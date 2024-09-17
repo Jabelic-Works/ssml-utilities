@@ -38,6 +38,7 @@ function tokenize(input: string): Token[] {
 }
 
 export function parseSSML(ssml: string, existingDag?: SSMLDAG): SSMLDAG {
+  console.log("Input SSML:", ssml); // 入力SSMLをログ出力
   const dag = existingDag || new SSMLDAG();
   let root: DAGNode;
 
@@ -59,10 +60,12 @@ export function parseSSML(ssml: string, existingDag?: SSMLDAG): SSMLDAG {
   let inTag = false;
 
   function processAttributes(tagContent: string, parentNode: DAGNode) {
+    console.log("Processing attributes for:", tagContent); // 属性処理をログ出力
     const attrRegex = /(\w+)=["']([^"']*)["']/g;
     let match;
     while ((match = attrRegex.exec(tagContent)) !== null) {
       const [, name, value] = match;
+      console.log("Attribute found:", name, value); // 見つかった属性をログ出力
       const attrNode = dag.createNode("attribute", name, value);
       dag.addEdge(parentNode.id, attrNode.id);
     }
@@ -72,6 +75,7 @@ export function parseSSML(ssml: string, existingDag?: SSMLDAG): SSMLDAG {
     const char = ssml[i];
 
     if (char === "<") {
+      console.log("Starting new tag"); // 新しいタグの開始をログ出力
       if (buffer) {
         const textNode = dag.createNode("text", undefined, buffer);
         dag.addEdge(currentElement.id, textNode.id);
@@ -80,6 +84,7 @@ export function parseSSML(ssml: string, existingDag?: SSMLDAG): SSMLDAG {
       inTag = true;
       buffer = char;
     } else if (char === ">" && inTag) {
+      console.log("Ending tag:", buffer + char); // タグの終了をログ出力
       buffer += char;
       const fullTag = buffer;
 
@@ -114,7 +119,7 @@ export function parseSSML(ssml: string, existingDag?: SSMLDAG): SSMLDAG {
     const textNode = dag.createNode("text", undefined, buffer);
     dag.addEdge(currentElement.id, textNode.id);
   }
-
+  console.log("Parsed DAG:", dag.debugPrint()); // 解析後のDAG構造をログ出力
   return dag;
 }
 
