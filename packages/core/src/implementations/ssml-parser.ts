@@ -36,6 +36,7 @@ function tokenize(input: string): Token[] {
 
   return tokens;
 }
+
 export function parseSSML(ssml: string, existingDag?: SSMLDAG): SSMLDAG {
   const dag = existingDag || new SSMLDAG();
   let root: DAGNode;
@@ -52,9 +53,20 @@ export function parseSSML(ssml: string, existingDag?: SSMLDAG): SSMLDAG {
     }
   }
 
+  const stack: DAGNode[] = [root];
   let currentElement = root;
   let buffer = "";
   let inTag = false;
+
+  function processAttributes(tagContent: string, parentNode: DAGNode) {
+    const attrRegex = /(\w+)=["']([^"']*)["']/g;
+    let match;
+    while ((match = attrRegex.exec(tagContent)) !== null) {
+      const [, name, value] = match;
+      const attrNode = dag.createNode("attribute", name, value);
+      dag.addEdge(parentNode.id, attrNode.id);
+    }
+  }
 
   for (let i = 0; i < ssml.length; i++) {
     const char = ssml[i];
@@ -65,20 +77,29 @@ export function parseSSML(ssml: string, existingDag?: SSMLDAG): SSMLDAG {
         dag.addEdge(currentElement.id, textNode.id);
         buffer = "";
       }
-      buffer += char;
       inTag = true;
+      buffer = char;
     } else if (char === ">" && inTag) {
       buffer += char;
-      const tagNode = dag.createNode("element", undefined, buffer);
-      dag.addEdge(currentElement.id, tagNode.id);
+      const fullTag = buffer;
 
-      if (!buffer.startsWith("</") && !buffer.endsWith("/>")) {
-        currentElement = tagNode;
-      } else if (buffer.startsWith("</")) {
-        // Close tag found, move back to parent
-        const parentId = Array.from(currentElement.parents)[0];
-        if (parentId) {
-          currentElement = dag.nodes.get(parentId)!;
+      if (fullTag.startsWith("</")) {
+        // Closing tag
+        const closeTagNode = dag.createNode("element", undefined, fullTag);
+        dag.addEdge(currentElement.id, closeTagNode.id);
+        if (stack.length > 1) {
+          stack.pop();
+          currentElement = stack[stack.length - 1];
+        }
+      } else {
+        // Opening tag or self-closing tag
+        const tagNode = dag.createNode("element", undefined, fullTag);
+        dag.addEdge(currentElement.id, tagNode.id);
+        processAttributes(fullTag, tagNode);
+
+        if (!fullTag.endsWith("/>")) {
+          currentElement = tagNode;
+          stack.push(currentElement);
         }
       }
 
@@ -96,6 +117,7 @@ export function parseSSML(ssml: string, existingDag?: SSMLDAG): SSMLDAG {
 
   return dag;
 }
+
 // デバッグ用の関数
 export function debugParseSSML(ssml: string): string {
   const dag = parseSSML(ssml);
