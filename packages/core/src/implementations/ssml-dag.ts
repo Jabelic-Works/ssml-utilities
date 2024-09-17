@@ -15,19 +15,6 @@ export class SSMLDAG {
     this.root = this.createNode("root");
   }
 
-  // createNode(type: DAGNode["type"], name?: string, value?: string): DAGNode {
-  //   const id = Math.random().toString(36).substr(2, 9);
-  //   const node: DAGNode = {
-  //     id,
-  //     type,
-  //     name,
-  //     value,
-  //     parents: new Set(),
-  //     children: new Set(),
-  //   };
-  //   this.nodes.set(id, node);
-  //   return node;
-  // }
   createNode(type: DAGNode["type"], name?: string, value?: string): DAGNode {
     if (type === "root" && this.nodes.size > 0) {
       throw new Error("Root node already exists");

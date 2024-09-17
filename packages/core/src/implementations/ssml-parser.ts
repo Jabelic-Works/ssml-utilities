@@ -1,27 +1,3 @@
-// import { SSMLDAG, DAGNode } from "./ssml-dag";
-
-// export function parseSSML(ssml: string): SSMLDAG {
-//   const dag = new SSMLDAG();
-//   const stack: DAGNode[] = [dag.root];
-//   let currentNode = dag.root;
-
-//   const tokenizer = /(<[^>]*>?)|([^<]+)/g;
-//   let match;
-
-//   while ((match = tokenizer.exec(ssml)) !== null) {
-//     const [fullMatch, tag, text] = match;
-
-//     if (tag) {
-//       const tagNode = dag.createNode("element", undefined, tag);
-//       dag.addEdge(currentNode.id, tagNode.id);
-//     } else if (text) {
-//       const textNode = dag.createNode("text", undefined, text);
-//       dag.addEdge(currentNode.id, textNode.id);
-//     }
-//   }
-
-//   return dag;
-// }
 import { SSMLDAG, DAGNode } from "./ssml-dag";
 
 interface Token {
@@ -29,14 +5,6 @@ interface Token {
   value: string;
 }
 
-// const tokenPatterns: [RegExp, Token["type"]][] = [
-//   [/^<[a-zA-Z][a-zA-Z0-9]*(?=[\s>])/, "openTag"],
-//   [/^<\/[a-zA-Z][a-zA-Z0-9]*>/, "closeTag"],
-//   [/^<[a-zA-Z][a-zA-Z0-9]*\s*\/>/, "selfClosingTag"],
-//   [/^[a-zA-Z][a-zA-Z0-9]*=(?:"[^"]*"|'[^']*'|[^\s>"']+)/, "attribute"],
-//   [/^[^<>\s]+/, "text"],
-//   [/^\s+/, "text"],
-// ];
 const tokenPatterns: [RegExp, Token["type"]][] = [
   [/^<[a-zA-Z][a-zA-Z0-9]*(?=[\s>])/, "openTag"],
   [/^<\/[a-zA-Z][a-zA-Z0-9]*>/, "closeTag"],
@@ -68,53 +36,6 @@ function tokenize(input: string): Token[] {
 
   return tokens;
 }
-
-// export function parseSSML(ssml: string): SSMLDAG {
-//   const dag = new SSMLDAG();
-//   const root = dag.createNode("root");
-//   const tokens = tokenize(ssml);
-
-//   for (const token of tokens) {
-//     switch (token.type) {
-//       case "openTag":
-//       case "closeTag":
-//       case "selfClosingTag":
-//         dag.addEdge(
-//           root.id,
-//           dag.createNode("element", undefined, token.value).id
-//         );
-//         break;
-//       case "attribute":
-//         const [name, value] = token.value.split("=");
-//         dag.addEdge(
-//           root.id,
-//           dag.createNode(
-//             "attribute",
-//             name.trim(),
-//             value.trim().replace(/^["']|["']$/g, "")
-//           ).id
-//         );
-//         break;
-//       case "text":
-//         dag.addEdge(root.id, dag.createNode("text", undefined, token.value).id);
-//         break;
-//     }
-//   }
-
-//   return dag;
-// }
-
-// // デバッグ用の関数
-// export function debugParseSSML(ssml: string): string {
-//   const dag = parseSSML(ssml);
-//   return Array.from(dag.root.children)
-//     .map((childId) => {
-//       const node = dag.nodes.get(childId)!;
-//       return `${node.type}: ${node.value || node.name}`;
-//     })
-//     .join("\n");
-// }
-
 export function parseSSML(ssml: string, existingDag?: SSMLDAG): SSMLDAG {
   const dag = existingDag || new SSMLDAG();
   let root: DAGNode;
@@ -131,54 +52,46 @@ export function parseSSML(ssml: string, existingDag?: SSMLDAG): SSMLDAG {
     }
   }
 
-  const stack: DAGNode[] = [root];
   let currentElement = root;
+  let buffer = "";
+  let inTag = false;
 
-  const tokenizer = /(<[^>]+>)|([^<]+)/g;
-  let match;
+  for (let i = 0; i < ssml.length; i++) {
+    const char = ssml[i];
 
-  while ((match = tokenizer.exec(ssml)) !== null) {
-    const [, tag, text] = match;
+    if (char === "<") {
+      if (buffer) {
+        const textNode = dag.createNode("text", undefined, buffer);
+        dag.addEdge(currentElement.id, textNode.id);
+        buffer = "";
+      }
+      buffer += char;
+      inTag = true;
+    } else if (char === ">" && inTag) {
+      buffer += char;
+      const tagNode = dag.createNode("element", undefined, buffer);
+      dag.addEdge(currentElement.id, tagNode.id);
 
-    if (tag) {
-      if (tag.startsWith("</")) {
-        // Closing tag
-        const closeTagNode = dag.createNode("element", undefined, tag);
-        dag.addEdge(currentElement.id, closeTagNode.id);
-        if (stack.length > 1) {
-          stack.pop();
-          currentElement = stack[stack.length - 1];
-        }
-      } else {
-        // Opening tag or self-closing tag
-        const tagParts = tag.slice(1, -1).split(/\s+/);
-        const tagName = tagParts[0];
-        const newElement = dag.createNode("element", undefined, `<${tagName}`);
-        dag.addEdge(currentElement.id, newElement.id);
-
-        // Process attributes
-        for (let i = 1; i < tagParts.length; i++) {
-          const attrPart = tagParts[i];
-          if (attrPart.includes("=")) {
-            const [name, value] = attrPart.split("=");
-            const attrNode = dag.createNode(
-              "attribute",
-              name,
-              value.replace(/^["']|["']$/g, "")
-            );
-            dag.addEdge(newElement.id, attrNode.id);
-          }
-        }
-
-        if (!tag.endsWith("/>")) {
-          currentElement = newElement;
-          stack.push(currentElement);
+      if (!buffer.startsWith("</") && !buffer.endsWith("/>")) {
+        currentElement = tagNode;
+      } else if (buffer.startsWith("</")) {
+        // Close tag found, move back to parent
+        const parentId = Array.from(currentElement.parents)[0];
+        if (parentId) {
+          currentElement = dag.nodes.get(parentId)!;
         }
       }
-    } else if (text) {
-      const textNode = dag.createNode("text", undefined, text);
-      dag.addEdge(currentElement.id, textNode.id);
+
+      buffer = "";
+      inTag = false;
+    } else {
+      buffer += char;
     }
+  }
+
+  if (buffer) {
+    const textNode = dag.createNode("text", undefined, buffer);
+    dag.addEdge(currentElement.id, textNode.id);
   }
 
   return dag;
