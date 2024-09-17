@@ -1,0 +1,22 @@
+{
+  "name": "@ssml-utilities/examples",
+  "version": "1.0.0",
+  "description": "",
+  "type": "module",
+  "main": "src/index.ts",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node --loader ts-node/esm src/index.ts"
+  },
+  "bin": {
+    "core": "dist/index.js"
+  },
+  "dependencies": {
+    "@ssml-utilities/core": "workspace:*",
+    "@ssml-utilities/editor-react": "workspace:*",
+    "ts-node": "^10.9.2"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "MIT"
+}

@@ -1,0 +1,13 @@
+{
+  "name": "ssml-utilities",
+  "private": true,
+  "workspaces": [
+    "packages/*"
+  ],
+  "dependencies": {
+    "typescript": "^5.6.2"
+  },
+  "volta": {
+    "node": "22.8.0"
+  }
+}
