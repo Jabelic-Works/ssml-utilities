@@ -28,6 +28,7 @@ export const SSMLEditor: React.FC<SSMLEditorProps> = ({
   useEffect(() => {
     const highlighted = ssmlHighlighter.highlight(ssml, highlightOptions);
     setHighlightedHtml(highlighted);
+    console.log(highlighted);
     onChange && onChange(ssml);
     syncScroll();
   }, [ssml, onChange]);
