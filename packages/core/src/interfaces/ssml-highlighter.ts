@@ -1,5 +1,8 @@
 // src/interfaces/ssml-highlighter.ts
 
+import { Result } from "../implementations/parser/result";
+import { SSMLDAG } from "../implementations/ssml-dag";
+
 export interface SSMLTag {
   name: string;
   attributes?: Record<string, string>;
@@ -55,5 +58,9 @@ export interface HighlightOptions {
 }
 
 export interface SSMLHighlighter {
-  highlight: (ssml: string, options: HighlightOptions) => string;
+  // highlight: (ssml: string, options: HighlightOptions) => string;
+  highlight: (
+    ssmlOrDag: string | Result<SSMLDAG, string>,
+    options: HighlightOptions
+  ) => Result<string, string>;
 }

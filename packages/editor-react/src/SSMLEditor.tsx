@@ -15,26 +15,32 @@ export const SSMLEditor: React.FC<SSMLEditorProps> = ({
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const highlightRef = useRef<HTMLDivElement>(null);
 
-  const highlightOptions: HighlightOptions = {
-    classes: {
-      tag: "ssml-tag",
-      attribute: "ssml-attribute",
-      attributeValue: "ssml-attribute-value",
-      text: "ssml-text",
-    },
-    indentation: 2,
-  };
-
   useEffect(() => {
-    const highlighted = ssmlHighlighter.highlight(ssml, highlightOptions);
-    setHighlightedHtml(highlighted);
-    console.log(highlighted);
-    onChange && onChange(ssml);
-    syncScroll();
-  }, [ssml, onChange]);
+    const options: HighlightOptions = {
+      classes: {
+        tag: "ssml-tag",
+        attribute: "ssml-attribute",
+        attributeValue: "ssml-attribute-value",
+        text: "ssml-text",
+      },
+      indentation: 2,
+    };
+
+    const highlightResult = ssmlHighlighter.highlight(ssml, options);
+
+    if (highlightResult.ok) {
+      setHighlightedHtml(highlightResult.value);
+    } else {
+      console.error("Error highlighting SSML:", highlightResult.error);
+      setHighlightedHtml(
+        `<span class="error">Error: ${highlightResult.error}</span>`
+      );
+    }
+  }, [ssml]);
 
   const handleInput = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     setSSML(e.target.value);
+    onChange && onChange(e.target.value);
   };
 
   const syncScroll = () => {

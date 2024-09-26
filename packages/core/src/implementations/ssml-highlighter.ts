@@ -1,63 +1,164 @@
-import { SSMLDAG, DAGNode } from "./ssml-dag";
-import { parseSSML, debugParseSSML } from "./ssml-parser";
 import {
   SSMLHighlighter,
   HighlightOptions,
 } from "../interfaces/ssml-highlighter";
+import { SSMLDAG, DAGNode } from "./ssml-dag";
+import { Result, success, failure } from "./parser/result";
+import { parseSSML } from "./parser";
 
-function highlightSSML(dag: SSMLDAG, options: HighlightOptions): string {
-  console.log("Highlighting DAG:", dag.debugPrint()); // ハイライト処理前のDAG構造をログ出力s
-  function highlightNode(nodeId: string): string {
-    const node = dag.nodes.get(nodeId)!;
-    console.log("Highlighting node:", node); // 各ノードの処理をログ出力
+export const ssmlHighlighter: SSMLHighlighter = {
+  highlight: (
+    ssmlOrDag: string | Result<SSMLDAG, string>,
+    options: HighlightOptions
+  ): Result<string, string> => {
+    const dagResult =
+      typeof ssmlOrDag === "string" ? parseSSML(ssmlOrDag) : ssmlOrDag;
+    if (!dagResult.ok) {
+      return failure(`Failed to parse SSML: ${dagResult.error}`);
+    }
+    return highlightSSML(dagResult.value, options);
+  },
+};
+
+function highlightSSML(
+  dag: SSMLDAG,
+  options: HighlightOptions
+): Result<string, string> {
+  function highlightNode(nodeId: string): Result<string, string> {
+    const node = dag.nodes.get(nodeId);
+    if (!node) {
+      return failure(`Node with id ${nodeId} not found`);
+    }
+
     switch (node.type) {
       case "element":
         const tagMatch = node.value!.match(/^<(\/?[^\s>]+)(.*)>?$/);
         if (tagMatch) {
           const [, tagName, rest] = tagMatch;
-          const attributes = Array.from(node.children)
-            .map((childId) => dag.nodes.get(childId)!)
-            .filter((child) => child.type === "attribute")
-            .map((attr) => highlightNode(attr.id))
-            .join("");
-          const content = Array.from(node.children)
-            .map((childId) => dag.nodes.get(childId)!)
-            .filter((child) => child.type !== "attribute")
-            .map((child) => highlightNode(child.id))
-            .join("");
+          const attributesResult = highlightAttributes(node);
+          if (!attributesResult.ok) {
+            return failure(attributesResult.error);
+          }
+          const contentResult = highlightChildren(node);
+          if (!contentResult.ok) {
+            return failure(contentResult.error);
+          }
 
-          let tagContent = `&lt;${escapeHtml(tagName)}${attributes}`;
+          let tagContent = `&lt;${escapeHtml(tagName)}${
+            attributesResult.value
+          }`;
           if (node.value!.trim().endsWith("/>") || rest.trim().endsWith("/")) {
             tagContent += " /";
           }
           tagContent += "&gt;";
 
-          return `<span class="${options.classes.tag}">${tagContent}</span>${content}`;
+          return success(
+            `<span class="${options.classes.tag}">${tagContent}</span>${contentResult.value}`
+          );
         }
-        return `<span class="${options.classes.tag}">${escapeHtml(
-          node.value!
-        )}</span>`;
+        return success(
+          `<span class="${options.classes.tag}">${escapeHtml(
+            node.value!
+          )}</span>`
+        );
       case "attribute":
-        return ` <span class="${options.classes.attribute}">${escapeHtml(
-          node.name!
-        )}</span>=<span class="${options.classes.attributeValue}">"${escapeHtml(
-          node.value!
-        )}"</span>`;
+        if (node.value) {
+          return success(
+            ` <span class="${options.classes.attribute}">${escapeHtml(
+              node.name!
+            )}</span>=<span class="${
+              options.classes.attributeValue
+            }">"${escapeHtml(node.value)}"</span>`
+          );
+        } else {
+          return success(
+            ` <span class="${options.classes.attribute}">${escapeHtml(
+              node.name!
+            )}</span>`
+          );
+        }
       case "text":
-        return `<span class="${options.classes.text}">${escapeHtml(
-          node.value!
-        )}</span>`;
+        return success(
+          `<span class="${options.classes.text}">${escapeHtml(
+            node.value!
+          )}</span>`
+        );
       default:
-        return "";
+        return failure(`Unknown node type: ${node.type}`);
     }
   }
 
-  const result = Array.from(dag.root.children)
-    .map((childId) => highlightNode(childId))
-    .join("");
-  console.log("Highlighted result:", result); // ハイライト処理後の結果をログ出力
-  return result;
+  function highlightAttributes(node: DAGNode): Result<string, string> {
+    console.log(
+      "Highlight Attributes",
+      Array.from(node.children).map((childId) => dag.nodes.get(childId))
+    );
+    const results = Array.from(node.children)
+      .map((childId) => dag.nodes.get(childId))
+      .filter(
+        (child): child is DAGNode =>
+          child !== undefined && child.type === "attribute"
+      )
+      .map((attr) => highlightNode(attr.id));
+
+    const errors = results.filter(
+      (result): result is Result<string, string> & { ok: false } => !result.ok
+    );
+    if (errors.length > 0) {
+      return failure(errors.map((err) => err.error).join(", "));
+    }
+
+    return success(
+      results
+        .filter(
+          (result): result is Result<string, string> & { ok: true } => result.ok
+        )
+        .map((result) => result.value)
+        .join("")
+    );
+  }
+
+  function highlightChildren(node: DAGNode): Result<string, string> {
+    const results = Array.from(node.children)
+      .map((childId) => dag.nodes.get(childId))
+      .filter(
+        (child): child is DAGNode =>
+          child !== undefined && child.type !== "attribute"
+      )
+      .map((child) => highlightNode(child.id));
+
+    const errors = results.filter(
+      (result): result is Result<string, string> & { ok: false } => !result.ok
+    );
+    if (errors.length > 0) {
+      return failure(errors.map((err) => err.error).join(", "));
+    }
+
+    return success(
+      results
+        .filter(
+          (result): result is Result<string, string> & { ok: true } => result.ok
+        )
+        .map((result) => result.value)
+        .join("")
+    );
+  }
+
+  const rootNode = Array.from(dag.nodes.values()).find(
+    (node) => node.type === "root"
+  );
+  if (!rootNode) {
+    return failure("Root node not found");
+  }
+
+  const result = highlightChildren(rootNode);
+  if (!result.ok) {
+    return failure(`Failed to highlight SSML: ${result.error}`);
+  }
+
+  return success(result.value);
 }
+
 function escapeHtml(text: string): string {
   return text
     .replace(/&/g, "&amp;")
@@ -66,12 +167,3 @@ function escapeHtml(text: string): string {
     .replace(/"/g, "&quot;")
     .replace(/'/g, "&#039;");
 }
-
-export const ssmlHighlighter: SSMLHighlighter = {
-  highlight: (ssml: string, options: HighlightOptions) => {
-    const dag = parseSSML(ssml);
-    console.log("DAG structure:");
-    console.log(debugParseSSML(ssml));
-    return highlightSSML(dag, options);
-  },
-};

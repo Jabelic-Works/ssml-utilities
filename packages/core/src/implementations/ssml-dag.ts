@@ -1,57 +1,82 @@
-export interface DAGNode {
-  id: string;
-  type: "root" | "element" | "attribute" | "text";
-  name?: string;
-  value?: string;
-  parents: Set<string>;
-  children: Set<string>;
-}
+import { Result, success, failure } from "./parser/result";
+
+const NodeType = {
+  root: "root",
+  element: "element",
+  attribute: "attribute",
+  text: "text",
+} as const;
+export type NodeType = (typeof NodeType)[keyof typeof NodeType];
 
 export class SSMLDAG {
-  nodes: Map<string, DAGNode> = new Map();
-  root: DAGNode;
+  nodes: Map<string, DAGNode>;
+  private idCounter: number;
 
   constructor() {
-    this.root = this.createNode("root");
+    this.nodes = new Map();
+    this.idCounter = 0;
   }
 
-  createNode(type: DAGNode["type"], name?: string, value?: string): DAGNode {
-    if (type === "root" && this.nodes.size > 0) {
-      throw new Error("Root node already exists");
+  generateId(): string {
+    return `node_${this.idCounter++}`;
+  }
+
+  createNode(
+    type: NodeType,
+    name?: string,
+    value?: string
+  ): Result<DAGNode, string> {
+    if (!["root", "element", "attribute", "text"].includes(type)) {
+      return failure(`Invalid node type: ${type}`);
     }
-    const id = Math.random().toString(36).substr(2, 9);
+    const id = this.generateId();
     const node: DAGNode = {
       id,
       type,
       name,
       value,
-      parents: new Set(),
       children: new Set(),
+      parents: new Set(),
     };
     this.nodes.set(id, node);
-    return node;
+    return success(node);
   }
 
-  addEdge(parentId: string, childId: string) {
+  addEdge(parentId: string, childId: string): Result<void, string> {
     const parent = this.nodes.get(parentId);
     const child = this.nodes.get(childId);
-    if (parent && child) {
-      parent.children.add(childId);
-      child.parents.add(parentId);
+
+    if (!parent) {
+      return failure(`Parent node with id ${parentId} not found`);
     }
+    if (!child) {
+      return failure(`Child node with id ${childId} not found`);
+    }
+
+    parent.children.add(childId);
+    child.parents.add(parentId);
+    return success(undefined);
   }
 
   debugPrint(): string {
-    let result = "";
+    let output = "";
     for (const [id, node] of this.nodes) {
-      result += `Node ${id}:\n`;
-      result += `  Type: ${node.type}\n`;
-      if (node.name) result += `  Name: ${node.name}\n`;
-      if (node.value) result += `  Value: ${node.value}\n`;
-      result += `  Parents: ${Array.from(node.parents).join(", ")}\n`;
-      result += `  Children: ${Array.from(node.children).join(", ")}\n`;
-      result += "\n";
+      output += `Node ${id}:\n`;
+      output += `  Type: ${node.type}\n`;
+      if (node.name) output += `  Name: ${node.name}\n`;
+      if (node.value) output += `  Value: ${node.value}\n`;
+      output += `  Parents: ${Array.from(node.parents).join(", ")}\n`;
+      output += `  Children: ${Array.from(node.children).join(", ")}\n\n`;
     }
-    return result;
+    return output;
   }
+}
+
+export interface DAGNode {
+  id: string;
+  type: string;
+  name?: string;
+  value?: string;
+  children: Set<string>;
+  parents: Set<string>;
 }
