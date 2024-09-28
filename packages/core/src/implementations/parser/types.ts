@@ -1,9 +1,4 @@
-export type TokenType =
-  | "openTag"
-  | "closeTag"
-  | "selfClosingTag"
-  // | "attribute"
-  | "text";
+export type TokenType = "openTag" | "closeTag" | "selfClosingTag" | "text";
 
 export interface Token {
   type: TokenType;

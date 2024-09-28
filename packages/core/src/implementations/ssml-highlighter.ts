@@ -29,13 +29,14 @@ function highlightSSML(
     if (!node) {
       return failure(`Node with id ${nodeId} not found`);
     }
-
     switch (node.type) {
       case "element":
         const tagMatch = node.value!.match(/^<(\/?[^\s>]+)(.*)>?$/);
         if (tagMatch) {
-          const [, tagName, rest] = tagMatch;
-          const attributesResult = highlightAttributes(node);
+          const [nodeValue, tagName, rest] = tagMatch;
+          const attributesResult = highlightAttributes(
+            extractAttributesFromNode(node)
+          );
           if (!attributesResult.ok) {
             return failure(attributesResult.error);
           }
@@ -43,14 +44,19 @@ function highlightSSML(
           if (!contentResult.ok) {
             return failure(contentResult.error);
           }
-
-          let tagContent = `&lt;${escapeHtml(tagName)}${
-            attributesResult.value
-          }`;
-          if (node.value!.trim().endsWith("/>") || rest.trim().endsWith("/")) {
-            tagContent += " /";
+          let tagContent: string;
+          if (attributesResult.value) {
+            tagContent = `&lt;${escapeHtml(tagName)}${attributesResult.value}`;
+            if (
+              node.value!.trim().endsWith("/>") ||
+              rest.trim().endsWith("/")
+            ) {
+              tagContent += "/";
+            }
+            tagContent += "&gt;"; // > 文字実体参照
+          } else {
+            tagContent = `&lt;${escapeHtml(tagName)}${rest}`;
           }
-          tagContent += "&gt;";
 
           return success(
             `<span class="${options.classes.tag}">${tagContent}</span>${contentResult.value}`
@@ -88,34 +94,59 @@ function highlightSSML(
     }
   }
 
-  function highlightAttributes(node: DAGNode): Result<string, string> {
-    console.log(
-      "Highlight Attributes",
-      Array.from(node.children).map((childId) => dag.nodes.get(childId))
-    );
-    const results = Array.from(node.children)
-      .map((childId) => dag.nodes.get(childId))
-      .filter(
-        (child): child is DAGNode =>
-          child !== undefined && child.type === "attribute"
-      )
-      .map((attr) => highlightNode(attr.id));
+  function highlightAttributes(attributes: string): Result<string, string> {
+    let result = "";
+    let remaining = attributes;
 
-    const errors = results.filter(
-      (result): result is Result<string, string> & { ok: false } => !result.ok
-    );
-    if (errors.length > 0) {
-      return failure(errors.map((err) => err.error).join(", "));
+    while (remaining.length > 0) {
+      // 先頭の空白を処理
+      const leadingSpaceMatch = remaining.match(/^\s+/);
+      if (leadingSpaceMatch) {
+        result += leadingSpaceMatch[0];
+        remaining = remaining.slice(leadingSpaceMatch[0].length);
+        continue;
+      }
+
+      // 属性名を処理
+      const nameMatch = remaining.match(/^\w+/);
+      if (nameMatch) {
+        const name = nameMatch[0];
+        result += `<span class="${options.classes.attribute}">${escapeHtml(
+          name
+        )}</span>`;
+        remaining = remaining.slice(name.length);
+
+        // 等号と値を処理
+        const valueMatch = remaining.match(
+          /^(\s*=\s*)(?:("[^"]*"|'[^']*')|(\S+))/
+        );
+        if (valueMatch) {
+          const [fullMatch, equals, quotedValue, unquotedValue] = valueMatch;
+          const value = quotedValue || unquotedValue;
+
+          result += escapeHtml(equals);
+          if (quotedValue) {
+            const quote = value[0];
+            const innerValue = value.slice(1, -1);
+            result += `${quote}<span class="${
+              options.classes.attributeValue
+            }">${escapeHtml(innerValue)}</span>${quote}`;
+          } else {
+            result += `<span class="${
+              options.classes.attributeValue
+            }">${escapeHtml(value)}</span>`;
+          }
+          remaining = remaining.slice(fullMatch.length);
+        }
+        continue;
+      }
+
+      // マッチしない文字があれば、そのまま追加して次へ
+      result += escapeHtml(remaining[0]);
+      remaining = remaining.slice(1);
     }
 
-    return success(
-      results
-        .filter(
-          (result): result is Result<string, string> & { ok: true } => result.ok
-        )
-        .map((result) => result.value)
-        .join("")
-    );
+    return success(result);
   }
 
   function highlightChildren(node: DAGNode): Result<string, string> {
@@ -166,4 +197,37 @@ function escapeHtml(text: string): string {
     .replace(/>/g, "&gt;")
     .replace(/"/g, "&quot;")
     .replace(/'/g, "&#039;");
+}
+
+function extractAttributesFromNode(node: DAGNode): string {
+  if (!node.value) {
+    return "";
+  }
+
+  const value = node.value;
+
+  // 自己閉じタグ: <tag ... />
+  const selfClosingMatch = value.match(/^<(\w+)([\s\S]*?)\/>/);
+  if (selfClosingMatch) {
+    // タグ名の直後から、'/>' の直前までを抽出（末尾のスペースを保持）
+    const extracted = value.substring(
+      selfClosingMatch[1].length + 1,
+      value.lastIndexOf("/>")
+    );
+    return extracted;
+  }
+
+  // 開始タグ: <tag ...>
+  const openingTagMatch = value.match(/^<(\w+)([\s\S]*?)>/);
+  if (openingTagMatch) {
+    // タグ名の直後から、'>' の直前までを抽出
+    const extracted = value.substring(
+      openingTagMatch[1].length + 1,
+      value.lastIndexOf(">")
+    );
+    return extracted;
+  }
+
+  // タグとして認識できない場合は空文字列を返す
+  return "";
 }

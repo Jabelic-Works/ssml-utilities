@@ -11,7 +11,6 @@ export function buildDAGFromTokens(tokens: Token[]): Result<SSMLDAG, string> {
   const root = rootResult.value;
   const stack: DAGNode[] = [root];
   let currentElement = root;
-  console.log("tokens:", tokens);
   for (const token of tokens) {
     switch (token.type) {
       case "openTag":

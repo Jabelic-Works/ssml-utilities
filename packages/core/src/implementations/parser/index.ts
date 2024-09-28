@@ -4,7 +4,6 @@ import { buildDAGFromTokens } from "./dagBuilder";
 import { Result } from "./result";
 
 export function parseSSML(ssml: string): Result<SSMLDAG, string> {
-  console.log("Input SSML:", ssml);
   const tokens = tokenize(ssml);
   const dagResult = buildDAGFromTokens(tokens);
   if (dagResult.ok) {
