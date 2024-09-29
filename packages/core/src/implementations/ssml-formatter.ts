@@ -1,6 +1,7 @@
 // src/implementations/ssml-formatter.ts
-
-import { SSMLFormatter } from "../interfaces/ssml-highlighter";
+export interface SSMLFormatter {
+  format(ssml: string, indentation: number): string;
+}
 
 const format = (ssml: string, indentation: number = 2): string => {
   let formatted = "";

@@ -1,8 +1,15 @@
-import {
-  SSMLValidator,
-  ValidationResult,
-  ValidationError,
-} from "../interfaces/ssml-highlighter";
+export interface SSMLValidator {
+  validate(ssml: string): ValidationResult;
+}
+type ValidationResult = {
+  isValid: boolean;
+  errors: ValidationError[];
+};
+type ValidationError = {
+  message: string;
+  line: number;
+  column: number;
+};
 
 export const ssmlValidator: SSMLValidator = {
   validate(ssml: string): ValidationResult {

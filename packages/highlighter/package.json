@@ -1,0 +1,57 @@
+{
+  "name": "@ssml-utilities/highlighter",
+  "version": "0.1.0",
+  "description": "SSML syntax highlighter for the SSML Utilities toolkit",
+  "main": "dist/index.js",
+  "module": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "type": "module",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "rollup -c rollup.config.mjs --bundleConfigAsCjs",
+    "test": "jest",
+    "lint": "eslint src --ext .ts,.tsx",
+    "prepublishOnly": "pnpm run build"
+  },
+  "keywords": [
+    "ssml",
+    "highlighter",
+    "syntax",
+    "speech",
+    "markup"
+  ],
+  "author": "Jabelic",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/your-username/ssml-utilities.git",
+    "directory": "packages/highlighter"
+  },
+  "bugs": {
+    "url": "https://github.com/your-username/ssml-utilities/issues"
+  },
+  "homepage": "https://github.com/your-username/ssml-utilities/tree/main/packages/highlighter#readme",
+  "dependencies": {
+    "@rollup/plugin-typescript": "^11.1.6",
+    "@ssml-utilities/core": "workspace:*"
+  },
+  "peerDependencies": {
+    "react": "^17.0.0 || ^18.0.0",
+    "react-dom": "^17.0.0 || ^18.0.0"
+  },
+  "devDependencies": {
+    "@types/jest": "^27.0.0",
+    "@types/react": "^17.0.0",
+    "@typescript-eslint/eslint-plugin": "^4.0.0",
+    "@typescript-eslint/parser": "^4.0.0",
+    "eslint": "^7.0.0",
+    "jest": "^27.0.0",
+    "rollup": "^2.0.0",
+    "rollup-plugin-typescript2": "^0.30.0",
+    "tslib": "^2.7.0",
+    "ts-jest": "^27.0.0",
+    "typescript": "^4.0.0"
+  }
+}

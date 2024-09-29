@@ -6,9 +6,9 @@ SSML Utilities は、Speech Synthesis Markup Language (SSML) を扱うための�
 
 SSML Utilities は以下のパッケージを提供しています：
 
-<!-- - [@ssml-utilities/highlighter](#ssml-utilitieshighlighter) -->
-
-- [@ssml-utilities/editor](#ssml-utilitieseditor)
+- [@ssml-utilities/editor-react](#ssml-utilitieseditor-react)
+- [@ssml-utilities/highlighter](#ssml-utilitieshighlighter)
+- [@ssml-utilities/core](#ssml-utilitiescore)
 
 <!-- 各パッケージは個別にインストールして使用することができます。
 

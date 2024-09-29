@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
-import { ssmlHighlighter, HighlightOptions } from "@ssml-utilities/core";
+import { ssmlHighlighter, HighlightOptions } from "@ssml-utilities/highlighter";
 
 interface SSMLEditorProps {
   initialValue?: string;

@@ -6,6 +6,8 @@
   "module": "dist/index.js",
   "type": "module",
   "types": "dist/index.d.ts",
+  "author": "Jabelic",
+  "license": "MIT",
   "scripts": {
     "build": "rollup -c rollup.config.mjs --bundleConfigAsCjs",
     "test": "vitest",
@@ -15,8 +17,6 @@
     "core": "dist/index.js"
   },
   "keywords": [],
-  "author": "",
-  "license": "MIT",
   "devDependencies": {
     "@rollup/plugin-typescript": "^11.1.6",
     "@types/node": "^22.5.5",

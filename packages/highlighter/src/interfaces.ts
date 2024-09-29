@@ -1,7 +1,7 @@
 // src/interfaces/ssml-highlighter.ts
 
-import { Result } from "../implementations/parser/result";
-import { SSMLDAG } from "../implementations/ssml-dag";
+import { Result } from "@ssml-utilities/core";
+import { SSMLDAG } from "@ssml-utilities/core";
 
 export interface SSMLTag {
   name: string;
@@ -18,10 +18,6 @@ export interface HighlightOptions {
   };
   indentation: number;
 }
-
-// export interface SSMLHighlighter {
-//   highlight(ssml: string, options?: Partial<HighlightOptions>): string;
-// }
 
 export interface SSMLValidator {
   validate(ssml: string): ValidationResult;
@@ -58,7 +54,6 @@ export interface HighlightOptions {
 }
 
 export interface SSMLHighlighter {
-  // highlight: (ssml: string, options: HighlightOptions) => string;
   highlight: (
     ssmlOrDag: string | Result<SSMLDAG, string>,
     options: HighlightOptions

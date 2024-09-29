@@ -1,10 +1,7 @@
-import {
-  SSMLHighlighter,
-  HighlightOptions,
-} from "../interfaces/ssml-highlighter";
-import { SSMLDAG, DAGNode } from "./ssml-dag";
-import { Result, success, failure } from "./parser/result";
-import { parseSSML } from "./parser";
+import { SSMLHighlighter, HighlightOptions } from "./interfaces";
+import { SSMLDAG, DAGNode } from "@ssml-utilities/core";
+import { Result, success, failure } from "@ssml-utilities/core";
+import { parseSSML } from "@ssml-utilities/core";
 
 export const ssmlHighlighter: SSMLHighlighter = {
   highlight: (

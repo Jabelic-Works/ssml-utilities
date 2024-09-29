@@ -5,6 +5,8 @@
   "main": "dist/index.js",
   "module": "dist/index.es.js",
   "types": "dist/index.d.ts",
+  "author": "Jabelic",
+  "license": "MIT",
   "exports": {
     ".": {
       "import": "./dist/index.es.js",
@@ -20,7 +22,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "@ssml-utilities/core": "workspace:*",
+    "@ssml-utilities/highlighter": "workspace:*",
     "react": "^18.2.0",
     "react-dom": "^18.2.0"
   },
