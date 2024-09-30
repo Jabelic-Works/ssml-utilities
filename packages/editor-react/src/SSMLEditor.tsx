@@ -88,7 +88,7 @@ export const SSMLEditor: React.FC<SSMLEditorProps> = ({
   };
 
   return (
-    <div style={{ position: "relative", height: "300px", width: "400px" }}>
+    <div style={{ position: "relative", height: "500px", width: "600px" }}>
       <div
         ref={highlightRef}
         style={{
