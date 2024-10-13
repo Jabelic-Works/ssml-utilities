@@ -74,7 +74,7 @@ export class SSMLDAG {
 
 export interface DAGNode {
   id: string;
-  type: string;
+  type: NodeType;
   name?: string;
   value?: string;
   children: Set<string>;

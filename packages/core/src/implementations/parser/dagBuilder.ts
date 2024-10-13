@@ -46,6 +46,21 @@ export function buildDAGFromTokens(tokens: Token[]): Result<SSMLDAG, string> {
         stack.push(currentElement);
         break;
       case "closeTag":
+        // 対応するopenTagがなければfailture. stackから探す
+        const openTagNode = stack.find(
+          (node) =>
+            // node.value: <speak> ,token.value:</speak> 一致
+            // node.value: <speak lang='ja-JP'> ,token.value:</speak> 一致
+            // node.value: <break> , token.value: </hoge> 一致しない
+            node.value?.includes(token.value) ||
+            node.value?.includes(token.value.replace("<", "</"))
+        );
+        console.log("openTagNode", openTagNode);
+        console.log("stack", stack, token);
+        // if (!openTagNode) {
+        //   return failure(`Failed to find open tag node: ${token.value}`);
+        // }
+
         const closeTagNodeResult = dag.createNode(
           "element",
           undefined,
