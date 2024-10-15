@@ -55,12 +55,9 @@ export function buildDAGFromTokens(tokens: Token[]): Result<SSMLDAG, string> {
             node.value?.includes(token.value) ||
             node.value?.includes(token.value.replace("<", "</"))
         );
-        console.log("openTagNode", openTagNode);
-        console.log("stack", stack, token);
-        // if (!openTagNode) {
-        //   return failure(`Failed to find open tag node: ${token.value}`);
-        // }
-
+        if (!openTagNode) {
+          console.error(`Failed to find open tag: ${token.value}`);
+        }
         const closeTagNodeResult = dag.createNode(
           "element",
           undefined,
@@ -134,11 +131,15 @@ export function buildDAGFromTokens(tokens: Token[]): Result<SSMLDAG, string> {
           }
         }
         break;
+
+      default:
+        return failure(`無効なトークンタイプです: ${token.type}`);
     }
   }
 
   return success(dag);
 }
+
 function createElementNode(
   dag: SSMLDAG,
   tagContent: string

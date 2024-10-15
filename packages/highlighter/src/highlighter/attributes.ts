@@ -18,7 +18,7 @@ export function highlightAttributes(
       continue;
     }
     // 属性名を処理
-    const nameMatch = remaining.match(/^[\w]+/); // 属性名は、\w で始まる
+    const nameMatch = remaining.match(/^[\w-]+/); // 属性名は、\w(半角英数字と_), - で構成される
     if (nameMatch) {
       const name = nameMatch[0];
       result += `<span class="${options.classes.attribute}">${escapeHtml(
