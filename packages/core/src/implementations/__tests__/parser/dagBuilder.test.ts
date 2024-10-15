@@ -42,9 +42,7 @@ describe("buildDAGFromTokens", () => {
       { type: "selfClosingTag", value: "<break time='500ms'>" },
       { type: "closeTag", value: "</speak>" },
     ];
-
     const result = buildDAGFromTokens(tokens);
-
     expect(result.ok).toBe(true);
     if (result.ok) {
       const dag = result.value;
@@ -52,16 +50,41 @@ describe("buildDAGFromTokens", () => {
     }
   });
 
-  it("無効なトークンシーケンスに対してエラーを返す", () => {
+  it("ネストしたSSMLを正しく処理する", () => {
     const tokens: Token[] = [
-      { type: "closeTag", value: "</speak>" }, // 開始タグなしで閉じタグ
+      { type: "openTag", value: "<speak>" },
+      { type: "selfClosingTag", value: "<break time='500ms' />" },
+      { type: "text", value: "こんにちは" },
+      { type: "openTag", value: '<prosody rate="slow" pitch="-2st">' },
+      { type: "openTag", value: '<sub alias="World Wide Web Consortium">' },
+      { type: "text", value: "W3C" },
+      { type: "closeTag", value: "</sub>" },
+      { type: "closeTag", value: "</prosody>" },
+      { type: "closeTag", value: "</speak>" },
     ];
-
     const result = buildDAGFromTokens(tokens);
 
-    expect(result.ok).toBe(false);
-    if (!result.ok) {
-      expect(result.error).toContain("Failed to");
+    expect(result.ok).toBe(true);
+    if (result.ok) {
+      const dag = result.value;
+      expect(dag.nodes.size).toBe(14); // root, speak, break, 属性, テキスト, prosody, 属性, 属性, sub, 属性, テキスト, /sub, /prosoby, /speak
+    }
+  });
+});
+describe("buildDAGFromTokens: white editing", () => {
+  it("", () => {
+    const tokens: Token[] = [
+      { type: "openTag", value: "<speak>" },
+      { type: "openTag", value: "<a>" },
+      { type: "text", value: "<" },
+      { type: "closeTag", value: "</a>" },
+      { type: "closeTag", value: "</speak>" },
+    ];
+    const result = buildDAGFromTokens(tokens);
+    expect(result.ok).toBe(true);
+    if (result.ok) {
+      const dag = result.value;
+      expect(dag.nodes.size).toBe(6); // root, speak, a, テキスト, a, speak
     }
   });
 });

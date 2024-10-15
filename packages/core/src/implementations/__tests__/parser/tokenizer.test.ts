@@ -64,3 +64,27 @@ describe("tokenizer", () => {
     expect(tokenize(input)).toEqual(expected);
   });
 });
+
+describe("tokenize: white editing", () => {
+  it("<", () => {
+    const input = "<";
+    const expected: Token[] = [{ type: "text", value: "<" }];
+    expect(tokenize(input)).toEqual(expected);
+  });
+  it("<<a", () => {
+    const input = "<<a";
+    const expected: Token[] = [
+      { type: "text", value: "<" },
+      { type: "text", value: "<a" },
+    ];
+    expect(tokenize(input)).toEqual(expected);
+  });
+  it("<が続く場合は、<をテキストとして認識する", () => {
+    const input = "<<a>";
+    const expected: Token[] = [
+      { type: "text", value: "<" },
+      { type: "openTag", value: "<a>" },
+    ];
+    expect(tokenize(input)).toEqual(expected);
+  });
+});

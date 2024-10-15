@@ -11,7 +11,8 @@
   ],
   "scripts": {
     "build": "rollup -c rollup.config.mjs --bundleConfigAsCjs",
-    "test": "jest",
+    "test": "vitest",
+    "test:watch": "vitest watch",
     "lint": "eslint src --ext .ts,.tsx",
     "prepublishOnly": "pnpm run build"
   },
@@ -50,8 +51,9 @@
     "jest": "^27.0.0",
     "rollup": "^2.0.0",
     "rollup-plugin-typescript2": "^0.30.0",
-    "tslib": "^2.7.0",
     "ts-jest": "^27.0.0",
-    "typescript": "^4.0.0"
+    "tslib": "^2.7.0",
+    "typescript": "^4.0.0",
+    "vitest": "^2.1.1"
   }
 }
