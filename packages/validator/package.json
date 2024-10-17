@@ -1,0 +1,33 @@
+{
+  "name": "@ssml-utilities/validator",
+  "version": "1.0.0",
+  "description": "",
+  "main": "dist/index.js",
+  "module": "dist/index.js",
+  "type": "module",
+  "types": "dist/index.d.ts",
+  "author": "Jabelic",
+  "license": "MIT",
+  "scripts": {
+    "build": "rollup -c rollup.config.mjs --bundleConfigAsCjs",
+    "test": "vitest",
+    "test:watch": "vitest watch"
+  },
+  "bin": {
+    "core": "dist/index.js"
+  },
+  "keywords": [],
+  "devDependencies": {
+    "@rollup/plugin-typescript": "^11.1.6",
+    "@types/node": "^22.5.5",
+    "@typescript-eslint/eslint-plugin": "^8.5.0",
+    "@typescript-eslint/parser": "^8.5.0",
+    "eslint": "^9.10.0",
+    "rollup": "^4.21.3",
+    "rollup-plugin-dts": "^6.1.1",
+    "tslib": "^2.7.0"
+  },
+  "dependencies": {
+    "vitest": "^2.1.1"
+  }
+}
