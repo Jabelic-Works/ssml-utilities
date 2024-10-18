@@ -4,11 +4,15 @@ import { ssmlHighlighter, HighlightOptions } from "@ssml-utilities/highlighter";
 interface SSMLEditorProps {
   initialValue?: string;
   onChange?: (value: string) => void;
+  width?: string;
+  height?: string;
 }
 
 export const SSMLEditor: React.FC<SSMLEditorProps> = ({
   initialValue = "",
   onChange,
+  width = "600px",
+  height = "500px",
 }) => {
   const [ssml, setSSML] = useState(initialValue);
   const [highlightedHtml, setHighlightedHtml] = useState("");
@@ -88,7 +92,7 @@ export const SSMLEditor: React.FC<SSMLEditorProps> = ({
   };
 
   return (
-    <div style={{ position: "relative", height: "500px", width: "600px" }}>
+    <div style={{ position: "relative", height: height, width: width }}>
       <div
         ref={highlightRef}
         style={{
