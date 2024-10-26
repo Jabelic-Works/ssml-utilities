@@ -1,1 +1,1 @@
-export { SSMLEditor } from "./SSMLEditor";
+export { SSMLEditor } from "./SSMLEditor.tsx";

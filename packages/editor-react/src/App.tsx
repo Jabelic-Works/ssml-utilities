@@ -1,5 +1,3 @@
-import React from "react";
-import "./App.css";
 import { SSMLEditor } from "./SSMLEditor";
 
 function App() {

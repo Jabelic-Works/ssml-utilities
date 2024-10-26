@@ -1,5 +1,23 @@
 import React, { useState, useEffect, useRef } from "react";
 import { ssmlHighlighter, HighlightOptions } from "@ssml-utilities/highlighter";
+declare global {
+  namespace JSX {
+    interface IntrinsicElements {
+      div: React.DetailedHTMLProps<
+        React.HTMLAttributes<HTMLDivElement>,
+        HTMLDivElement
+      >;
+      textarea: React.DetailedHTMLProps<
+        React.TextareaHTMLAttributes<HTMLTextAreaElement>,
+        HTMLTextAreaElement
+      >;
+      style: React.DetailedHTMLProps<
+        React.StyleHTMLAttributes<HTMLStyleElement>,
+        HTMLStyleElement
+      >;
+    }
+  }
+}
 
 interface SSMLEditorProps {
   initialValue?: string;
@@ -16,8 +34,10 @@ export const SSMLEditor: React.FC<SSMLEditorProps> = ({
 }) => {
   const [ssml, setSSML] = useState(initialValue);
   const [highlightedHtml, setHighlightedHtml] = useState("");
+  const [lineNumbers, setLineNumbers] = useState<string[]>([]);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const highlightRef = useRef<HTMLDivElement>(null);
+  const lineNumbersRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const options: HighlightOptions = {
@@ -40,6 +60,10 @@ export const SSMLEditor: React.FC<SSMLEditorProps> = ({
         `<span class="error">Error: ${highlightResult.error}</span>`
       );
     }
+
+    // Update line numbers
+    const lines = ssml.split("\n");
+    setLineNumbers(lines.map((_, index) => (index + 1).toString()));
   }, [ssml]);
 
   const handleInput = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
@@ -48,9 +72,10 @@ export const SSMLEditor: React.FC<SSMLEditorProps> = ({
   };
 
   const syncScroll = () => {
-    if (textareaRef.current && highlightRef.current) {
+    if (textareaRef.current && highlightRef.current && lineNumbersRef.current) {
       highlightRef.current.scrollTop = textareaRef.current.scrollTop;
       highlightRef.current.scrollLeft = textareaRef.current.scrollLeft;
+      lineNumbersRef.current.scrollTop = textareaRef.current.scrollTop;
     }
   };
 
@@ -61,7 +86,6 @@ export const SSMLEditor: React.FC<SSMLEditorProps> = ({
       const end = e.currentTarget.selectionEnd;
       const newValue = ssml.substring(0, start) + "  " + ssml.substring(end);
       setSSML(newValue);
-      // カーソル位置を更新
       setTimeout(() => {
         if (textareaRef.current) {
           textareaRef.current.selectionStart =
@@ -77,14 +101,12 @@ export const SSMLEditor: React.FC<SSMLEditorProps> = ({
     lineHeight: "1.5",
     padding: "10px",
     margin: "0",
-    border: "1px solid #ddd",
-    borderRadius: "4px",
     position: "absolute",
     top: "0",
     left: "0",
     width: "100%",
     height: "100%",
-    boxSizing: "border-box",
+    border: "none",
     overflow: "auto",
     whiteSpace: "pre-wrap",
     wordWrap: "break-word",
@@ -92,39 +114,71 @@ export const SSMLEditor: React.FC<SSMLEditorProps> = ({
   };
 
   return (
-    <div style={{ position: "relative", height: height, width: width }}>
+    <div style={{ position: "relative", height, width }}>
       <div
-        ref={highlightRef}
+        ref={lineNumbersRef}
         style={{
           ...commonStyles,
-          backgroundColor: "#f5f5f5",
-          pointerEvents: "none",
+          width: "auto",
+          borderRight: "none",
+          paddingLeft: "auto",
+          marginLeft: "auto",
+          textAlign: "right",
+          color: "#6b6b6b",
+          border: "1px solid #ddd",
+          borderRadius: "10px 0px 0px 10px",
         }}
-        dangerouslySetInnerHTML={{ __html: highlightedHtml }}
-      />
-      <textarea
-        ref={textareaRef}
-        value={ssml}
-        onChange={handleInput}
-        onScroll={syncScroll}
-        onKeyDown={handleKeyDown}
+      >
+        {lineNumbers.map((num) => (
+          <div key={num}>{num}</div>
+        ))}
+      </div>
+      <div
         style={{
-          ...commonStyles,
-          backgroundColor: "transparent",
-          color: "transparent",
-          caretColor: "black",
-          resize: "none",
-          zIndex: 1,
+          position: "absolute",
+          left: "30px",
+          top: "0",
+          right: "0",
+          bottom: "0",
         }}
-        spellCheck="false"
-      />
+      >
+        <div
+          ref={highlightRef}
+          style={{
+            ...commonStyles,
+            backgroundColor: "#f5f5f5",
+            pointerEvents: "none",
+            left: "0",
+            border: "1px solid #ddd",
+            borderRadius: "0px 10px 10px 0px",
+          }}
+          dangerouslySetInnerHTML={{ __html: highlightedHtml }}
+        />
+        <textarea
+          ref={textareaRef}
+          value={ssml}
+          onChange={handleInput}
+          onScroll={syncScroll}
+          onKeyDown={handleKeyDown}
+          style={{
+            ...commonStyles,
+            backgroundColor: "transparent",
+            color: "transparent",
+            caretColor: "black",
+            resize: "none",
+            zIndex: 1,
+            left: "0",
+            outline: "none",
+          }}
+          spellCheck="false"
+        />
+      </div>
       <style>{`
         .ssml-tag { color: #000fff; }
         .ssml-attribute { color: #FFA500; }
         .ssml-attribute-value { color: #008000; }
         .ssml-text { color: #000; }
         
-        /* Ensure left alignment for all span elements */
         div[dangerouslySetInnerHTML] span {
           text-align: left;
           display: inline;
