@@ -1,5 +1,10 @@
 {
   "name": "@jabelic/ssml-utilities",
+  "license": "MIT",
   "version": "0.1.0",
-  "exports": "./mod.ts"
+  "include": ["packages/*/dist"],
+  "exports": {
+    "./core": "./packages/core/dist/index.js",
+    "./highlighter": "./packages/highlighter/dist/index.js"
+  }
 }

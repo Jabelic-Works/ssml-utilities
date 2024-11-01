@@ -1,23 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
 import { ssmlHighlighter, HighlightOptions } from "@ssml-utilities/highlighter";
-declare global {
-  namespace JSX {
-    interface IntrinsicElements {
-      div: React.DetailedHTMLProps<
-        React.HTMLAttributes<HTMLDivElement>,
-        HTMLDivElement
-      >;
-      textarea: React.DetailedHTMLProps<
-        React.TextareaHTMLAttributes<HTMLTextAreaElement>,
-        HTMLTextAreaElement
-      >;
-      style: React.DetailedHTMLProps<
-        React.StyleHTMLAttributes<HTMLStyleElement>,
-        HTMLStyleElement
-      >;
-    }
-  }
-}
 
 interface SSMLEditorProps {
   initialValue?: string;
