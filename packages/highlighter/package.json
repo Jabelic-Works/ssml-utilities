@@ -14,7 +14,7 @@
     "registry": "https://npm.pkg.github.com/"
   },
   "scripts": {
-    "build": "rollup -c rollup.config.mjs --bundleConfigAsCjs",
+    "build": "rollup -c rollup.config.mjs",
     "test": "vitest",
     "test:watch": "vitest watch",
     "lint": "eslint src --ext .ts,.tsx",
