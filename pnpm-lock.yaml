@@ -46,8 +46,8 @@ importers:
   packages/editor-react:
     dependencies:
       '@ssml-utilities/highlighter':
-        specifier: workspace:*
-        version: link:../highlighter
+        specifier: ^0.1.0
+        version: 0.1.0(@types/node@22.5.5)(jsdom@16.7.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(rollup@4.24.3)(tslib@2.7.0)(typescript@5.6.2)
       react:
         specifier: ^18.2.0
         version: 18.3.1
@@ -164,7 +164,7 @@ importers:
         version: 0.30.0(rollup@2.79.1)(typescript@4.9.5)
       ts-jest:
         specifier: ^27.0.0
-        version: 27.1.5(@babel/core@7.25.2)(@types/jest@27.5.2)(babel-jest@27.5.1(@babel/core@7.25.2))(esbuild@0.24.0)(jest@27.5.1(ts-node@10.9.2(@types/node@22.5.5)(typescript@4.9.5)))(typescript@4.9.5)
+        version: 27.1.5(@babel/core@7.25.2)(@types/jest@27.5.2)(babel-jest@27.5.1(@babel/core@7.25.2))(jest@27.5.1(ts-node@10.9.2(@types/node@22.5.5)(typescript@4.9.5)))(typescript@4.9.5)
       tslib:
         specifier: ^2.7.0
         version: 2.7.0
@@ -1205,6 +1205,12 @@ packages:
   '@ssml-utilities/core@1.0.0':
     resolution: {integrity: sha512-uhMhfqDn30DM72nOBI0W0zE5jTsV9J6OO2MZmRGfLBB22Qhg+8PPXV4i4Z7bwNc/9XpKe9GyzOm2jLdXxwN4Mw==}
     hasBin: true
+
+  '@ssml-utilities/highlighter@0.1.0':
+    resolution: {integrity: sha512-R3gvouyuVkwPrI/1S0izW8gNNolHuCXb8J9r9y0LcQG2gI1fZT4li9iwXAmRC24MtoSFsp5elj4VutSnLGbQMA==}
+    peerDependencies:
+      react: ^17.0.0 || ^18.0.0
+      react-dom: ^17.0.0 || ^18.0.0
 
   '@tootallnate/once@1.1.2':
     resolution: {integrity: sha512-RbzJvlNzmRq5c3O09UipeuXno4tA1FE6ikOjxZK0tuxVv3412l64l5t1W5pj4+rJq9vpkm/kwiR07aZXnsKPxw==}
@@ -4224,6 +4230,15 @@ snapshots:
       rollup: 4.21.3
       tslib: 2.7.0
 
+  '@rollup/plugin-typescript@11.1.6(rollup@4.24.3)(tslib@2.7.0)(typescript@5.6.2)':
+    dependencies:
+      '@rollup/pluginutils': 5.1.0(rollup@4.24.3)
+      resolve: 1.22.8
+      typescript: 5.6.2
+    optionalDependencies:
+      rollup: 4.24.3
+      tslib: 2.7.0
+
   '@rollup/pluginutils@4.2.1':
     dependencies:
       estree-walker: 2.0.2
@@ -4414,6 +4429,32 @@ snapshots:
       - sugarss
       - supports-color
       - terser
+
+  '@ssml-utilities/highlighter@0.1.0(@types/node@22.5.5)(jsdom@16.7.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(rollup@4.24.3)(tslib@2.7.0)(typescript@5.6.2)':
+    dependencies:
+      '@rollup/plugin-typescript': 11.1.6(rollup@4.24.3)(tslib@2.7.0)(typescript@5.6.2)
+      '@ssml-utilities/core': 1.0.0(@types/node@22.5.5)(jsdom@16.7.0)
+      react: 18.3.1
+      react-dom: 18.3.1(react@18.3.1)
+    transitivePeerDependencies:
+      - '@edge-runtime/vm'
+      - '@types/node'
+      - '@vitest/browser'
+      - '@vitest/ui'
+      - happy-dom
+      - jsdom
+      - less
+      - lightningcss
+      - msw
+      - rollup
+      - sass
+      - sass-embedded
+      - stylus
+      - sugarss
+      - supports-color
+      - terser
+      - tslib
+      - typescript
 
   '@tootallnate/once@1.1.2': {}
 
@@ -6667,7 +6708,7 @@ snapshots:
 
   ts-interface-checker@0.1.13: {}
 
-  ts-jest@27.1.5(@babel/core@7.25.2)(@types/jest@27.5.2)(babel-jest@27.5.1(@babel/core@7.25.2))(esbuild@0.24.0)(jest@27.5.1(ts-node@10.9.2(@types/node@22.5.5)(typescript@4.9.5)))(typescript@4.9.5):
+  ts-jest@27.1.5(@babel/core@7.25.2)(@types/jest@27.5.2)(babel-jest@27.5.1(@babel/core@7.25.2))(jest@27.5.1(ts-node@10.9.2(@types/node@22.5.5)(typescript@4.9.5)))(typescript@4.9.5):
     dependencies:
       bs-logger: 0.2.6
       fast-json-stable-stringify: 2.1.0
@@ -6683,7 +6724,6 @@ snapshots:
       '@babel/core': 7.25.2
       '@types/jest': 27.5.2
       babel-jest: 27.5.1(@babel/core@7.25.2)
-      esbuild: 0.24.0
 
   ts-node@10.9.2(@types/node@22.5.5)(typescript@4.9.5):
     dependencies:

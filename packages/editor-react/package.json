@@ -15,8 +15,7 @@
     }
   },
   "publishConfig": {
-    "access": "public",
-    "registry": "https://npm.pkg.github.com/"
+    "access": "public"
   },
   "files": [
     "dist"
@@ -29,7 +28,7 @@
     "prepublishOnly": "pnpm run pkg:build"
   },
   "dependencies": {
-    "@ssml-utilities/highlighter": "workspace:*",
+    "@ssml-utilities/highlighter": "^0.1.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0"
   },
