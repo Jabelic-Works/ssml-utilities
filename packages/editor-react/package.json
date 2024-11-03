@@ -2,16 +2,17 @@
   "name": "@ssml-utilities/editor-react",
   "version": "0.1.0",
   "type": "module",
-  "main": "dist/index.js",
-  "module": "dist/index.es.js",
+  "main": "dist/index.cjs",
+  "module": "dist/index.js",
   "types": "dist/index.d.ts",
   "author": "Jabelic",
   "private": false,
   "license": "MIT",
   "exports": {
     ".": {
-      "import": "./dist/index.es.js",
-      "require": "./dist/index.js"
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs"
     }
   },
   "publishConfig": {
@@ -23,7 +24,7 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build",
-    "pkg:build": "tsup src/index.tsx --format cjs,esm --dts",
+    "pkg:build": "tsup src/index.tsx --format cjs,esm --dts --clean",
     "preview": "vite preview",
     "prepublishOnly": "pnpm run pkg:build"
   },
