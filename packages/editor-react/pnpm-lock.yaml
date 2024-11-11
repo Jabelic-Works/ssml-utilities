@@ -9,8 +9,8 @@ importers:
   .:
     dependencies:
       '@ssml-utilities/highlighter':
-        specifier: ^0.1.0
-        version: 0.1.0(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(rollup@4.24.3)(typescript@5.6.3)
+        specifier: ^0.2.0
+        version: 0.2.0(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(rollup@4.24.3)(typescript@5.6.3)
       react:
         specifier: ^18.2.0
         version: 18.3.1
@@ -716,8 +716,8 @@ packages:
     resolution: {integrity: sha512-uhMhfqDn30DM72nOBI0W0zE5jTsV9J6OO2MZmRGfLBB22Qhg+8PPXV4i4Z7bwNc/9XpKe9GyzOm2jLdXxwN4Mw==}
     hasBin: true
 
-  '@ssml-utilities/highlighter@0.1.0':
-    resolution: {integrity: sha512-R3gvouyuVkwPrI/1S0izW8gNNolHuCXb8J9r9y0LcQG2gI1fZT4li9iwXAmRC24MtoSFsp5elj4VutSnLGbQMA==}
+  '@ssml-utilities/highlighter@0.2.0':
+    resolution: {integrity: sha512-Xkhop2+blTeRCLlj/n1appGmegtFml0aAfZ/CbuZL7+0POUX26acLUFOkTk0TWZ24lDiihLtO2gEcDartjUw9A==}
     peerDependencies:
       react: ^17.0.0 || ^18.0.0
       react-dom: ^17.0.0 || ^18.0.0
@@ -2076,7 +2076,7 @@ snapshots:
       - supports-color
       - terser
 
-  '@ssml-utilities/highlighter@0.1.0(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(rollup@4.24.3)(typescript@5.6.3)':
+  '@ssml-utilities/highlighter@0.2.0(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(rollup@4.24.3)(typescript@5.6.3)':
     dependencies:
       '@rollup/plugin-typescript': 11.1.6(rollup@4.24.3)(typescript@5.6.3)
       '@ssml-utilities/core': 1.0.0
