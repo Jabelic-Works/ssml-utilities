@@ -9,11 +9,11 @@ import { HighlightOptions } from "../interfaces";
 import { highlightNode } from "./node";
 
 export function highlightChildren(
-  node: DAGNode,
+  rootNode: DAGNode,
   dag: SSMLDAG,
   options: HighlightOptions
 ): Result<string, string> {
-  const results = Array.from(node.children)
+  const results = Array.from(rootNode.children)
     .map((childId) => dag.nodes.get(childId))
     .filter(
       (child): child is DAGNode =>
