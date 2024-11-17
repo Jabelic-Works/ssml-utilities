@@ -10,15 +10,16 @@ SSML Utilities は以下のパッケージを提供しています：
 - [@ssml-utilities/highlighter](#ssml-utilitieshighlighter)
 - [@ssml-utilities/core](#ssml-utilitiescore)
 
-<!-- 各パッケージは個別にインストールして使用することができます。
+各パッケージは個別にインストールして使用することができます。
 
 ## インストール
 
 各パッケージを個別にインストールするには、以下のコマンドを使用します：
 
 ```bash
+npm install @ssml-utilities/editor-react
 npm install @ssml-utilities/highlighter
-npm install @ssml-utilities/editor
+npm install @ssml-utilities/core
 ```
 
 ## 使用方法
@@ -43,9 +44,9 @@ const highlighted = ssmlHighlighter.highlight(ssml, {
 console.log(highlighted);
 ```
 
-### @ssml-utilities/editor
+### @ssml-utilities/editor-react
 
-SSML Editor は、SSML テキストを編集するための React コンポーネントを提供します。
+SSML Editor for React は、SSML テキストを編集するための React コンポーネントを提供します。
 
 ```jsx
 import React from "react";
@@ -60,16 +61,19 @@ function App() {
 
 ### API ドキュメント
 
-詳細な API ドキュメントは各パッケージの README を参照してください：
+各パッケージの README を参照してください：
 
-- [@ssml-utilities/highlighter API]()
-- [@ssml-utilities/editor API]()
+- [@ssml-utilities/editor-react API](https://github.com/Jabelic-Works/ssml-utilities/tree/master/packages/editor-react)
+- [@ssml-utilities/highlighter API](https://github.com/Jabelic-Works/ssml-utilities/tree/master/packages/highlighter)
+- [@ssml-utilities/core API](https://github.com/Jabelic-Works/ssml-utilities/tree/master/packages/core)
+
+<!--
 
 ### 貢献
 
 プロジェクトへの貢献を歓迎します。バグ報告、機能リクエスト、プルリクエストなど、どんな形式の貢献も大歓迎です。
 
-貢献する前に、CONTRIBUTING.md をお読みください。
+貢献する前に、CONTRIBUTING.md をお読みください。 -->
 
 ### ライセンス
 
@@ -80,4 +84,3 @@ function App() {
 問題や質問がある場合は、GitHub の Issue トラッカーを使用してください。
 
 SSML Utilities を使用していただきありがとうございます。このツールキットが SSML の操作をより簡単かつ効率的にすることを願っています。
--->

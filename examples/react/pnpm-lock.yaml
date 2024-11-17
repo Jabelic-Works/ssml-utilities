@@ -9,8 +9,8 @@ importers:
   .:
     dependencies:
       '@ssml-utilities/editor-react':
-        specifier: ^0.1.2
-        version: 0.1.2(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(rollup@4.24.3)(typescript@5.6.3)
+        specifier: ^0.3.0
+        version: 0.3.0(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(rollup@4.24.3)(typescript@5.6.3)
       react:
         specifier: ^18.3.1
         version: 18.3.1
@@ -475,14 +475,14 @@ packages:
     resolution: {integrity: sha512-uhMhfqDn30DM72nOBI0W0zE5jTsV9J6OO2MZmRGfLBB22Qhg+8PPXV4i4Z7bwNc/9XpKe9GyzOm2jLdXxwN4Mw==}
     hasBin: true
 
-  '@ssml-utilities/editor-react@0.1.2':
-    resolution: {integrity: sha512-oQkj09QaxU53qDxqMhbK3+PQd3LhoFu6K/kck0sGk2EpOWPg4iiRgligtYeJVLjadMTii/xdAJKN5iql8Pjuuw==}
+  '@ssml-utilities/editor-react@0.3.0':
+    resolution: {integrity: sha512-mV0y2QG0YMxz8UqAj7pqFR4uMbT+sxeu034DkGTrM8d0efD53K4BSx9qzUbqssriddnT3m6Jb+etcYN25XNItQ==}
     peerDependencies:
       react: ^18.2.0
       react-dom: ^18.2.0
 
-  '@ssml-utilities/highlighter@0.1.0':
-    resolution: {integrity: sha512-R3gvouyuVkwPrI/1S0izW8gNNolHuCXb8J9r9y0LcQG2gI1fZT4li9iwXAmRC24MtoSFsp5elj4VutSnLGbQMA==}
+  '@ssml-utilities/highlighter@0.2.0':
+    resolution: {integrity: sha512-Xkhop2+blTeRCLlj/n1appGmegtFml0aAfZ/CbuZL7+0POUX26acLUFOkTk0TWZ24lDiihLtO2gEcDartjUw9A==}
     peerDependencies:
       react: ^17.0.0 || ^18.0.0
       react-dom: ^17.0.0 || ^18.0.0
@@ -1100,8 +1100,8 @@ packages:
   stackback@0.0.2:
     resolution: {integrity: sha512-1XMJE5fQo1jGH6Y/7ebnwPOBEkIEnT4QF32d5R1+VXdXveM0IBMJt8zfaxX1P3QhVwrYe+576+jkANtSS2mBbw==}
 
-  std-env@3.7.0:
-    resolution: {integrity: sha512-JPbdCEQLj1w5GilpiHAx3qJvFndqybBysA3qUOnznweH4QbNYUsW/ea8QzSrnh0vNsezMMw5bcVool8lM0gwzg==}
+  std-env@3.8.0:
+    resolution: {integrity: sha512-Bc3YwwCB+OzldMxOXJIIvC6cPRWr/LxOp48CdQTOkPyk/t4JWWJbrilwBd7RJzKV8QW7tJkcgAmeuLLJugl5/w==}
 
   strip-json-comments@3.1.1:
     resolution: {integrity: sha512-6fPc+R4ihwqP6N/aIv2f1gMH8lOVtWQHoqC4yK6oSDVVocumAsfCqjkXnqiYMhmMwS/mEHLp7Vehlt3ql6lEig==}
@@ -1612,9 +1612,9 @@ snapshots:
       - supports-color
       - terser
 
-  '@ssml-utilities/editor-react@0.1.2(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(rollup@4.24.3)(typescript@5.6.3)':
+  '@ssml-utilities/editor-react@0.3.0(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(rollup@4.24.3)(typescript@5.6.3)':
     dependencies:
-      '@ssml-utilities/highlighter': 0.1.0(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(rollup@4.24.3)(typescript@5.6.3)
+      '@ssml-utilities/highlighter': 0.2.0(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(rollup@4.24.3)(typescript@5.6.3)
       react: 18.3.1
       react-dom: 18.3.1(react@18.3.1)
     transitivePeerDependencies:
@@ -1637,7 +1637,7 @@ snapshots:
       - tslib
       - typescript
 
-  '@ssml-utilities/highlighter@0.1.0(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(rollup@4.24.3)(typescript@5.6.3)':
+  '@ssml-utilities/highlighter@0.2.0(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(rollup@4.24.3)(typescript@5.6.3)':
     dependencies:
       '@rollup/plugin-typescript': 11.1.6(rollup@4.24.3)(typescript@5.6.3)
       '@ssml-utilities/core': 1.0.0
@@ -2313,7 +2313,7 @@ snapshots:
 
   stackback@0.0.2: {}
 
-  std-env@3.7.0: {}
+  std-env@3.8.0: {}
 
   strip-json-comments@3.1.1: {}
 
@@ -2409,7 +2409,7 @@ snapshots:
       expect-type: 1.1.0
       magic-string: 0.30.12
       pathe: 1.1.2
-      std-env: 3.7.0
+      std-env: 3.8.0
       tinybench: 2.9.0
       tinyexec: 0.3.1
       tinypool: 1.0.1
