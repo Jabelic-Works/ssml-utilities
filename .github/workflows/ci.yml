@@ -1,5 +1,9 @@
 name: CI
 
+permissions:
+  contents: read
+  pull-requests: write
+
 on:
   pull_request:
     branches: [master]
@@ -57,6 +61,8 @@ jobs:
         run: pnpm --filter @ssml-utilities/${{ matrix.package }} run build
 
   changeset-check:
+    needs: detect-changes
+    if: ${{ needs.detect-changes.outputs.changed_packages != '[]' }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
@@ -72,4 +78,24 @@ jobs:
       - run: pnpm install
 
       - name: Check for changesets
-        run: pnpm changeset status --since=origin/master
+        id: changeset-check
+        run: |
+          if pnpm changeset status --since=origin/master; then
+            echo "Changesets found or not required."
+          else
+            echo "No changesets found. This might be intentional, but please verify."
+            echo "changeset_missing=true" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Comment PR
+        if: ${{ steps.changeset-check.outputs.changeset_missing == 'true' }}
+        uses: actions/github-script@v6
+        with:
+          github-token: ${{secrets.GITHUB_TOKEN}}
+          script: |
+            github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo, 
+              issue_number: context.issue.number, 
+              body: '📦 パッケージの変更が検出されましたが、対応する changeset が見つかりませんでした。\n\nもしこの変更がリリースを必要とする場合は、以下のコマンドを実行して changeset を追加してください：\n```\npnpm changeset add\n```\n\nリリースが不要な場合は、以下のコマンドを実行して空の changeset を追加してください：\n```\npnpm changeset add --empty\n```\n\n詳細については [Changesets のドキュメント](https://github.com/changesets/changesets) を参照してください。'
+            })
