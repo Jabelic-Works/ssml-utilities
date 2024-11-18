@@ -5,8 +5,37 @@ on:
     branches: [master]
 
 jobs:
-  test:
+  detect-changes:
     runs-on: ubuntu-latest
+    outputs:
+      changed_packages: ${{ steps.set-changed-packages.outputs.changed_packages }}
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+      - uses: pnpm/action-setup@v2
+        with:
+          version: 8
+      - uses: actions/setup-node@v3
+        with:
+          node-version: "18"
+          cache: "pnpm"
+      - run: pnpm install
+
+      - name: Get changed packages
+        id: changed-packages
+        run: |
+          CHANGED=$(pnpm ls --filter "...[origin/master]" --json | jq -r '.[].name' | sed 's/@ssml-utilities\///' | jq -R -s -c 'split("\n")[:-1]')
+          echo "Changed packages: $CHANGED"
+          echo "changed_packages=$CHANGED" >> $GITHUB_OUTPUT
+
+  test:
+    needs: detect-changes
+    if: ${{ needs.detect-changes.outputs.changed_packages != '[]' }}
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        package: ${{ fromJson(needs.detect-changes.outputs.changed_packages) }}
     steps:
       - uses: actions/checkout@v3
       - uses: pnpm/action-setup@v2
@@ -17,10 +46,30 @@ jobs:
           node-version: "18"
           cache: "pnpm"
       - run: pnpm install
-      - run: pnpm run lint
-      - run: pnpm run test
-      - run: pnpm run build
 
-      # 変更セットの存在をチェック
+      - name: Lint
+        run: pnpm --filter @ssml-utilities/${{ matrix.package }} run lint
+
+      - name: Test
+        run: pnpm --filter @ssml-utilities/${{ matrix.package }} run test
+
+      - name: Build
+        run: pnpm --filter @ssml-utilities/${{ matrix.package }} run build
+
+  changeset-check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+      - uses: pnpm/action-setup@v2
+        with:
+          version: 8
+      - uses: actions/setup-node@v3
+        with:
+          node-version: "18"
+          cache: "pnpm"
+      - run: pnpm install
+
       - name: Check for changesets
         run: pnpm changeset status --since=origin/master
