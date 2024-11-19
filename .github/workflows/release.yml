@@ -1,0 +1,64 @@
+name: Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      packages:
+        description: "Packages to update (comma-separated)"
+        required: true
+        type: string
+      change_type:
+        description: "Type of change"
+        required: true
+        type: choice
+        options:
+          - patch
+          - minor
+          - major
+      description:
+        description: "Change description"
+        required: true
+        type: string
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: pnpm/action-setup@v2
+        with:
+          version: 8
+      - uses: actions/setup-node@v3
+        with:
+          node-version: "18"
+          cache: "pnpm"
+      - run: pnpm install
+
+      - name: Create changeset
+        run: |
+          pnpm changeset add --empty
+          CHANGESET_FILE=$(ls .changeset/*.md | tail -n 1)
+          echo "'${{ github.event.inputs.change_type }}':" > $CHANGESET_FILE
+          IFS=',' read -ra PACKAGES <<< "${{ github.event.inputs.packages }}"
+          for PACKAGE in "${PACKAGES[@]}"; do
+            echo "  '@ssml-utilities/$PACKAGE': ${{ github.event.inputs.change_type }}" >> $CHANGESET_FILE
+          done
+          echo -e "\n${{ github.event.inputs.description }}" >> $CHANGESET_FILE
+
+      - name: Create Release Pull Request or Publish to npm
+        id: changesets
+        uses: changesets/action@v1
+        with:
+          publish: pnpm release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      - name: Create GitHub Release
+        if: steps.changesets.outputs.published == 'true'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release create $(git describe --tags --abbrev=0) \
+            --title "Release $(git describe --tags --abbrev=0)" \
+            --generate-notes

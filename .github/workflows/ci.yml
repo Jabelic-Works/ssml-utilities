@@ -1,0 +1,101 @@
+name: CI
+
+permissions:
+  contents: read
+  pull-requests: write
+
+on:
+  pull_request:
+    branches: [master]
+
+jobs:
+  detect-changes:
+    runs-on: ubuntu-latest
+    outputs:
+      changed_packages: ${{ steps.set-changed-packages.outputs.changed_packages }}
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+      - uses: pnpm/action-setup@v2
+        with:
+          version: 8
+      - uses: actions/setup-node@v3
+        with:
+          node-version: "18"
+          cache: "pnpm"
+      - run: pnpm install
+
+      - name: Get changed packages
+        id: changed-packages
+        run: |
+          CHANGED=$(pnpm ls --filter "...[origin/master]" --json | jq -r '.[].name' | sed 's/@ssml-utilities\///' | jq -R -s -c 'split("\n")[:-1]')
+          echo "Changed packages: $CHANGED"
+          echo "changed_packages=$CHANGED" >> $GITHUB_OUTPUT
+
+  test:
+    needs: detect-changes
+    if: ${{ needs.detect-changes.outputs.changed_packages != '[]' }}
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        package: ${{ fromJson(needs.detect-changes.outputs.changed_packages) }}
+    steps:
+      - uses: actions/checkout@v3
+      - uses: pnpm/action-setup@v2
+        with:
+          version: 8
+      - uses: actions/setup-node@v3
+        with:
+          node-version: "18"
+          cache: "pnpm"
+      - run: pnpm install
+
+      - name: Lint
+        run: pnpm --filter @ssml-utilities/${{ matrix.package }} run lint
+
+      - name: Test
+        run: pnpm --filter @ssml-utilities/${{ matrix.package }} run test
+
+      - name: Build
+        run: pnpm --filter @ssml-utilities/${{ matrix.package }} run build
+
+  changeset-check:
+    needs: detect-changes
+    if: ${{ needs.detect-changes.outputs.changed_packages != '[]' }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+      - uses: pnpm/action-setup@v2
+        with:
+          version: 8
+      - uses: actions/setup-node@v3
+        with:
+          node-version: "18"
+          cache: "pnpm"
+      - run: pnpm install
+
+      - name: Check for changesets
+        id: changeset-check
+        run: |
+          if pnpm changeset status --since=origin/master; then
+            echo "Changesets found or not required."
+          else
+            echo "No changesets found. This might be intentional, but please verify."
+            echo "changeset_missing=true" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Comment PR
+        if: ${{ steps.changeset-check.outputs.changeset_missing == 'true' }}
+        uses: actions/github-script@v6
+        with:
+          github-token: ${{secrets.GITHUB_TOKEN}}
+          script: |
+            github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo, 
+              issue_number: context.issue.number, 
+              body: '📦 パッケージの変更が検出されましたが、対応する changeset が見つかりませんでした。\n\nもしこの変更がリリースを必要とする場合は、以下のコマンドを実行して changeset を追加してください：\n```\npnpm changeset add\n```\n\nリリースが不要な場合は、以下のコマンドを実行して空の changeset を追加してください：\n```\npnpm changeset add --empty\n```\n\n詳細については [Changesets のドキュメント](https://github.com/changesets/changesets) を参照してください。'
+            })
