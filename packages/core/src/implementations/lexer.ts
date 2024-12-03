@@ -1,4 +1,4 @@
-import { Token, TokenType } from "./types";
+import { Token, TokenType } from "./parser/types";
 
 export function determineTagType(tag: string): TokenType {
   if (tag.startsWith("</")) return "closeTag";

@@ -1,5 +1,5 @@
 import { parseSSML } from "../../parser";
-import { SSMLDAG } from "../../ssml-dag";
+import { SSMLDAG } from "../../dag";
 
 describe("SSML Parser", () => {
   describe("parseSSML", () => {
