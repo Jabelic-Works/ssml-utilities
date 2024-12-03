@@ -32,6 +32,23 @@ jobs:
           CHANGED=$(pnpm ls --filter "...[origin/master]" --json | jq -r '.[].name' | sed 's/@ssml-utilities\///' | jq -R -s -c 'split("\n")[:-1]')
           echo "Changed packages: $CHANGED"
           echo "changed_packages=$CHANGED" >> $GITHUB_OUTPUT
+          echo "$GITHUB_OUTPUT"
+
+      # - name: Get changed packages
+      #   id: changed-packages
+      #   run: |
+      #     git fetch origin master:master
+
+      #     echo "Current branch:"
+      #     git branch --show-current
+      #     echo "Git status:"
+      #     git status
+
+      #     CHANGED=$(pnpm ls --filter "...[origin/master]" --json | jq -r '.[].name' | sed 's/@ssml-utilities\///' | jq -R -s -c 'split("\n")[:-1]')
+      #     echo "Changed packages raw output:"
+      #     pnpm ls --filter "...[origin/master]" --json
+      #     echo "Processed output: $CHANGED"
+      #     echo "changed_packages=$CHANGED" >> $GITHUB_OUTPUT
 
   test:
     needs: detect-changes
@@ -39,7 +56,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        package: ${{ fromJson(needs.detect-changes.outputs.changed_packages) }}
+        package: ${{ fromJson(needs.detect-changes.outputs.changed_packages || '[]') }}
     steps:
       - uses: actions/checkout@v3
       - uses: pnpm/action-setup@v2

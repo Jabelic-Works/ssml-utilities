@@ -1,6 +1,6 @@
-import { SSMLDAG, DAGNode } from "../ssml-dag";
-import { Token, ParsedAttribute } from "./types";
-import { failure, Result, success } from "./result"; // Result型の定義をimport
+import { SSMLDAG, DAGNode } from ".";
+import { Token, ParsedAttribute } from "../parser/types";
+import { failure, Result, success } from "../result"; // Result型の定義をimport
 
 export function buildDAGFromTokens(tokens: Token[]): Result<SSMLDAG, string> {
   const dag = new SSMLDAG();

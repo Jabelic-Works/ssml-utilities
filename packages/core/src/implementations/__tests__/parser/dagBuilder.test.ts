@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { buildDAGFromTokens } from "../../parser/dagBuilder";
+import { buildDAGFromTokens } from "../../dag/builder";
 import { Token } from "../../parser/types";
 
 describe("buildDAGFromTokens", () => {

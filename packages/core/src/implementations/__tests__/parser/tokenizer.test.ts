@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { tokenize, determineTagType } from "../../parser/tokenizer";
+import { tokenize, determineTagType } from "../../lexer";
 import { Token } from "../../parser/types";
 
 describe("tokenizer", () => {

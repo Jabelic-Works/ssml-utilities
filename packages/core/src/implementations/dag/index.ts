@@ -1,4 +1,4 @@
-import { Result, success, failure } from "./parser/result";
+import { Result, success, failure } from "../result";
 
 const NodeType = {
   root: "root",

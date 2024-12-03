@@ -1,7 +1,7 @@
-import { SSMLDAG } from "../ssml-dag";
-import { tokenize } from "./tokenizer";
-import { buildDAGFromTokens } from "./dagBuilder";
-import { Result } from "./result";
+import { SSMLDAG } from "../dag";
+import { tokenize } from "../lexer";
+import { buildDAGFromTokens } from "../dag/builder";
+import { Result } from "../result";
 
 export function parseSSML(ssml: string): Result<SSMLDAG, string> {
   const tokens = tokenize(ssml);
