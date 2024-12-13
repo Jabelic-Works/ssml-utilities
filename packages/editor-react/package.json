@@ -29,7 +29,7 @@
     "prepublishOnly": "pnpm run pkg:build"
   },
   "dependencies": {
-    "@ssml-utilities/highlighter": "^0.2.0",
+    "@ssml-utilities/highlighter": "^0.3.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0"
   },
