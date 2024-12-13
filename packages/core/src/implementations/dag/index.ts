@@ -1,6 +1,6 @@
 import { Result, success, failure } from "../result";
 
-const NodeType = {
+export const NodeType = {
   root: "root",
   element: "element",
   attribute: "attribute",
@@ -45,7 +45,6 @@ export class SSMLDAG {
   addEdge(parentId: string, childId: string): Result<void, string> {
     const parent = this.nodes.get(parentId);
     const child = this.nodes.get(childId);
-
     if (!parent) {
       return failure(`Parent node with id ${parentId} not found`);
     }
@@ -53,9 +52,34 @@ export class SSMLDAG {
       return failure(`Child node with id ${childId} not found`);
     }
 
+    // detect cycle
+    if (this.isReachable(childId, parentId)) {
+      return failure(`Adding this edge would create a cycle`);
+    }
+
     parent.children.add(childId);
     child.parents.add(parentId);
     return success(undefined);
+  }
+
+  // helper method： childId から targetId に到達可能かを確認
+  isReachable(
+    fromId: string,
+    toId: string,
+    visited = new Set<string>()
+  ): boolean {
+    if (fromId === toId) return true;
+    visited.add(fromId);
+    const node = this.nodes.get(fromId);
+    if (!node) return false;
+    for (const childId of node.children) {
+      if (!visited.has(childId)) {
+        if (this.isReachable(childId, toId, visited)) {
+          return true;
+        }
+      }
+    }
+    return false;
   }
 
   debugPrint(): string {
