@@ -1,69 +1,97 @@
 # @ssml-utilities/core
 
-SSML ユーティリティの中核機能を提供するパッケージです。SSML（Speech Synthesis Markup Language）の解析、DAG（有向非巡回グラフ）の構築、および基本的なユーティリティ機能を提供します。
+SSMLユーティリティの中核機能を提供するパッケージです。SSML（Speech Synthesis Markup Language）の解析、DAG（有向非巡回グラフ）の構築、および基本的なユーティリティ機能を提供します。
 
 ## インストール
 
-```
+```bash
 npm install @ssml-utilities/core
+```
+
+または
+
+```bash
+pnpm add @ssml-utilities/core
 ```
 
 ## 主な機能
 
-- SSML の解析
+- SSMLの解析
 - DAG（有向非巡回グラフ）の構築と操作
-- 結果型（Result）を使用したエラーハンドリング
-- SSML タグのインターフェース定義
+- Result型を使用したエラーハンドリング
 
 ## 使用方法
 
-### SSML の解析
+### SSMLの解析
 
-```ts
+```typescript
 import { parseSSML } from "@ssml-utilities/core";
+
 const ssml = "<speak>Hello <emphasis>world</emphasis>!</speak>";
 const result = parseSSML(ssml);
+
 if (result.ok) {
   const dag = result.value;
   // DAGを使用した処理
 }
 ```
 
-### DAG の操作
+### DAGの操作
 
-```ts
+```typescript
 import { SSMLDAG } from "@ssml-utilities/core";
+
 const dag = new SSMLDAG();
 const nodeResult = dag.createNode("element", "speak", "<speak>");
+
 if (nodeResult.ok) {
   const node = nodeResult.value;
   // ノードを使用した処理
 }
 ```
 
-## インターフェース
+## API
 
-### Speech
+### DAGNode型
 
-SSML タグの基本インターフェースを提供します：
+DAGのノードを表す型です：
 
-```ts
-interface Speech {
-  say(text: string): string;
-  pause(time: string): string;
-  emphasis(level: "strong" | "moderate" | "reduced", text: string): string;
-  prosody(options: ProsodyOptions, text: string): string;
+```typescript
+interface DAGNode {
+  id: string;
+  type: "root" | "element" | "text" | "attribute";
+  name?: string;
+  value?: string;
+  children: Set<string>;
+  parents: Set<string>;
 }
 ```
 
-### Result 型
+### Result型
 
 エラーハンドリングのための型を提供します：
 
-```ts
+```typescript
 type Result<T, E> = { ok: true; value: T } | { ok: false; error: E };
 ```
 
+## デバッグ
+
+DAGの構造を確認するためのデバッグ機能を提供しています：
+
+```typescript
+import { debugParseSSML } from "@ssml-utilities/core";
+
+const debug = debugParseSSML("<speak>Hello, world!</speak>");
+console.log(debug); // DAG構造を表示
+```
+
+
 ## ライセンス
 
-MIT ライセンスの下で公開されています。詳細は[LICENSE](https://github.com/Jabelic-Works/ssml-utilities/blob/master/LICENCE)ファイルを参照してください。
+MITライセンスの下で公開されています。詳細は[LICENSE](https://github.com/Jabelic-Works/ssml-utilities/blob/master/LICENCE)ファイルを参照してください。
+
+## 関連パッケージ
+
+- [@ssml-utilities/editor-react](https://github.com/Jabelic-Works/ssml-utilities/tree/master/packages/editor-react)
+- [@ssml-utilities/highlighter](https://github.com/Jabelic-Works/ssml-utilities/tree/master/packages/highlighter)
