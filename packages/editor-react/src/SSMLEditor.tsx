@@ -6,6 +6,18 @@ interface SSMLEditorProps {
   onChange?: (value: string) => void;
   width?: string;
   height?: string;
+  onWrapTag?: (
+    wrapFn: (tagName: string, attributes?: TagAttributes) => void
+  ) => void;
+  wrapTagShortCuts?: {
+    tagName: string;
+    shortcut: (e: React.KeyboardEvent<HTMLTextAreaElement>) => boolean;
+    attributes?: TagAttributes;
+  }[];
+}
+
+interface TagAttributes {
+  [key: string]: string;
 }
 
 export const SSMLEditor: React.FC<SSMLEditorProps> = ({
@@ -13,6 +25,8 @@ export const SSMLEditor: React.FC<SSMLEditorProps> = ({
   onChange,
   width = "600px",
   height = "500px",
+  onWrapTag,
+  wrapTagShortCuts,
 }) => {
   const [ssml, setSSML] = useState(initialValue);
   const [highlightedHtml, setHighlightedHtml] = useState("");
@@ -21,6 +35,12 @@ export const SSMLEditor: React.FC<SSMLEditorProps> = ({
   const highlightRef = useRef<HTMLDivElement>(null);
   const lineNumbersRef = useRef<HTMLDivElement>(null);
 
+  // タグをラップする関数を受け取る
+  useEffect(() => {
+    if (onWrapTag) onWrapTag(wrapSelectionWithTag);
+  }, [onWrapTag]);
+
+  // ハイライトを更新する
   useEffect(() => {
     const options: HighlightOptions = {
       classes: {
@@ -61,7 +81,55 @@ export const SSMLEditor: React.FC<SSMLEditorProps> = ({
     }
   };
 
+  const wrapSelectionWithTag = (
+    tagName: string,
+    attributes?: TagAttributes
+  ) => {
+    if (textareaRef.current) {
+      const start = textareaRef.current.selectionStart;
+      const end = textareaRef.current.selectionEnd;
+      const selectedText = ssml.substring(start, end);
+
+      // 属性文字列の生成
+      const attributesStr = attributes
+        ? Object.entries(attributes)
+            .map(([key, value]) => ` ${key}="${value}"`)
+            .join("")
+        : "";
+
+      const openTag = `<${tagName}${attributesStr}>`;
+      const closeTag = `</${tagName}>`;
+      const newValue =
+        ssml.substring(0, start) +
+        openTag +
+        selectedText +
+        closeTag +
+        ssml.substring(end);
+
+      setSSML(newValue);
+      onChange?.(newValue);
+
+      requestAnimationFrame(() => {
+        if (textareaRef.current) {
+          textareaRef.current.selectionStart = start + openTag.length;
+          textareaRef.current.selectionEnd = end + openTag.length;
+        }
+      });
+    }
+  };
+
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    // ショートカットの処理を最初に行う
+    const shortcutMatch = wrapTagShortCuts?.find((wrapTagShortCut) =>
+      wrapTagShortCut.shortcut(e)
+    );
+
+    if (shortcutMatch) {
+      e.preventDefault();
+      wrapSelectionWithTag(shortcutMatch.tagName, shortcutMatch.attributes);
+      return;
+    }
+
     if (e.key === "Tab") {
       e.preventDefault();
       const start = e.currentTarget.selectionStart;
