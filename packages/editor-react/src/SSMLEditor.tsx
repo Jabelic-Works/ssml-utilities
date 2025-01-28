@@ -109,13 +109,12 @@ export const SSMLEditor: React.FC<SSMLEditorProps> = ({
       setSSML(newValue);
       onChange?.(newValue);
 
-      // カーソル位置を調整（選択範囲を維持）
-      setTimeout(() => {
+      requestAnimationFrame(() => {
         if (textareaRef.current) {
           textareaRef.current.selectionStart = start + openTag.length;
           textareaRef.current.selectionEnd = end + openTag.length;
         }
-      }, 0);
+      });
     }
   };
 
