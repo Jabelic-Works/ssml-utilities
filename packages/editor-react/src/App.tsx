@@ -1,6 +1,17 @@
+import { useRef, useState } from "react";
 import { SSMLEditor } from "./SSMLEditor";
 
 function App() {
+  const [ssml, setSSML] = useState("");
+  const wrapWithTagRef =
+    useRef<(tagName: string, attributes?: { [key: string]: string }) => void>();
+
+  const handleWrapButtonClick = (e: React.MouseEvent<HTMLButtonElement>) => {
+    e.preventDefault();
+    if (wrapWithTagRef.current) {
+      wrapWithTagRef.current("prosody", { rate: "120%", pitch: "+2st" });
+    }
+  };
   return (
     <>
       <div
@@ -15,7 +26,51 @@ function App() {
           backgroundColor: "#f0f0f0",
         }}
       >
-        <SSMLEditor />
+        <button onClick={handleWrapButtonClick}>Wrap with prosody</button>
+        <SSMLEditor
+          initialValue={ssml}
+          onChange={setSSML}
+          onWrapTag={(wrapFn) => {
+            wrapWithTagRef.current = wrapFn;
+          }}
+          wrapTagShortCuts={[
+            {
+              tagName: "speak",
+              shortcut: (e) =>
+                e.key === "s" && e.shiftKey && (e.ctrlKey || e.metaKey),
+            },
+            {
+              tagName: "break",
+              shortcut: (e) =>
+                e.key === "b" && e.shiftKey && (e.ctrlKey || e.metaKey),
+              attributes: {
+                time: "200ms",
+              },
+            },
+            {
+              tagName: "emphasis",
+              shortcut: (e) =>
+                e.key === "e" && e.shiftKey && (e.ctrlKey || e.metaKey),
+              attributes: {
+                level: "moderate",
+              },
+            },
+            {
+              tagName: "prosody",
+              shortcut: (e) =>
+                e.key === "p" && e.shiftKey && (e.ctrlKey || e.metaKey),
+              attributes: {
+                rate: "120%",
+                pitch: "+2st",
+              },
+            },
+            {
+              tagName: "phoneme",
+              shortcut: (e) =>
+                e.key === "f" && e.shiftKey && (e.ctrlKey || e.metaKey),
+            },
+          ]}
+        />
       </div>
     </>
   );
