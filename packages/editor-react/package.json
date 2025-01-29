@@ -1,6 +1,6 @@
 {
   "name": "@ssml-utilities/editor-react",
-  "version": "0.5.3",
+  "version": "0.5.5",
   "type": "module",
   "main": "./dist/editor-react.umd.cjs",
   "module": "./dist/editor-react.js",
