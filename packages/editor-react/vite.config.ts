@@ -8,7 +8,7 @@ export default defineConfig({
   build: {
     lib: {
       entry: resolve(__dirname, "src/index.tsx"),
-      name: "EditorReact",
+      name: "@ssml-utilities/editor-react",
       fileName: (format) =>
         `editor-react.${format === "es" ? "js" : "umd.cjs"}`,
     },

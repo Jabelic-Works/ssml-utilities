@@ -212,6 +212,7 @@ export const SSMLEditor: React.FC<SSMLEditorProps> = ({
           top: "0",
           right: "0",
           bottom: "0",
+          width: "100%",
         }}
       >
         <div
@@ -223,7 +224,8 @@ export const SSMLEditor: React.FC<SSMLEditorProps> = ({
             whiteSpace: "pre-wrap",
             left: "0",
             border: "1px solid #ddd",
-            borderRadius: "0px 10px 10px 0px",
+            borderRadius: showLineNumbers ? "0px 10px 10px 0px" : "10px",
+            width: "100%",
           }}
           dangerouslySetInnerHTML={{ __html: highlightedHtml }}
         />
