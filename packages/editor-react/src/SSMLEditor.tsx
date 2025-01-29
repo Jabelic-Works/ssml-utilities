@@ -116,6 +116,7 @@ export const SSMLEditor: React.FC<SSMLEditorProps> = ({
           textareaRef.current.selectionStart = start + openTag.length;
           textareaRef.current.selectionEnd = end + openTag.length;
         }
+        textareaRef.current?.focus();
       });
     }
   };
@@ -138,12 +139,13 @@ export const SSMLEditor: React.FC<SSMLEditorProps> = ({
       const end = e.currentTarget.selectionEnd;
       const newValue = ssml.substring(0, start) + "  " + ssml.substring(end);
       setSSML(newValue);
-      setTimeout(() => {
+      requestAnimationFrame(() => {
         if (textareaRef.current) {
           textareaRef.current.selectionStart =
             textareaRef.current.selectionEnd = start + 2;
         }
-      }, 0);
+        textareaRef.current?.focus();
+      });
     }
   };
 
