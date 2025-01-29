@@ -8,16 +8,16 @@ export default defineConfig({
   build: {
     lib: {
       entry: resolve(__dirname, "src/index.tsx"),
-      name: "@ssml-utilities/editor-react",
-      fileName: (format) =>
-        `editor-react.${format === "es" ? "js" : "umd.cjs"}`,
+      name: "SSMLEditorReact",
+      fileName: (format) => `index.${format === "es" ? "js" : "cjs"}`,
     },
     rollupOptions: {
-      external: ["react", "react-dom"],
+      external: ["react", "react-dom", "@ssml-utilities/highlighter"],
       output: {
         globals: {
           react: "React",
           "react-dom": "ReactDOM",
+          "@ssml-utilities/highlighter": "SSMLHighlighter",
         },
       },
     },

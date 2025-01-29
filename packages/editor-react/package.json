@@ -1,9 +1,9 @@
 {
   "name": "@ssml-utilities/editor-react",
-  "version": "0.5.6",
+  "version": "0.5.7",
   "type": "module",
-  "main": "./dist/editor-react.umd.cjs",
-  "module": "./dist/editor-react.js",
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "author": "Jabelic",
   "private": false,
@@ -11,8 +11,8 @@
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
-      "import": "./dist/editor-react.js",
-      "require": "./dist/editor-react.umd.cjs"
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs"
     }
   },
   "publishConfig": {
