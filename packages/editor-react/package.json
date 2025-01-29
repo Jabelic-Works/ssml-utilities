@@ -2,8 +2,8 @@
   "name": "@ssml-utilities/editor-react",
   "version": "0.5.6",
   "type": "module",
-  "main": "./dist/index.cjs",
-  "module": "./dist/index.js",
+  "main": "./dist/editor-react.umd.cjs",
+  "module": "./dist/editor-react.js",
   "types": "./dist/index.d.ts",
   "author": "Jabelic",
   "private": false,
@@ -11,8 +11,8 @@
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
-      "import": "./dist/index.js",
-      "require": "./dist/index.cjs"
+      "import": "./dist/editor-react.js",
+      "require": "./dist/editor-react.umd.cjs"
     }
   },
   "publishConfig": {
@@ -23,7 +23,8 @@
   ],
   "scripts": {
     "dev": "vite",
-    "pkg:build": "tsc && vite build",
+    "build": "vite build",
+    "pkg:build": "vite build",
     "preview": "vite preview",
     "prepublishOnly": "pnpm run pkg:build"
   },
