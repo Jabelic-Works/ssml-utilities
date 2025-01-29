@@ -1,6 +1,6 @@
 {
   "name": "@ssml-utilities/highlighter",
-  "version": "0.3.1",
+  "version": "0.3.2",
   "description": "SSML syntax highlighter for the SSML Utilities toolkit",
   "main": "dist/index.js",
   "module": "dist/index.js",
