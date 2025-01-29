@@ -14,6 +14,7 @@ interface SSMLEditorProps {
     shortcut: (e: React.KeyboardEvent<HTMLTextAreaElement>) => boolean;
     attributes?: TagAttributes;
   }[];
+  showLineNumbers?: boolean;
 }
 
 interface TagAttributes {
@@ -27,6 +28,7 @@ export const SSMLEditor: React.FC<SSMLEditorProps> = ({
   height = "500px",
   onWrapTag,
   wrapTagShortCuts,
+  showLineNumbers = false,
 }) => {
   const [ssml, setSSML] = useState(initialValue);
   const [highlightedHtml, setHighlightedHtml] = useState("");
@@ -63,9 +65,9 @@ export const SSMLEditor: React.FC<SSMLEditorProps> = ({
       );
     }
 
-    // Update line numbers
+    // 実際の改行のみを使用して行番号を生成
     const lines = ssml.split("\n");
-    setLineNumbers(lines.map((_, index) => (index + 1).toString()));
+    setLineNumbers(lines.map((_, i) => (i + 1).toString()));
   }, [ssml]);
 
   const handleInput = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
@@ -157,32 +159,50 @@ export const SSMLEditor: React.FC<SSMLEditorProps> = ({
     width: "100%",
     height: "100%",
     border: "none",
-    overflow: "auto",
-    whiteSpace: "pre-wrap",
-    wordWrap: "break-word",
     textAlign: "left",
   };
 
   return (
     <div style={{ position: "relative", height, width }}>
-      <div
-        ref={lineNumbersRef}
-        style={{
-          ...commonStyles,
-          width: "auto",
-          borderRight: "none",
-          paddingLeft: "auto",
-          marginLeft: "auto",
-          textAlign: "right",
-          color: "#6b6b6b",
-          border: "1px solid #ddd",
-          borderRadius: "10px 0px 0px 10px",
-        }}
-      >
-        {lineNumbers.map((num) => (
-          <div key={num}>{num}</div>
-        ))}
-      </div>
+      {showLineNumbers && (
+        <div
+          ref={lineNumbersRef}
+          style={{
+            width: "auto",
+            borderRight: "none",
+            paddingLeft: "auto",
+            marginLeft: "auto",
+            textAlign: "right",
+            color: "#6b6b6b",
+            border: "1px solid #ddd",
+            borderRadius: "10px 0px 0px 10px",
+            fontFamily: "monospace",
+            fontSize: "14px",
+            lineHeight: "1.5",
+            padding: "10px",
+            margin: "0",
+            position: "absolute",
+            top: "0",
+            left: "0",
+            height: "100%",
+            overflow: "auto",
+            whiteSpace: "pre-wrap",
+            wordWrap: "break-word",
+          }}
+        >
+          {lineNumbers.map((num) => (
+            <div
+              key={num}
+              style={{
+                display: "block",
+                minHeight: "1.5em",
+              }}
+            >
+              {num}
+            </div>
+          ))}
+        </div>
+      )}
       <div
         style={{
           position: "absolute",
@@ -198,6 +218,7 @@ export const SSMLEditor: React.FC<SSMLEditorProps> = ({
             ...commonStyles,
             backgroundColor: "#f5f5f5",
             pointerEvents: "none",
+            whiteSpace: "pre-wrap",
             left: "0",
             border: "1px solid #ddd",
             borderRadius: "0px 10px 10px 0px",
