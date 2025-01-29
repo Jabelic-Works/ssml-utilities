@@ -208,7 +208,7 @@ export const SSMLEditor: React.FC<SSMLEditorProps> = ({
       <div
         style={{
           position: "absolute",
-          left: "30px",
+          left: showLineNumbers ? "30px" : "0",
           top: "0",
           right: "0",
           bottom: "0",
