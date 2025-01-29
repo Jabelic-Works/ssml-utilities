@@ -42,10 +42,11 @@ function App() {
             {
               tagName: "break",
               shortcut: (e) =>
-                e.key === "b" && e.shiftKey && (e.ctrlKey || e.metaKey),
+                e.key === "." && e.shiftKey && (e.ctrlKey || e.metaKey),
               attributes: {
                 time: "200ms",
               },
+              selfClosing: true,
             },
             {
               tagName: "emphasis",

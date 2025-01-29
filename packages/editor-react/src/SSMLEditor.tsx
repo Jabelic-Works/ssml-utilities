@@ -7,12 +7,17 @@ interface SSMLEditorProps {
   width?: string;
   height?: string;
   onWrapTag?: (
-    wrapFn: (tagName: string, attributes?: TagAttributes) => void
+    wrapFn: (
+      tagName: string,
+      attributes?: TagAttributes,
+      selfClosing?: boolean
+    ) => void
   ) => void;
   wrapTagShortCuts?: {
     tagName: string;
     shortcut: (e: React.KeyboardEvent<HTMLTextAreaElement>) => boolean;
     attributes?: TagAttributes;
+    selfClosing?: boolean;
   }[];
   showLineNumbers?: boolean;
 }
@@ -85,7 +90,8 @@ export const SSMLEditor: React.FC<SSMLEditorProps> = ({
 
   const wrapSelectionWithTag = (
     tagName: string,
-    attributes?: TagAttributes
+    attributes?: TagAttributes,
+    selfClosing?: boolean
   ) => {
     if (textareaRef.current) {
       const start = textareaRef.current.selectionStart;
@@ -99,37 +105,58 @@ export const SSMLEditor: React.FC<SSMLEditorProps> = ({
             .join("")
         : "";
 
-      const openTag = `<${tagName}${attributesStr}>`;
-      const closeTag = `</${tagName}>`;
-      const newValue =
-        ssml.substring(0, start) +
-        openTag +
-        selectedText +
-        closeTag +
-        ssml.substring(end);
+      if (selfClosing) {
+        // 自己閉じタグの場合
+        const tag = `<${tagName}${attributesStr}/>`;
+        const newValue = ssml.substring(0, start) + tag + ssml.substring(end);
 
-      setSSML(newValue);
-      onChange?.(newValue);
+        setSSML(newValue);
+        onChange?.(newValue);
 
-      requestAnimationFrame(() => {
-        if (textareaRef.current) {
-          textareaRef.current.selectionStart = start + openTag.length;
-          textareaRef.current.selectionEnd = end + openTag.length;
-        }
-        textareaRef.current?.focus();
-      });
+        requestAnimationFrame(() => {
+          if (textareaRef.current) {
+            textareaRef.current.selectionStart =
+              textareaRef.current.selectionEnd = start + tag.length;
+          }
+          textareaRef.current?.focus();
+        });
+      } else {
+        // 通常のタグの場合（既存のロジック）
+        const openTag = `<${tagName}${attributesStr}>`;
+        const closeTag = `</${tagName}>`;
+        const newValue =
+          ssml.substring(0, start) +
+          openTag +
+          selectedText +
+          closeTag +
+          ssml.substring(end);
+
+        setSSML(newValue);
+        onChange?.(newValue);
+
+        requestAnimationFrame(() => {
+          if (textareaRef.current) {
+            textareaRef.current.selectionStart = start + openTag.length;
+            textareaRef.current.selectionEnd = end + openTag.length;
+          }
+          textareaRef.current?.focus();
+        });
+      }
     }
   };
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
-    // ショートカットの処理を最初に行う
     const shortcutMatch = wrapTagShortCuts?.find((wrapTagShortCut) =>
       wrapTagShortCut.shortcut(e)
     );
 
     if (shortcutMatch) {
       e.preventDefault();
-      wrapSelectionWithTag(shortcutMatch.tagName, shortcutMatch.attributes);
+      wrapSelectionWithTag(
+        shortcutMatch.tagName,
+        shortcutMatch.attributes,
+        shortcutMatch.selfClosing
+      );
       return;
     }
 
