@@ -1,6 +1,6 @@
 {
   "name": "@ssml-utilities/editor-react",
-  "version": "0.5.0",
+  "version": "0.5.1",
   "type": "module",
   "main": "dist/index.cjs",
   "module": "dist/index.js",
@@ -29,18 +29,18 @@
     "prepublishOnly": "pnpm run pkg:build"
   },
   "dependencies": {
-    "@ssml-utilities/highlighter": "^0.3.1",
-    "react": "^18.2.0",
-    "react-dom": "^18.2.0"
+    "@ssml-utilities/highlighter": "^0.3.2",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1"
   },
   "devDependencies": {
-    "@types/react": "^18.2.15",
-    "@types/react-dom": "^18.2.7",
-    "@vitejs/plugin-react": "^4.0.3",
-    "tsup": "^8.3.5",
-    "typescript": "^5.0.2",
-    "vite": "^4.4.5",
-    "vite-plugin-dts": "^3.5.2"
+    "@types/react": "^18.3.18",
+    "@types/react-dom": "^18.3.5",
+    "@vitejs/plugin-react": "^4.3.4",
+    "tsup": "^8.3.6",
+    "typescript": "^5.7.3",
+    "vite": "^4.5.9",
+    "vite-plugin-dts": "^3.9.1"
   },
   "peerDependencies": {
     "react": "^18.2.0",
