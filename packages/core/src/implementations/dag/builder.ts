@@ -47,16 +47,36 @@ export function buildDAGFromTokens(tokens: Token[]): Result<SSMLDAG, string> {
         break;
       case "closeTag":
         // 対応するopenTagがなければfailture. stackから探す
-        const openTagNode = stack.find(
-          (node) =>
-            // node.value: <speak> ,token.value:</speak> 一致
-            // node.value: <speak lang='ja-JP'> ,token.value:</speak> 一致
-            // node.value: <break> , token.value: </hoge> 一致しない
-            node.value?.includes(token.value) ||
-            node.value?.includes(token.value.replace("<", "</"))
-        );
+        const openTagNode = stack.find((node) => {
+          if (!node.value || !token.value) return false;
+
+          // タグ名を抽出
+          const openTagMatch = node.value.match(/^<([\w-]+)[\s>]/);
+          const closeTagMatch = token.value.match(/^<\/([\w-]+)>/);
+
+          if (!openTagMatch || !closeTagMatch) return false;
+
+          // タグ名だけを比較
+          return openTagMatch[1] === closeTagMatch[1];
+        });
         if (!openTagNode) {
-          console.error(`Failed to find open tag: ${token.value}`);
+          // 対応するopenTagが見つからない場合は、テキストとして扱う
+          const textNodeResult = dag.createNode("text", undefined, token.value);
+          if (!textNodeResult.ok) {
+            return failure(
+              `Failed to create text node: ${textNodeResult.error}`
+            );
+          }
+          const addTextEdgeResult = dag.addEdge(
+            currentElement.id,
+            textNodeResult.value.id
+          );
+          if (!addTextEdgeResult.ok) {
+            return failure(
+              `Failed to add text edge: ${addTextEdgeResult.error}`
+            );
+          }
+          break;
         }
         const closeTagNodeResult = dag.createNode(
           "element",

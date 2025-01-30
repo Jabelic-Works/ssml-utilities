@@ -9,8 +9,8 @@ importers:
   .:
     dependencies:
       '@ssml-utilities/highlighter':
-        specifier: ^0.3.2
-        version: 0.3.2(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(rollup@4.32.1)(typescript@5.7.3)
+        specifier: ^0.3.3
+        version: 0.3.3(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(rollup@4.32.1)(typescript@5.7.3)
       react:
         specifier: ^18.3.1
         version: 18.3.1
@@ -585,12 +585,12 @@ packages:
   '@rushstack/ts-command-line@4.19.1':
     resolution: {integrity: sha512-J7H768dgcpG60d7skZ5uSSwyCZs/S2HrWP1Ds8d1qYAyaaeJmpmmLr9BVw97RjFzmQPOYnoXcKA4GkqDCkduQg==}
 
-  '@ssml-utilities/core@1.2.2':
-    resolution: {integrity: sha512-B7/Jjuksc2i02lZWgHENw3EalguVyVcenaNzfpdF0tcgrIKaUf02j+BUmAd8DxYPg47HdpjfejRtGOl42AIVVw==}
+  '@ssml-utilities/core@1.2.3':
+    resolution: {integrity: sha512-3AZOARlL4RHHHV3P2Bpzp5tUA82pupR3Pl6rcdLiDc8pO6nnM7DIO4Yh/Z0MixP4f9r6XOeuAhkJrYlBKGixfQ==}
     hasBin: true
 
-  '@ssml-utilities/highlighter@0.3.2':
-    resolution: {integrity: sha512-rFCknyOtoQ04tUh01MXZf45TYz/C8RcAGMeKb84H84hMu+oipv+i5n5Ss4wWiRfmFNLZCm80ys6NAYB9UcA0LA==}
+  '@ssml-utilities/highlighter@0.3.3':
+    resolution: {integrity: sha512-SuJvaHAP3hFEjP8hcQj3Lrix5QKAM9ahP+DRV6gSg6MjOvElMtcpoBJSUGc58FQdMN9tvmwPXM0pyfE29tSsXQ==}
     peerDependencies:
       react: ^17.0.0 || ^18.0.0
       react-dom: ^17.0.0 || ^18.0.0
@@ -1714,12 +1714,12 @@ snapshots:
     transitivePeerDependencies:
       - '@types/node'
 
-  '@ssml-utilities/core@1.2.2': {}
+  '@ssml-utilities/core@1.2.3': {}
 
-  '@ssml-utilities/highlighter@0.3.2(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(rollup@4.32.1)(typescript@5.7.3)':
+  '@ssml-utilities/highlighter@0.3.3(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(rollup@4.32.1)(typescript@5.7.3)':
     dependencies:
       '@rollup/plugin-typescript': 11.1.6(rollup@4.32.1)(typescript@5.7.3)
-      '@ssml-utilities/core': 1.2.2
+      '@ssml-utilities/core': 1.2.3
       react: 18.3.1
       react-dom: 18.3.1(react@18.3.1)
     transitivePeerDependencies:
