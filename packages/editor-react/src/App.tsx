@@ -5,6 +5,7 @@ function App() {
   const [ssml, setSSML] = useState("");
   const wrapWithTagRef =
     useRef<(tagName: string, attributes?: { [key: string]: string }) => void>();
+  const insertPhraseRef = useRef<(text: string) => void>();
 
   const handleWrapButtonClick = (e: React.MouseEvent<HTMLButtonElement>) => {
     e.preventDefault();
@@ -12,11 +13,23 @@ function App() {
       wrapWithTagRef.current("prosody", { rate: "120%", pitch: "+2st" });
     }
   };
+
+  const handleInsertPhrase1 = () => {
+    insertPhraseRef.current?.(
+      "申し訳ありません。もう一度お名前をお願いします。"
+    );
+  };
+
+  const handleInsertPhrase2 = () => {
+    insertPhraseRef.current?.("ご利用ありがとうございました。");
+  };
+
   return (
     <>
       <div
         style={{
           display: "flex",
+          flexDirection: "column",
           justifyContent: "center",
           alignItems: "center",
           height: "100vh",
@@ -26,12 +39,26 @@ function App() {
           backgroundColor: "#f0f0f0",
         }}
       >
-        <button onClick={handleWrapButtonClick}>Wrap with prosody</button>
+        <div style={{ marginBottom: "20px" }}>
+          <button
+            onClick={handleWrapButtonClick}
+            style={{ marginRight: "10px" }}
+          >
+            Wrap with prosody
+          </button>
+          <button onClick={handleInsertPhrase1} style={{ marginRight: "10px" }}>
+            名前確認
+          </button>
+          <button onClick={handleInsertPhrase2}>お礼</button>
+        </div>
         <SSMLEditor
           initialValue={ssml}
           onChange={setSSML}
           onWrapTag={(wrapFn) => {
             wrapWithTagRef.current = wrapFn;
+          }}
+          onInsertPhrase={(insertFn) => {
+            insertPhraseRef.current = insertFn;
           }}
           wrapTagShortCuts={[
             {

@@ -20,6 +20,7 @@ interface SSMLEditorProps {
     selfClosing?: boolean;
   }[];
   showLineNumbers?: boolean;
+  onInsertPhrase?: (insertFn: (text: string) => void) => void;
 }
 
 interface TagAttributes {
@@ -34,6 +35,7 @@ export const SSMLEditor: React.FC<SSMLEditorProps> = ({
   onWrapTag,
   wrapTagShortCuts,
   showLineNumbers = false,
+  onInsertPhrase,
 }) => {
   const [ssml, setSSML] = useState(initialValue);
   const [highlightedHtml, setHighlightedHtml] = useState("");
@@ -74,6 +76,11 @@ export const SSMLEditor: React.FC<SSMLEditorProps> = ({
     const lines = ssml.split("\n");
     setLineNumbers(lines.map((_, i) => (i + 1).toString()));
   }, [ssml]);
+
+  // 定型文挿入関数を受け取る
+  useEffect(() => {
+    if (onInsertPhrase) onInsertPhrase(insertPhrase);
+  }, [onInsertPhrase]);
 
   const handleInput = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     setSSML(e.target.value);
@@ -170,6 +177,25 @@ export const SSMLEditor: React.FC<SSMLEditorProps> = ({
         if (textareaRef.current) {
           textareaRef.current.selectionStart =
             textareaRef.current.selectionEnd = start + 2;
+        }
+        textareaRef.current?.focus();
+      });
+    }
+  };
+
+  const insertPhrase = (text: string) => {
+    if (textareaRef.current) {
+      const start = textareaRef.current.selectionStart;
+      const newValue = ssml.substring(0, start) + text + ssml.substring(start);
+
+      setSSML(newValue);
+      onChange?.(newValue);
+
+      requestAnimationFrame(() => {
+        if (textareaRef.current) {
+          const newPosition = start + text.length;
+          textareaRef.current.selectionStart =
+            textareaRef.current.selectionEnd = newPosition;
         }
         textareaRef.current?.focus();
       });
