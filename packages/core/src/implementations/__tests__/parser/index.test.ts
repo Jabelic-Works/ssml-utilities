@@ -177,5 +177,42 @@ describe("SSML Parser", () => {
         expect(closeTagNode!.value).toBe("</say-as>");
       }
     });
+
+    it("should parse a SSML string with say-as tag", () => {
+      const input = "<say-as>Hello, world!</say-as>";
+      const result = parseSSML(input);
+
+      expect(result.ok).toBe(true);
+      if (result.ok) {
+        const dag = result.value;
+        expect(dag).toBeInstanceOf(SSMLDAG);
+        expect(dag.nodes.size).toBe(4); // root, <say-as>, text, </say-as>
+
+        const rootNode = Array.from(dag.nodes.values()).find(
+          (node) => node.type === "root"
+        );
+        expect(rootNode).toBeDefined();
+        expect(rootNode!.children.size).toBe(1);
+
+        const sayAsNode = dag.nodes.get(Array.from(rootNode!.children)[0]);
+        expect(sayAsNode).toBeDefined();
+        expect(sayAsNode!.type).toBe("element");
+        expect(sayAsNode!.value).toBe("<say-as>");
+        expect(sayAsNode!.children.size).toBe(2); // text, </say-as>
+
+        const textNode = Array.from(dag.nodes.values()).filter(
+          (node) => node.type === "text"
+        )[0];
+        expect(textNode).toBeDefined();
+        expect(textNode!.value).toBe("Hello, world!");
+
+        const closeTagNode = Array.from(dag.nodes.values()).find(
+          (node) => node.value === "</say-as>"
+        );
+        expect(closeTagNode).toBeDefined();
+        expect(closeTagNode!.type).toBe("element");
+        expect(closeTagNode!.value).toBe("</say-as>");
+      }
+    });
   });
 });
