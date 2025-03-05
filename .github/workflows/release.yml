@@ -1,24 +1,24 @@
-name: Release
+name: Release SSML Utilities Package
 
 on:
   workflow_dispatch:
     inputs:
-      packages:
-        description: "Packages to update (comma-separated)"
-        required: true
-        type: string
-      change_type:
-        description: "Type of change"
+      package:
+        description: "リリースするパッケージを選択"
         required: true
         type: choice
         options:
-          - patch
-          - minor
-          - major
-      description:
-        description: "Change description"
+          - "@ssml-utilities/react-editor"
+          - "@ssml-utilities/highlighter"
+          - "@ssml-utilities/core"
+      version:
+        description: "バージョン (major, minor, patch, または具体的なバージョン)"
         required: true
-        type: string
+        default: "patch"
+      tag:
+        description: "npm タグ (latest, beta, など)"
+        required: true
+        default: "latest"
 
 jobs:
   release:
@@ -27,49 +27,84 @@ jobs:
       - uses: actions/checkout@v3
         with:
           fetch-depth: 0
-      - uses: pnpm/action-setup@v2
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
         with:
-          version: 8
-      - uses: actions/setup-node@v3
-        with:
-          node-version: "18"
-          cache: "pnpm"
-      - run: pnpm install
+          node-version: "18.x"
+          registry-url: "https://registry.npmjs.org"
 
-      - name: Create changeset
+      - name: Get package directory name
+        id: get-directory
         run: |
-          pnpm changeset add --empty
-          CHANGESET_FILE=$(ls .changeset/*.md | tail -n 1)
-          echo "'${{ github.event.inputs.change_type }}':" > $CHANGESET_FILE
-          IFS=',' read -ra PACKAGES <<< "${{ github.event.inputs.packages }}"
-          for PACKAGE in "${PACKAGES[@]}"; do
-            echo "  '@ssml-utilities/$PACKAGE': ${{ github.event.inputs.change_type }}" >> $CHANGESET_FILE
-          done
-          echo -e "\n${{ github.event.inputs.description }}" >> $CHANGESET_FILE
+          # スコープ名を除去してディレクトリ名を取得
+          PACKAGE_NAME="${{ github.event.inputs.package }}"
+          DIRECTORY_NAME=${PACKAGE_NAME#@ssml-utilities/}
+          echo "directory=$DIRECTORY_NAME" >> $GITHUB_OUTPUT
 
-      - name: Setup Git
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build
         run: |
-          git config user.name "${GITHUB_ACTOR}"
-          git config user.email "${GITHUB_ACTOR}@users.noreply.github.com"
+          cd packages/${{ steps.get-directory.outputs.directory }}
+          pnpm run build
 
-      - name: Update versions
-        run: pnpm changeset version
-
-      - name: Commit changes
+      - name: Bump version
+        id: bump-version
         run: |
-          git add .
-          git commit -m "Bump version and update changelog" || echo "No changes to commit"
+          cd packages/${{ steps.get-directory.outputs.directory }}
+          if [[ "${{ github.event.inputs.version }}" =~ ^(major|minor|patch)$ ]]; then
+            pnpm version ${{ github.event.inputs.version }} --no-git-tag-version
+          else
+            pnpm version ${{ github.event.inputs.version }} --no-git-tag-version --allow-same-version
+          fi
+          echo "new_version=$(node -p "require('./package.json').version")" >> $GITHUB_OUTPUT
+
+      - name: Create Git Tag
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git add packages/${{ steps.get-directory.outputs.directory }}/package.json
+          git commit -m "Release ${{ github.event.inputs.package }}@${{ steps.bump-version.outputs.new_version }}"
+          git tag "${{ github.event.inputs.package }}@${{ steps.bump-version.outputs.new_version }}"
           git push
+          git push --tags
 
-      - name: Publish to npm
-        run: pnpm publish -r --no-git-checks
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+      - name: Generate Release Notes
+        id: release-notes
+        run: |
+          PACKAGE_NAME="${{ github.event.inputs.package }}"
+          PACKAGE_NAME_ESC=$(echo $PACKAGE_NAME | sed 's/\//\\\//g' | sed 's/\@/\\\@/g')
+          PREVIOUS_TAG=$(git tag --sort=-version:refname | grep "$PACKAGE_NAME_ESC@" | sed -n 2p)
+
+          if [ -z "$PREVIOUS_TAG" ]; then
+            # 最初のリリースの場合
+            echo "CHANGELOG<<EOF" >> $GITHUB_OUTPUT
+            git log --pretty=format:"- %s (%h)" -n 10 -- packages/${{ steps.get-directory.outputs.directory }} >> $GITHUB_OUTPUT
+            echo "EOF" >> $GITHUB_OUTPUT
+          else
+            echo "CHANGELOG<<EOF" >> $GITHUB_OUTPUT
+            git log --pretty=format:"- %s (%h)" $PREVIOUS_TAG..HEAD -- packages/${{ steps.get-directory.outputs.directory }} >> $GITHUB_OUTPUT
+            echo "EOF" >> $GITHUB_OUTPUT
+          fi
 
       - name: Create GitHub Release
+        uses: actions/create-release@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ github.event.inputs.package }}@${{ steps.bump-version.outputs.new_version }}
+          release_name: ${{ github.event.inputs.package }} v${{ steps.bump-version.outputs.new_version }}
+          body: |
+            ## 変更点
+            ${{ steps.release-notes.outputs.CHANGELOG }}
+          draft: false
+          prerelease: ${{ github.event.inputs.tag != 'latest' }}
+
+      - name: Publish to npm
         run: |
-          gh release create $(git describe --tags --abbrev=0) \
-            --title "Release $(git describe --tags --abbrev=0)" \
-            --generate-notes
+          cd packages/${{ steps.get-directory.outputs.directory }}
+          npm publish --tag ${{ github.event.inputs.tag }} --access public
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
