@@ -70,14 +70,14 @@ jobs:
           CURRENT_VERSION=$(node -p "require('./package.json').version")
 
           if [[ "${{ github.event.inputs.version }}" = "major" ]]; then
-            NEW_VERSION=$(npm --no-git-tag-version version major)
+            NEW_VERSION=$(pnpm --no-git-tag-version version major)
           elif [[ "${{ github.event.inputs.version }}" = "minor" ]]; then
-            NEW_VERSION=$(npm --no-git-tag-version version minor)
+            NEW_VERSION=$(pnpm --no-git-tag-version version minor)
           elif [[ "${{ github.event.inputs.version }}" = "patch" ]]; then
-            NEW_VERSION=$(npm --no-git-tag-version version patch)
+            NEW_VERSION=$(pnpm --no-git-tag-version version patch)
           else
             NEW_VERSION="${{ github.event.inputs.version }}"
-            npm --no-git-tag-version version $NEW_VERSION
+            pnpm --no-git-tag-version version $NEW_VERSION
           fi
 
           # vを削除
@@ -92,20 +92,20 @@ jobs:
             if [ "$PACKAGE_NAME" = "@ssml-utilities/core" ]; then
               # highlighter を更新
               cd $GITHUB_WORKSPACE/packages/highlighter
-              HIGHLIGHTER_VERSION=$(npm --no-git-tag-version version patch)
+              HIGHLIGHTER_VERSION=$(pnpm --no-git-tag-version version patch)
               HIGHLIGHTER_VERSION=${HIGHLIGHTER_VERSION#v}
               UPDATED_PACKAGES="$UPDATED_PACKAGES @ssml-utilities/highlighter@$HIGHLIGHTER_VERSION"
               
               # react-editor を更新
               cd $GITHUB_WORKSPACE/packages/editor-react
-              EDITOR_VERSION=$(npm --no-git-tag-version version patch)
+              EDITOR_VERSION=$(pnpm --no-git-tag-version version patch)
               EDITOR_VERSION=${EDITOR_VERSION#v}
               UPDATED_PACKAGES="$UPDATED_PACKAGES @ssml-utilities/react-editor@$EDITOR_VERSION"
               
             elif [ "$PACKAGE_NAME" = "@ssml-utilities/highlighter" ]; then
               # react-editor を更新
               cd $GITHUB_WORKSPACE/packages/editor-react
-              EDITOR_VERSION=$(npm --no-git-tag-version version patch)
+              EDITOR_VERSION=$(pnpm --no-git-tag-version version patch)
               EDITOR_VERSION=${EDITOR_VERSION#v}
               UPDATED_PACKAGES="$UPDATED_PACKAGES @ssml-utilities/react-editor@$EDITOR_VERSION"
             fi
