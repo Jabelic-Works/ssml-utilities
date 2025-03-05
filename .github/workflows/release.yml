@@ -67,9 +67,9 @@ jobs:
         run: |
           cd packages/${{ steps.get-directory.outputs.directory }}
           if [[ "${{ github.event.inputs.version }}" =~ ^(major|minor|patch)$ ]]; then
-            npm version ${{ github.event.inputs.version }} --no-git-tag-version
+            pnpm version ${{ github.event.inputs.version }} --no-git-tag-version
           else
-            npm version ${{ github.event.inputs.version }} --no-git-tag-version --allow-same-version
+            pnpm version ${{ github.event.inputs.version }} --no-git-tag-version --allow-same-version
           fi
           NEW_VERSION=$(node -p "require('./package.json').version")
           echo "new_version=$NEW_VERSION" >> $GITHUB_OUTPUT
@@ -85,19 +85,19 @@ jobs:
           # core が更新された場合、highlighter と react-editor も更新
           if [ "$PACKAGE_NAME" = "@ssml-utilities/core" ]; then
             cd packages/highlighter
-            npm version patch --no-git-tag-version
+            pnpm version patch --no-git-tag-version
             HIGHLIGHTER_VERSION=$(node -p "require('./package.json').version")
             UPDATED_PACKAGES+=("@ssml-utilities/highlighter@$HIGHLIGHTER_VERSION")
             
             cd ../editor-react
-            npm version patch --no-git-tag-version
+            pnpm version patch --no-git-tag-version
             EDITOR_VERSION=$(node -p "require('./package.json').version")
             UPDATED_PACKAGES+=("@ssml-utilities/react-editor@$EDITOR_VERSION")
 
           # highlighter が更新された場合、react-editor も更新
           elif [ "$PACKAGE_NAME" = "@ssml-utilities/highlighter" ]; then
             cd packages/editor-react
-            npm version patch --no-git-tag-version
+            pnpm version patch --no-git-tag-version
             EDITOR_VERSION=$(node -p "require('./package.json').version")
             UPDATED_PACKAGES+=("@ssml-utilities/react-editor@$EDITOR_VERSION")
           fi
