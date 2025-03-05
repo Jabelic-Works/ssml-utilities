@@ -65,49 +65,44 @@ jobs:
       - name: Calculate new versions
         id: calc-versions
         run: |
-          # メインパッケージの新しいバージョンを計算
+          # メインパッケージのバージョンを更新
           cd packages/${{ steps.get-directory.outputs.directory }}
-          CURRENT_VERSION=$(node -p "require('./package.json').version")
 
-          if [[ "${{ github.event.inputs.version }}" = "major" ]]; then
-            # pnpm を使用してバージョンを更新
-            pnpm version major --no-git-tag-version
-            NEW_VERSION=$(node -p "require('./package.json').version")
-          elif [[ "${{ github.event.inputs.version }}" = "minor" ]]; then
-            pnpm version minor --no-git-tag-version
-            NEW_VERSION=$(node -p "require('./package.json').version")
-          elif [[ "${{ github.event.inputs.version }}" = "patch" ]]; then
-            pnpm version patch --no-git-tag-version
-            NEW_VERSION=$(node -p "require('./package.json').version")
+          # 選択されたバージョンアップの種類に基づいてメインパッケージを更新
+          if [[ "${{ github.event.inputs.version }}" = "major" || "${{ github.event.inputs.version }}" = "minor" || "${{ github.event.inputs.version }}" = "patch" ]]; then
+            # semver 更新（major/minor/patch）
+            pnpm version ${{ github.event.inputs.version }} --no-git-checks
           else
-            NEW_VERSION="${{ github.event.inputs.version }}"
-            pnpm version $NEW_VERSION --no-git-tag-version
+            # 具体的なバージョン指定
+            pnpm version ${{ github.event.inputs.version }} --no-git-checks
           fi
 
+          # 更新後のバージョンを取得
+          NEW_VERSION=$(node -p "require('./package.json').version")
           echo "new_version=$NEW_VERSION" >> $GITHUB_OUTPUT
 
-          # 依存関係の更新が選択されている場合、他のパッケージも更新
+          # 依存パッケージも更新する場合
           if [[ "${{ github.event.inputs.update_dependent_packages }}" == "true" ]]; then
             PACKAGE_NAME="${{ github.event.inputs.package }}"
             UPDATED_PACKAGES="$PACKAGE_NAME@$NEW_VERSION"
             
             if [ "$PACKAGE_NAME" = "@ssml-utilities/core" ]; then
-              # highlighter を更新
+              # highlighter を更新（常にpatch）
               cd $GITHUB_WORKSPACE/packages/highlighter
-              pnpm version patch --no-git-tag-version
+              pnpm version patch --no-git-checks
               HIGHLIGHTER_VERSION=$(node -p "require('./package.json').version")
               UPDATED_PACKAGES="$UPDATED_PACKAGES @ssml-utilities/highlighter@$HIGHLIGHTER_VERSION"
               
-              # react-editor を更新
+              # react-editor を更新（常にpatch）
               cd $GITHUB_WORKSPACE/packages/editor-react
-              pnpm version patch --no-git-tag-version
+              pnpm version patch --no-git-checks
               EDITOR_VERSION=$(node -p "require('./package.json').version")
               UPDATED_PACKAGES="$UPDATED_PACKAGES @ssml-utilities/react-editor@$EDITOR_VERSION"
               
             elif [ "$PACKAGE_NAME" = "@ssml-utilities/highlighter" ]; then
-              # react-editor を更新
+              # react-editor を更新（常にpatch）
               cd $GITHUB_WORKSPACE/packages/editor-react
-              pnpm version patch --no-git-tag-version
+              pnpm version patch --no-git-checks
               EDITOR_VERSION=$(node -p "require('./package.json').version")
               UPDATED_PACKAGES="$UPDATED_PACKAGES @ssml-utilities/react-editor@$EDITOR_VERSION"
             fi
