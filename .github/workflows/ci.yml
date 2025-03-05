@@ -13,6 +13,7 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       changed_packages: ${{ steps.set-changed-packages.outputs.changed_packages }}
+      has_changes: ${{ steps.set-changed-packages.outputs.has_changes }}
     steps:
       - uses: actions/checkout@v3
         with:
@@ -27,24 +28,26 @@ jobs:
       - run: pnpm install
 
       - name: Get changed packages
-        id: changed-packages
+        id: set-changed-packages
         run: |
           CHANGED=$(pnpm ls --filter "...[origin/master]" --json | jq -r '.[].name' | sed 's/@ssml-utilities\///' | jq -R -s -c 'split("\n")[:-1]')
-          if [ -z "$CHANGED" ] || [ "$CHANGED" == "[]" ]; then
-            echo "No changes detected"
-            echo "changed_packages=[]" >> $GITHUB_OUTPUT
+          echo "Changed packages: $CHANGED"
+          echo "changed_packages=$CHANGED" >> $GITHUB_OUTPUT
+
+          # 変更があるかどうかを判断する（空の配列でない場合は true）
+          if [ "$CHANGED" != "[]" ] && [ -n "$CHANGED" ]; then
+            echo "has_changes=true" >> $GITHUB_OUTPUT
           else
-            echo "Changed packages: $CHANGED"
-            echo "changed_packages=$CHANGED" >> $GITHUB_OUTPUT
+            echo "has_changes=false" >> $GITHUB_OUTPUT
           fi
 
   test:
     needs: detect-changes
-    if: ${{ needs.detect-changes.outputs.changed_packages != '[]' }}
+    if: ${{ needs.detect-changes.outputs.has_changes == 'true' }}
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        package: ${{ fromJson(needs.detect-changes.outputs.changed_packages || '[]') }}
+        package: ${{ fromJson(needs.detect-changes.outputs.changed_packages) }}
     steps:
       - uses: actions/checkout@v3
       - uses: pnpm/action-setup@v2
@@ -67,7 +70,7 @@ jobs:
 
   changeset-check:
     needs: detect-changes
-    if: ${{ needs.detect-changes.outputs.changed_packages != '[]' }}
+    if: ${{ needs.detect-changes.outputs.has_changes == 'true' }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
@@ -102,5 +105,13 @@ jobs:
               owner: context.repo.owner,
               repo: context.repo.repo, 
               issue_number: context.issue.number, 
-              body: '📦 パッケージの変更が検出されましたが、対応する changeset が見つかりませんでした。\n\nもしこの変更がリリースを必要とする場合は、以下のコマンドを実行して changeset を追加してください：\n```\npnpm changeset add\n```\n\nリリースが不要な場合は、以下のコマンドを実行して空の changeset を追加してください：\n```\npnpm changeset add --empty\n```\n\n詳細については [Changesets のドキュメント](https://github.com/changesets/changesets) を参照してください。\n\n**注**: マージ後は Actions タブから "Release SSML Utilities Package" ワークフローを使って手動でリリースを行ってください。'
+              body: '📦 パッケージの変更が検出されましたが、対応する changeset が見つかりませんでした。\n\nもしこの変更がリリースを必要とする場合は、以下のコマンドを実行して changeset を追加してください：\n```\npnpm changeset add\n```\n\nリリースが不要な場合は、以下のコマンドを実行して空の changeset を追加してください：\n```\npnpm changeset add --empty\n```\n\n詳細については [Changesets のドキュメント](https://github.com/changesets/changesets) を参照してください。'
             })
+
+  no-changes:
+    needs: detect-changes
+    if: ${{ needs.detect-changes.outputs.has_changes != 'true' }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: No package changes detected
+        run: echo "No package changes were detected. Skipping tests."
