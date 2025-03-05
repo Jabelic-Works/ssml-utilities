@@ -67,18 +67,24 @@ jobs:
         run: |
           # メインパッケージのバージョンを更新
           cd packages/${{ steps.get-directory.outputs.directory }}
+          CURRENT_VERSION=$(node -p "require('./package.json').version")
 
-          # 選択されたバージョンアップの種類に基づいてメインパッケージを更新
-          if [[ "${{ github.event.inputs.version }}" = "major" || "${{ github.event.inputs.version }}" = "minor" || "${{ github.event.inputs.version }}" = "patch" ]]; then
-            # semver 更新（major/minor/patch）
-            pnpm version ${{ github.event.inputs.version }} --no-git-checks
+          # semver をインストール
+          npm install -g semver
+
+          if [[ "${{ github.event.inputs.version }}" = "major" ]]; then
+            NEW_VERSION=$(semver -i major $CURRENT_VERSION)
+          elif [[ "${{ github.event.inputs.version }}" = "minor" ]]; then
+            NEW_VERSION=$(semver -i minor $CURRENT_VERSION)
+          elif [[ "${{ github.event.inputs.version }}" = "patch" ]]; then
+            NEW_VERSION=$(semver -i patch $CURRENT_VERSION)
           else
-            # 具体的なバージョン指定
-            pnpm version ${{ github.event.inputs.version }} --no-git-checks
+            NEW_VERSION="${{ github.event.inputs.version }}"
           fi
 
-          # 更新後のバージョンを取得
-          NEW_VERSION=$(node -p "require('./package.json').version")
+          # package.json のバージョンフィールドのみを更新
+          pnpm pkg set version=$NEW_VERSION
+
           echo "new_version=$NEW_VERSION" >> $GITHUB_OUTPUT
 
           # 依存パッケージも更新する場合
@@ -87,24 +93,27 @@ jobs:
             UPDATED_PACKAGES="$PACKAGE_NAME@$NEW_VERSION"
             
             if [ "$PACKAGE_NAME" = "@ssml-utilities/core" ]; then
-              # highlighter を更新（常にpatch）
+              # highlighter を更新
               cd $GITHUB_WORKSPACE/packages/highlighter
-              pnpm version patch --no-git-checks
               HIGHLIGHTER_VERSION=$(node -p "require('./package.json').version")
-              UPDATED_PACKAGES="$UPDATED_PACKAGES @ssml-utilities/highlighter@$HIGHLIGHTER_VERSION"
+              HIGHLIGHTER_NEW_VERSION=$(semver -i patch $HIGHLIGHTER_VERSION)
+              pnpm pkg set version=$HIGHLIGHTER_NEW_VERSION
+              UPDATED_PACKAGES="$UPDATED_PACKAGES @ssml-utilities/highlighter@$HIGHLIGHTER_NEW_VERSION"
               
-              # react-editor を更新（常にpatch）
+              # react-editor を更新
               cd $GITHUB_WORKSPACE/packages/editor-react
-              pnpm version patch --no-git-checks
               EDITOR_VERSION=$(node -p "require('./package.json').version")
-              UPDATED_PACKAGES="$UPDATED_PACKAGES @ssml-utilities/react-editor@$EDITOR_VERSION"
+              EDITOR_NEW_VERSION=$(semver -i patch $EDITOR_VERSION)
+              pnpm pkg set version=$EDITOR_NEW_VERSION
+              UPDATED_PACKAGES="$UPDATED_PACKAGES @ssml-utilities/react-editor@$EDITOR_NEW_VERSION"
               
             elif [ "$PACKAGE_NAME" = "@ssml-utilities/highlighter" ]; then
-              # react-editor を更新（常にpatch）
+              # react-editor を更新
               cd $GITHUB_WORKSPACE/packages/editor-react
-              pnpm version patch --no-git-checks
               EDITOR_VERSION=$(node -p "require('./package.json').version")
-              UPDATED_PACKAGES="$UPDATED_PACKAGES @ssml-utilities/react-editor@$EDITOR_VERSION"
+              EDITOR_NEW_VERSION=$(semver -i patch $EDITOR_VERSION)
+              pnpm pkg set version=$EDITOR_NEW_VERSION
+              UPDATED_PACKAGES="$UPDATED_PACKAGES @ssml-utilities/react-editor@$EDITOR_NEW_VERSION"
             fi
             
             echo "updated_packages=$UPDATED_PACKAGES" >> $GITHUB_OUTPUT
