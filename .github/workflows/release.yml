@@ -174,14 +174,15 @@ jobs:
 
           if [ -z "$PREVIOUS_TAG" ]; then
             # 最初のリリースの場合
-            echo "CHANGELOG<<EOF" >> $GITHUB_OUTPUT
-            git log --pretty=format:"- %s (%h)" -n 10 -- packages/${{ steps.get-directory.outputs.directory }} >> $GITHUB_OUTPUT
-            echo "EOF" >> $GITHUB_OUTPUT
+            CHANGELOG=$(git log --pretty=format:"- %s (%h)" -n 10 -- packages/${{ steps.get-directory.outputs.directory }})
           else
-            echo "CHANGELOG<<EOF" >> $GITHUB_OUTPUT
-            git log --pretty=format:"- %s (%h)" $PREVIOUS_TAG..HEAD -- packages/${{ steps.get-directory.outputs.directory }} >> $GITHUB_OUTPUT
-            echo "EOF" >> $GITHUB_OUTPUT
+            CHANGELOG=$(git log --pretty=format:"- %s (%h)" $PREVIOUS_TAG..HEAD -- packages/${{ steps.get-directory.outputs.directory }})
           fi
+
+          # GitHub Actionsのoutput形式に合わせて出力
+          echo "CHANGELOG<<EOF" >> $GITHUB_OUTPUT
+          echo "$CHANGELOG" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v1
