@@ -2,12 +2,14 @@
 import { describe, it, expect } from "vitest";
 import { extractAttributesFromNode, highlightAttributes } from "../attributes";
 import { DAGNode, Result } from "@ssml-utilities/core";
-import { NodeType } from "@ssml-utilities/core/dist/implementations/ssml-dag";
 import { HighlightOptions } from "../../interfaces";
 
 describe("extractAttributesFromNode", () => {
   // ヘルパー関数を作成して、テストデータの作成を簡略化
-  function createNode(value: string, type: NodeType = "element"): DAGNode {
+  function createNode(
+    value: string,
+    type: DAGNode["type"] = "element"
+  ): DAGNode {
     return {
       id: "test-id",
       type,
