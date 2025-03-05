@@ -34,6 +34,11 @@ jobs:
           node-version: "18.x"
           registry-url: "https://registry.npmjs.org"
 
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: 8
+
       - name: Get package directory name
         id: get-directory
         run: |
