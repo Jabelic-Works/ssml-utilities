@@ -62,17 +62,33 @@ jobs:
         run: |
           pnpm --filter ${{ github.event.inputs.package }} run build
 
+      - name: Install required tools
+        run: pnpm install -g semver json
+
       - name: Bump version
         id: bump-version
         run: |
           cd packages/${{ steps.get-directory.outputs.directory }}
-          if [[ "${{ github.event.inputs.version }}" =~ ^(major|minor|patch)$ ]]; then
-            pnpm version ${{ github.event.inputs.version }} --no-git-tag-version
+
+          # 現在のバージョンを取得
+          CURRENT_VERSION=$(node -p "require('./package.json').version")
+
+          # バージョンを計算
+          if [ "${{ github.event.inputs.version }}" = "major" ]; then
+            NEW_VERSION=$(semver -i major $CURRENT_VERSION)
+          elif [ "${{ github.event.inputs.version }}" = "minor" ]; then
+            NEW_VERSION=$(semver -i minor $CURRENT_VERSION)
+          elif [ "${{ github.event.inputs.version }}" = "patch" ]; then
+            NEW_VERSION=$(semver -i patch $CURRENT_VERSION)
           else
-            pnpm version ${{ github.event.inputs.version }} --no-git-tag-version --allow-same-version
+            NEW_VERSION="${{ github.event.inputs.version }}"
           fi
-          NEW_VERSION=$(node -p "require('./package.json').version")
+
+          # package.json を更新
+          json -I -f package.json -e "this.version=\"$NEW_VERSION\""
+
           echo "new_version=$NEW_VERSION" >> $GITHUB_OUTPUT
+          echo "Version bumped from $CURRENT_VERSION to $NEW_VERSION"
 
       - name: Update dependent packages
         if: ${{ github.event.inputs.update_dependent_packages == 'true' }}
