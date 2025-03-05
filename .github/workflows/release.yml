@@ -8,9 +8,9 @@ on:
         required: true
         type: choice
         options:
-          - "@ssml-utilities/react-editor"
-          - "@ssml-utilities/highlighter"
           - "@ssml-utilities/core"
+          - "@ssml-utilities/highlighter"
+          - "@ssml-utilities/react-editor"
       version:
         description: "バージョン (major, minor, patch, または具体的なバージョン)"
         required: true
@@ -19,6 +19,11 @@ on:
         description: "npm タグ (latest, beta, など)"
         required: true
         default: "latest"
+      update_dependent_packages:
+        description: "依存パッケージも更新する"
+        required: true
+        type: boolean
+        default: false
 
 jobs:
   release:
@@ -34,45 +39,106 @@ jobs:
           node-version: "18.x"
           registry-url: "https://registry.npmjs.org"
 
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v2
+      - uses: pnpm/action-setup@v2
         with:
           version: 8
+
+      - name: Install dependencies
+        run: pnpm install
 
       - name: Get package directory name
         id: get-directory
         run: |
           # スコープ名を除去してディレクトリ名を取得
           PACKAGE_NAME="${{ github.event.inputs.package }}"
-          DIRECTORY_NAME=${PACKAGE_NAME#@ssml-utilities/}
-          echo "directory=$DIRECTORY_NAME" >> $GITHUB_OUTPUT
-
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+          if [ "$PACKAGE_NAME" = "@ssml-utilities/react-editor" ]; then
+            echo "directory=editor-react" >> $GITHUB_OUTPUT
+          else
+            DIRECTORY_NAME=${PACKAGE_NAME#@ssml-utilities/}
+            echo "directory=$DIRECTORY_NAME" >> $GITHUB_OUTPUT
+          fi
 
       - name: Build
         run: |
-          cd packages/${{ steps.get-directory.outputs.directory }}
-          pnpm run build
+          pnpm run build --filter=${{ github.event.inputs.package }}...
 
       - name: Bump version
         id: bump-version
         run: |
           cd packages/${{ steps.get-directory.outputs.directory }}
           if [[ "${{ github.event.inputs.version }}" =~ ^(major|minor|patch)$ ]]; then
-            pnpm version ${{ github.event.inputs.version }} --no-git-tag-version
+            npm version ${{ github.event.inputs.version }} --no-git-tag-version
           else
-            pnpm version ${{ github.event.inputs.version }} --no-git-tag-version --allow-same-version
+            npm version ${{ github.event.inputs.version }} --no-git-tag-version --allow-same-version
           fi
-          echo "new_version=$(node -p "require('./package.json').version")" >> $GITHUB_OUTPUT
+          NEW_VERSION=$(node -p "require('./package.json').version")
+          echo "new_version=$NEW_VERSION" >> $GITHUB_OUTPUT
 
-      - name: Create Git Tag
+      - name: Update dependent packages
+        if: ${{ github.event.inputs.update_dependent_packages == 'true' }}
+        id: update-dependents
+        run: |
+          PACKAGE_NAME="${{ github.event.inputs.package }}"
+          NEW_VERSION="${{ steps.bump-version.outputs.new_version }}"
+          UPDATED_PACKAGES=("$PACKAGE_NAME@$NEW_VERSION")
+
+          # core が更新された場合、highlighter と react-editor も更新
+          if [ "$PACKAGE_NAME" = "@ssml-utilities/core" ]; then
+            cd packages/highlighter
+            npm version patch --no-git-tag-version
+            HIGHLIGHTER_VERSION=$(node -p "require('./package.json').version")
+            UPDATED_PACKAGES+=("@ssml-utilities/highlighter@$HIGHLIGHTER_VERSION")
+            
+            cd ../editor-react
+            npm version patch --no-git-tag-version
+            EDITOR_VERSION=$(node -p "require('./package.json').version")
+            UPDATED_PACKAGES+=("@ssml-utilities/react-editor@$EDITOR_VERSION")
+
+          # highlighter が更新された場合、react-editor も更新
+          elif [ "$PACKAGE_NAME" = "@ssml-utilities/highlighter" ]; then
+            cd packages/editor-react
+            npm version patch --no-git-tag-version
+            EDITOR_VERSION=$(node -p "require('./package.json').version")
+            UPDATED_PACKAGES+=("@ssml-utilities/react-editor@$EDITOR_VERSION")
+          fi
+
+          # 更新されたパッケージのリストを出力
+          echo "Updated packages: ${UPDATED_PACKAGES[*]}"
+          echo "updated_packages=${UPDATED_PACKAGES[*]}" >> $GITHUB_OUTPUT
+
+      - name: Create Git Tag and Commit
         run: |
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
+
+          # 個別のパッケージファイルの変更をコミット
           git add packages/${{ steps.get-directory.outputs.directory }}/package.json
           git commit -m "Release ${{ github.event.inputs.package }}@${{ steps.bump-version.outputs.new_version }}"
           git tag "${{ github.event.inputs.package }}@${{ steps.bump-version.outputs.new_version }}"
+
+          # 依存パッケージが更新された場合、それらもコミットとタグ付け
+          if [[ "${{ github.event.inputs.update_dependent_packages }}" == "true" ]]; then
+            IFS=' ' read -ra PACKAGES <<< "${{ steps.update-dependents.outputs.updated_packages }}"
+            for PACKAGE in "${PACKAGES[@]}"; do
+              # 最初の要素(自分自身)はスキップ
+              if [ "$PACKAGE" != "${{ github.event.inputs.package }}@${{ steps.bump-version.outputs.new_version }}" ]; then
+                PACKAGE_NAME=${PACKAGE%@*}
+                PACKAGE_VERSION=${PACKAGE#*@}
+                
+                # ディレクトリ名を決定
+                if [ "$PACKAGE_NAME" = "@ssml-utilities/react-editor" ]; then
+                  DIRECTORY="editor-react"
+                else
+                  DIRECTORY=${PACKAGE_NAME#@ssml-utilities/}
+                fi
+                
+                git add packages/$DIRECTORY/package.json
+                git commit -m "Release $PACKAGE_NAME@$PACKAGE_VERSION (dependent update)"
+                git tag "$PACKAGE_NAME@$PACKAGE_VERSION"
+              fi
+            done
+          fi
+
           git push
           git push --tags
 
@@ -95,21 +161,44 @@ jobs:
           fi
 
       - name: Create GitHub Release
-        uses: actions/create-release@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        uses: softprops/action-gh-release@v1
         with:
           tag_name: ${{ github.event.inputs.package }}@${{ steps.bump-version.outputs.new_version }}
-          release_name: ${{ github.event.inputs.package }} v${{ steps.bump-version.outputs.new_version }}
+          name: ${{ github.event.inputs.package }} v${{ steps.bump-version.outputs.new_version }}
           body: |
             ## 変更点
             ${{ steps.release-notes.outputs.CHANGELOG }}
+
+            ${{ github.event.inputs.update_dependent_packages == 'true' && '## 依存パッケージも更新されました' || '' }}
           draft: false
           prerelease: ${{ github.event.inputs.tag != 'latest' }}
 
       - name: Publish to npm
         run: |
+          # メインのパッケージを公開
           cd packages/${{ steps.get-directory.outputs.directory }}
-          npm publish --tag ${{ github.event.inputs.tag }} --access public
+          pnpm publish --access public --tag ${{ github.event.inputs.tag }} --no-git-checks
+
+          # 依存パッケージも公開
+          if [[ "${{ github.event.inputs.update_dependent_packages }}" == "true" ]]; then
+            IFS=' ' read -ra PACKAGES <<< "${{ steps.update-dependents.outputs.updated_packages }}"
+            for PACKAGE in "${PACKAGES[@]}"; do
+              # 最初の要素(自分自身)はスキップ
+              if [ "$PACKAGE" != "${{ github.event.inputs.package }}@${{ steps.bump-version.outputs.new_version }}" ]; then
+                PACKAGE_NAME=${PACKAGE%@*}
+                
+                # ディレクトリ名を決定
+                if [ "$PACKAGE_NAME" = "@ssml-utilities/react-editor" ]; then
+                  DIRECTORY="editor-react"
+                else
+                  DIRECTORY=${PACKAGE_NAME#@ssml-utilities/}
+                fi
+                
+                echo "Publishing $PACKAGE_NAME from packages/$DIRECTORY"
+                cd $GITHUB_WORKSPACE/packages/$DIRECTORY
+                pnpm publish --access public --tag ${{ github.event.inputs.tag }} --no-git-checks
+              fi
+            done
+          fi
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
