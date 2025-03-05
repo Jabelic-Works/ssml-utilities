@@ -58,7 +58,7 @@ jobs:
             echo "directory=$DIRECTORY_NAME" >> $GITHUB_OUTPUT
           fi
 
-      - name: Build
+      - name: Build selected package
         run: |
           pnpm --filter ${{ github.event.inputs.package }} run build
 
@@ -105,6 +105,17 @@ jobs:
           # 更新されたパッケージのリストを出力
           echo "Updated packages: ${UPDATED_PACKAGES[*]}"
           echo "updated_packages=${UPDATED_PACKAGES[*]}" >> $GITHUB_OUTPUT
+
+      - name: Build dependent packages
+        if: ${{ github.event.inputs.update_dependent_packages == 'true' }}
+        run: |
+          # 依存するパッケージを適切な順序でビルド
+          if [ "${{ github.event.inputs.package }}" = "@ssml-utilities/core" ]; then
+            pnpm --filter "@ssml-utilities/highlighter" run build
+            pnpm --filter "@ssml-utilities/react-editor" run build
+          elif [ "${{ github.event.inputs.package }}" = "@ssml-utilities/highlighter" ]; then
+            pnpm --filter "@ssml-utilities/react-editor" run build
+          fi
 
       - name: Create Git Tag and Commit
         run: |
@@ -177,33 +188,22 @@ jobs:
         run: |
           # メインのパッケージを公開
           cd packages/${{ steps.get-directory.outputs.directory }}
-
-          # workspace:プロトコルを処理するために--no-git-checksを使用
           pnpm publish --access public --tag ${{ github.event.inputs.tag }} --no-git-checks
 
-          # 依存パッケージも公開
+          # 依存パッケージも公開 (pnpmがworkspace:*を自動変換)
           if [[ "${{ github.event.inputs.update_dependent_packages }}" == "true" ]]; then
             if [ "${{ github.event.inputs.package }}" = "@ssml-utilities/core" ]; then
-              # core を更新した後なので、highlighter と react-editor も依存順に公開
-              
               # highlighter を公開
               cd $GITHUB_WORKSPACE/packages/highlighter
-              # package.jsonのworkspace:*参照を実際のバージョンに置換
-              sed -i 's/"workspace:\*"/"^${{ steps.bump-version.outputs.new_version }}"/g' package.json
               pnpm publish --access public --tag ${{ github.event.inputs.tag }} --no-git-checks
               
               # react-editor を公開
               cd $GITHUB_WORKSPACE/packages/editor-react
-              # package.jsonのworkspace:*参照を実際のバージョンに置換
-              HIGHLIGHTER_VERSION=$(node -p "require('../highlighter/package.json').version")
-              sed -i 's/"@ssml-utilities\/highlighter": "workspace:\*"/"@ssml-utilities\/highlighter": "^'$HIGHLIGHTER_VERSION'"/g' package.json
               pnpm publish --access public --tag ${{ github.event.inputs.tag }} --no-git-checks
             
             elif [ "${{ github.event.inputs.package }}" = "@ssml-utilities/highlighter" ]; then
               # react-editor を公開
               cd $GITHUB_WORKSPACE/packages/editor-react
-              # package.jsonのworkspace:*参照を実際のバージョンに置換
-              sed -i 's/"@ssml-utilities\/highlighter": "workspace:\*"/"@ssml-utilities\/highlighter": "^${{ steps.bump-version.outputs.new_version }}"/g' package.json
               pnpm publish --access public --tag ${{ github.event.inputs.tag }} --no-git-checks
             fi
           fi
