@@ -28,6 +28,9 @@ on:
 jobs:
   release:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write # リポジトリコンテンツの書き込み権限
+      packages: write # パッケージの公開権限
     steps:
       - uses: actions/checkout@v4
         with:
