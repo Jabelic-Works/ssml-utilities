@@ -54,6 +54,7 @@ function App() {
         <SSMLEditor
           initialValue={ssml}
           onChange={setSSML}
+          height="200px"
           onWrapTag={(wrapFn) => {
             wrapWithTagRef.current = wrapFn;
           }}

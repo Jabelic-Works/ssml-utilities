@@ -19,29 +19,29 @@ export interface HighlightOptions {
   indentation: number;
 }
 
-export interface SSMLValidator {
-  validate(ssml: string): ValidationResult;
-}
+// export interface SSMLValidator {
+//   validate(ssml: string): ValidationResult;
+// }
 
-export interface ValidationResult {
-  isValid: boolean;
-  errors: ValidationError[];
-}
+// export interface ValidationResult {
+//   isValid: boolean;
+//   errors: ValidationError[];
+// }
 
-export interface ValidationError {
-  message: string;
-  line: number;
-  column: number;
-}
+// export interface ValidationError {
+//   message: string;
+//   line: number;
+//   column: number;
+// }
 
-export interface SSMLFormatter {
-  format(ssml: string, indentation?: number): string;
-}
+// export interface SSMLFormatter {
+//   format(ssml: string, indentation?: number): string;
+// }
 
 export interface SSMLProcessor {
   highlighter: SSMLHighlighter;
-  validator: SSMLValidator;
-  formatter: SSMLFormatter;
+  // validator: SSMLValidator;
+  // formatter: SSMLFormatter;
 }
 
 export interface HighlightOptions {

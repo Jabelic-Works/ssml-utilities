@@ -88,11 +88,15 @@ export const SSMLEditor: React.FC<SSMLEditorProps> = ({
   };
 
   const syncScroll = () => {
-    if (textareaRef.current && highlightRef.current && lineNumbersRef.current) {
-      highlightRef.current.scrollTop = textareaRef.current.scrollTop;
-      highlightRef.current.scrollLeft = textareaRef.current.scrollLeft;
-      lineNumbersRef.current.scrollTop = textareaRef.current.scrollTop;
-    }
+    requestAnimationFrame(() => {
+      if (textareaRef.current && highlightRef.current) {
+        highlightRef.current.scrollTop = textareaRef.current.scrollTop;
+        highlightRef.current.scrollLeft = textareaRef.current.scrollLeft;
+        if (lineNumbersRef.current) {
+          lineNumbersRef.current.scrollTop = textareaRef.current.scrollTop;
+        }
+      }
+    });
   };
 
   const wrapSelectionWithTag = (
@@ -213,12 +217,21 @@ export const SSMLEditor: React.FC<SSMLEditorProps> = ({
     left: "0",
     width: "100%",
     height: "100%",
+    scrollBehavior: "revert",
     border: "none",
     textAlign: "left",
+    whiteSpace: "pre-wrap",
+    overflow: "auto",
   };
 
   return (
-    <div style={{ position: "relative", height, width }}>
+    <div
+      style={{
+        position: "relative",
+        height,
+        width,
+      }}
+    >
       {showLineNumbers && (
         <div
           ref={lineNumbersRef}
@@ -251,6 +264,8 @@ export const SSMLEditor: React.FC<SSMLEditorProps> = ({
               style={{
                 display: "block",
                 minHeight: "1.5em",
+                lineHeight: "1.5",
+                padding: "0 5px",
               }}
             >
               {num}
@@ -260,12 +275,9 @@ export const SSMLEditor: React.FC<SSMLEditorProps> = ({
       )}
       <div
         style={{
-          position: "absolute",
-          left: showLineNumbers ? "30px" : "0",
-          top: "0",
-          right: "0",
-          bottom: "0",
-          width: "100%",
+          position: "relative",
+          height: "100%",
+          marginLeft: showLineNumbers ? "30px" : "0",
         }}
       >
         <div
@@ -274,18 +286,29 @@ export const SSMLEditor: React.FC<SSMLEditorProps> = ({
             ...commonStyles,
             backgroundColor: "#f5f5f5",
             pointerEvents: "none",
-            whiteSpace: "pre-wrap",
-            left: "0",
             border: "1px solid #ddd",
             borderRadius: showLineNumbers ? "0px 10px 10px 0px" : "10px",
-            width: "100%",
+          }}
+          onScroll={(e) => {
+            requestAnimationFrame(() => {
+              if (textareaRef.current && e.currentTarget) {
+                textareaRef.current.scrollTop = e.currentTarget.scrollTop;
+                textareaRef.current.scrollLeft = e.currentTarget.scrollLeft;
+                if (lineNumbersRef.current) {
+                  lineNumbersRef.current.scrollTop = e.currentTarget.scrollTop;
+                }
+              }
+            });
           }}
           dangerouslySetInnerHTML={{ __html: highlightedHtml }}
         />
         <textarea
           ref={textareaRef}
           value={ssml}
-          onChange={handleInput}
+          onChange={(e) => {
+            handleInput(e);
+            syncScroll();
+          }}
           onScroll={syncScroll}
           onKeyDown={handleKeyDown}
           style={{
@@ -310,6 +333,9 @@ export const SSMLEditor: React.FC<SSMLEditorProps> = ({
         div[dangerouslySetInnerHTML] span {
           text-align: left;
           display: inline;
+        }
+        textarea::-webkit-scrollbar {
+          display: none;
         }
       `}</style>
     </div>
