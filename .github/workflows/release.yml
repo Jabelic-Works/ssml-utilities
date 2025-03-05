@@ -147,7 +147,13 @@ jobs:
           MAIN_PACKAGE="${{ github.event.inputs.package }}"
           MAIN_VERSION="${{ steps.calc-versions.outputs.new_version }}"
           git commit -m "Release $MAIN_PACKAGE@$MAIN_VERSION"
-          git tag "$MAIN_PACKAGE@$MAIN_VERSION"
+
+          # タグが存在するかチェックし、存在しない場合のみ作成
+          if ! git tag -l "$MAIN_PACKAGE@$MAIN_VERSION" | grep -q "$MAIN_PACKAGE@$MAIN_VERSION"; then
+            git tag "$MAIN_PACKAGE@$MAIN_VERSION"
+          else
+            echo "タグ $MAIN_PACKAGE@$MAIN_VERSION はすでに存在します。スキップします。"
+          fi
 
           # 依存パッケージが更新された場合、追加のタグを作成
           if [[ "${{ github.event.inputs.update_dependent_packages }}" == "true" ]]; then
@@ -156,14 +162,20 @@ jobs:
               if [ "$PACKAGE_INFO" != "$MAIN_PACKAGE@$MAIN_VERSION" ]; then
                 PACKAGE_NAME=${PACKAGE_INFO%@*}
                 PACKAGE_VERSION=${PACKAGE_INFO#*@}
-                git tag "$PACKAGE_NAME@$PACKAGE_VERSION"
+                
+                # タグが存在するかチェックし、存在しない場合のみ作成
+                if ! git tag -l "$PACKAGE_NAME@$PACKAGE_VERSION" | grep -q "$PACKAGE_NAME@$PACKAGE_VERSION"; then
+                  git tag "$PACKAGE_NAME@$PACKAGE_VERSION"
+                else
+                  echo "タグ $PACKAGE_NAME@$PACKAGE_VERSION はすでに存在します。スキップします。"
+                fi
               fi
             done
           fi
 
-          # 変更をプッシュ
-          git push
-          git push --tags
+          # 変更をプッシュ（--force オプションを追加して強制プッシュ）
+          git push --force
+          git push --tags --force
 
       - name: Generate Release Notes
         id: release-notes
