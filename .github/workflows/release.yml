@@ -60,7 +60,7 @@ jobs:
 
       - name: Build
         run: |
-          pnpm run build --filter=${{ github.event.inputs.package }}...
+          pnpm --filter ${{ github.event.inputs.package }} run build
 
       - name: Bump version
         id: bump-version
