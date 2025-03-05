@@ -62,65 +62,56 @@ jobs:
         run: |
           pnpm --filter ${{ github.event.inputs.package }} run build
 
-      - name: Install required tools
-        run: pnpm install -g semver json
-
-      - name: Bump version
-        id: bump-version
+      - name: Calculate new versions
+        id: calc-versions
         run: |
+          # メインパッケージの新しいバージョンを計算
           cd packages/${{ steps.get-directory.outputs.directory }}
-
-          # 現在のバージョンを取得
           CURRENT_VERSION=$(node -p "require('./package.json').version")
 
-          # バージョンを計算
-          if [ "${{ github.event.inputs.version }}" = "major" ]; then
-            NEW_VERSION=$(semver -i major $CURRENT_VERSION)
-          elif [ "${{ github.event.inputs.version }}" = "minor" ]; then
-            NEW_VERSION=$(semver -i minor $CURRENT_VERSION)
-          elif [ "${{ github.event.inputs.version }}" = "patch" ]; then
-            NEW_VERSION=$(semver -i patch $CURRENT_VERSION)
+          if [[ "${{ github.event.inputs.version }}" = "major" ]]; then
+            NEW_VERSION=$(npm --no-git-tag-version version major)
+          elif [[ "${{ github.event.inputs.version }}" = "minor" ]]; then
+            NEW_VERSION=$(npm --no-git-tag-version version minor)
+          elif [[ "${{ github.event.inputs.version }}" = "patch" ]]; then
+            NEW_VERSION=$(npm --no-git-tag-version version patch)
           else
             NEW_VERSION="${{ github.event.inputs.version }}"
+            npm --no-git-tag-version version $NEW_VERSION
           fi
 
-          # package.json を更新
-          json -I -f package.json -e "this.version=\"$NEW_VERSION\""
-
+          # vを削除
+          NEW_VERSION=${NEW_VERSION#v}
           echo "new_version=$NEW_VERSION" >> $GITHUB_OUTPUT
-          echo "Version bumped from $CURRENT_VERSION to $NEW_VERSION"
 
-      - name: Update dependent packages
-        if: ${{ github.event.inputs.update_dependent_packages == 'true' }}
-        id: update-dependents
-        run: |
-          PACKAGE_NAME="${{ github.event.inputs.package }}"
-          NEW_VERSION="${{ steps.bump-version.outputs.new_version }}"
-          UPDATED_PACKAGES=("$PACKAGE_NAME@$NEW_VERSION")
-
-          # core が更新された場合、highlighter と react-editor も更新
-          if [ "$PACKAGE_NAME" = "@ssml-utilities/core" ]; then
-            cd packages/highlighter
-            pnpm version patch --no-git-tag-version
-            HIGHLIGHTER_VERSION=$(node -p "require('./package.json').version")
-            UPDATED_PACKAGES+=("@ssml-utilities/highlighter@$HIGHLIGHTER_VERSION")
+          # 依存関係の更新が選択されている場合、他のパッケージも更新
+          if [[ "${{ github.event.inputs.update_dependent_packages }}" == "true" ]]; then
+            PACKAGE_NAME="${{ github.event.inputs.package }}"
+            UPDATED_PACKAGES="$PACKAGE_NAME@$NEW_VERSION"
             
-            cd ../editor-react
-            pnpm version patch --no-git-tag-version
-            EDITOR_VERSION=$(node -p "require('./package.json').version")
-            UPDATED_PACKAGES+=("@ssml-utilities/react-editor@$EDITOR_VERSION")
-
-          # highlighter が更新された場合、react-editor も更新
-          elif [ "$PACKAGE_NAME" = "@ssml-utilities/highlighter" ]; then
-            cd packages/editor-react
-            pnpm version patch --no-git-tag-version
-            EDITOR_VERSION=$(node -p "require('./package.json').version")
-            UPDATED_PACKAGES+=("@ssml-utilities/react-editor@$EDITOR_VERSION")
+            if [ "$PACKAGE_NAME" = "@ssml-utilities/core" ]; then
+              # highlighter を更新
+              cd $GITHUB_WORKSPACE/packages/highlighter
+              HIGHLIGHTER_VERSION=$(npm --no-git-tag-version version patch)
+              HIGHLIGHTER_VERSION=${HIGHLIGHTER_VERSION#v}
+              UPDATED_PACKAGES="$UPDATED_PACKAGES @ssml-utilities/highlighter@$HIGHLIGHTER_VERSION"
+              
+              # react-editor を更新
+              cd $GITHUB_WORKSPACE/packages/editor-react
+              EDITOR_VERSION=$(npm --no-git-tag-version version patch)
+              EDITOR_VERSION=${EDITOR_VERSION#v}
+              UPDATED_PACKAGES="$UPDATED_PACKAGES @ssml-utilities/react-editor@$EDITOR_VERSION"
+              
+            elif [ "$PACKAGE_NAME" = "@ssml-utilities/highlighter" ]; then
+              # react-editor を更新
+              cd $GITHUB_WORKSPACE/packages/editor-react
+              EDITOR_VERSION=$(npm --no-git-tag-version version patch)
+              EDITOR_VERSION=${EDITOR_VERSION#v}
+              UPDATED_PACKAGES="$UPDATED_PACKAGES @ssml-utilities/react-editor@$EDITOR_VERSION"
+            fi
+            
+            echo "updated_packages=$UPDATED_PACKAGES" >> $GITHUB_OUTPUT
           fi
-
-          # 更新されたパッケージのリストを出力
-          echo "Updated packages: ${UPDATED_PACKAGES[*]}"
-          echo "updated_packages=${UPDATED_PACKAGES[*]}" >> $GITHUB_OUTPUT
 
       - name: Build dependent packages
         if: ${{ github.event.inputs.update_dependent_packages == 'true' }}
@@ -133,39 +124,33 @@ jobs:
             pnpm --filter "@ssml-utilities/react-editor" run build
           fi
 
-      - name: Create Git Tag and Commit
+      - name: Commit changes and create tags
         run: |
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
 
-          # 個別のパッケージファイルの変更をコミット
-          git add packages/${{ steps.get-directory.outputs.directory }}/package.json
-          git commit -m "Release ${{ github.event.inputs.package }}@${{ steps.bump-version.outputs.new_version }}"
-          git tag "${{ github.event.inputs.package }}@${{ steps.bump-version.outputs.new_version }}"
+          # 変更を追加
+          git add packages/*/package.json
 
-          # 依存パッケージが更新された場合、それらもコミットとタグ付け
+          # メインパッケージのコミットとタグ
+          MAIN_PACKAGE="${{ github.event.inputs.package }}"
+          MAIN_VERSION="${{ steps.calc-versions.outputs.new_version }}"
+          git commit -m "Release $MAIN_PACKAGE@$MAIN_VERSION"
+          git tag "$MAIN_PACKAGE@$MAIN_VERSION"
+
+          # 依存パッケージが更新された場合、追加のタグを作成
           if [[ "${{ github.event.inputs.update_dependent_packages }}" == "true" ]]; then
-            IFS=' ' read -ra PACKAGES <<< "${{ steps.update-dependents.outputs.updated_packages }}"
-            for PACKAGE in "${PACKAGES[@]}"; do
-              # 最初の要素(自分自身)はスキップ
-              if [ "$PACKAGE" != "${{ github.event.inputs.package }}@${{ steps.bump-version.outputs.new_version }}" ]; then
-                PACKAGE_NAME=${PACKAGE%@*}
-                PACKAGE_VERSION=${PACKAGE#*@}
-                
-                # ディレクトリ名を決定
-                if [ "$PACKAGE_NAME" = "@ssml-utilities/react-editor" ]; then
-                  DIRECTORY="editor-react"
-                else
-                  DIRECTORY=${PACKAGE_NAME#@ssml-utilities/}
-                fi
-                
-                git add packages/$DIRECTORY/package.json
-                git commit -m "Release $PACKAGE_NAME@$PACKAGE_VERSION (dependent update)"
+            for PACKAGE_INFO in ${{ steps.calc-versions.outputs.updated_packages }}; do
+              # 最初のパッケージ（メイン）はスキップ
+              if [ "$PACKAGE_INFO" != "$MAIN_PACKAGE@$MAIN_VERSION" ]; then
+                PACKAGE_NAME=${PACKAGE_INFO%@*}
+                PACKAGE_VERSION=${PACKAGE_INFO#*@}
                 git tag "$PACKAGE_NAME@$PACKAGE_VERSION"
               fi
             done
           fi
 
+          # 変更をプッシュ
           git push
           git push --tags
 
@@ -190,8 +175,8 @@ jobs:
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v1
         with:
-          tag_name: ${{ github.event.inputs.package }}@${{ steps.bump-version.outputs.new_version }}
-          name: ${{ github.event.inputs.package }} v${{ steps.bump-version.outputs.new_version }}
+          tag_name: ${{ github.event.inputs.package }}@${{ steps.calc-versions.outputs.new_version }}
+          name: ${{ github.event.inputs.package }} v${{ steps.calc-versions.outputs.new_version }}
           body: |
             ## 変更点
             ${{ steps.release-notes.outputs.CHANGELOG }}
@@ -206,7 +191,7 @@ jobs:
           cd packages/${{ steps.get-directory.outputs.directory }}
           pnpm publish --access public --tag ${{ github.event.inputs.tag }} --no-git-checks
 
-          # 依存パッケージも公開 (pnpmがworkspace:*を自動変換)
+          # 依存パッケージも公開
           if [[ "${{ github.event.inputs.update_dependent_packages }}" == "true" ]]; then
             if [ "${{ github.event.inputs.package }}" = "@ssml-utilities/core" ]; then
               # highlighter を公開
