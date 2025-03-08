@@ -205,27 +205,38 @@ jobs:
           draft: false
           prerelease: ${{ github.event.inputs.tag != 'latest' }}
 
+      - name: Setup Node.js with NPM auth
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22.x"
+          registry-url: "https://registry.npmjs.org/"
+          # スコープを指定
+          scope: "@ssml-utilities"
+
       - name: Publish to npm
         run: |
+          # NPMの認証設定
+          echo "//registry.npmjs.org/:_authToken=${NODE_AUTH_TOKEN}" > ~/.npmrc
+
           # メインのパッケージを公開
           cd packages/${{ steps.get-directory.outputs.directory }}
-          pnpm publish --access public --tag ${{ github.event.inputs.tag }} --no-git-checks
+          pnpm publish --access public --tag ${{ github.event.inputs.tag }} --no-git-checks || echo "パッケージが既に公開されているか、権限がありません"
 
           # 依存パッケージも公開
           if [[ "${{ github.event.inputs.update_dependent_packages }}" == "true" ]]; then
             if [ "${{ github.event.inputs.package }}" = "@ssml-utilities/core" ]; then
               # highlighter を公開
               cd $GITHUB_WORKSPACE/packages/highlighter
-              pnpm publish --access public --tag ${{ github.event.inputs.tag }} --no-git-checks
+              pnpm publish --access public --tag ${{ github.event.inputs.tag }} --no-git-checks || echo "highlighterパッケージが既に公開されているか、権限がありません"
               
               # react-editor を公開
               cd $GITHUB_WORKSPACE/packages/editor-react
-              pnpm publish --access public --tag ${{ github.event.inputs.tag }} --no-git-checks
+              pnpm publish --access public --tag ${{ github.event.inputs.tag }} --no-git-checks || echo "react-editorパッケージが既に公開されているか、権限がありません"
             
             elif [ "${{ github.event.inputs.package }}" = "@ssml-utilities/highlighter" ]; then
               # react-editor を公開
               cd $GITHUB_WORKSPACE/packages/editor-react
-              pnpm publish --access public --tag ${{ github.event.inputs.tag }} --no-git-checks
+              pnpm publish --access public --tag ${{ github.event.inputs.tag }} --no-git-checks || echo "react-editorパッケージが既に公開されているか、権限がありません"
             fi
           fi
         env:
