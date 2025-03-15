@@ -74,8 +74,8 @@ importers:
   packages/core:
     devDependencies:
       '@rollup/plugin-typescript':
-        specifier: ^11.1.6
-        version: 11.1.6(rollup@4.34.9)(tslib@2.8.1)(typescript@5.8.2)
+        specifier: ^12.1.2
+        version: 12.1.2(rollup@4.34.9)(tslib@2.8.1)(typescript@5.8.2)
       '@types/node':
         specifier: ^22.5.5
         version: 22.13.9
@@ -104,13 +104,13 @@ importers:
   packages/editor-react:
     dependencies:
       '@ssml-utilities/highlighter':
-        specifier: ^0.3.3
-        version: 0.3.3(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(rollup@4.34.9)(tslib@2.8.1)(typescript@5.8.2)
+        specifier: workspace:*
+        version: link:../highlighter
       react:
-        specifier: ^18.3.1
+        specifier: ^18.2.0
         version: 18.3.1
       react-dom:
-        specifier: ^18.3.1
+        specifier: ^18.2.0
         version: 18.3.1(react@18.3.1)
     devDependencies:
       '@types/react':
@@ -138,11 +138,11 @@ importers:
   packages/highlighter:
     dependencies:
       '@rollup/plugin-typescript':
-        specifier: ^11.1.6
-        version: 11.1.6(rollup@2.79.2)(tslib@2.8.1)(typescript@4.9.5)
+        specifier: ^12.1.2
+        version: 12.1.2(rollup@2.79.2)(tslib@2.8.1)(typescript@4.9.5)
       '@ssml-utilities/core':
-        specifier: ^1.2.3
-        version: 1.2.3
+        specifier: workspace:*
+        version: link:../core
       react:
         specifier: ^17.0.0 || ^18.0.0
         version: 18.3.1
@@ -1021,8 +1021,8 @@ packages:
     resolution: {integrity: sha512-+1VkjdD0QBLPodGrJUeqarH8VAIvQODIbwh9XpP5Syisf7YoQgsJKPNFoqqLQlu+VQ/tVSshMR6loPMn8U+dPg==}
     engines: {node: '>=14'}
 
-  '@rollup/plugin-typescript@11.1.6':
-    resolution: {integrity: sha512-R92yOmIACgYdJ7dJ97p4K69I8gg6IEHt8M7dUBxN3W6nrO8uUxX5ixl0yU/N3aZTi8WhPuICvOHXQvF6FaykAA==}
+  '@rollup/plugin-typescript@12.1.2':
+    resolution: {integrity: sha512-cdtSp154H5sv637uMr1a8OTWB0L1SWDSm1rDGiyfcGcvQ6cuTs4MDk2BVEBGysUWago4OJN4EQZqOTl/QY3Jgg==}
     engines: {node: '>=14.0.0'}
     peerDependencies:
       rollup: ^2.14.0||^3.0.0||^4.0.0
@@ -1169,16 +1169,6 @@ packages:
 
   '@sinonjs/fake-timers@8.1.0':
     resolution: {integrity: sha512-OAPJUAtgeINhh/TAlUID4QTs53Njm7xzddaVlEs/SXwgtiD1tW22zAB/W1wdqfrpmikgaWQ9Fw6Ws+hsiRm5Vg==}
-
-  '@ssml-utilities/core@1.2.3':
-    resolution: {integrity: sha512-3AZOARlL4RHHHV3P2Bpzp5tUA82pupR3Pl6rcdLiDc8pO6nnM7DIO4Yh/Z0MixP4f9r6XOeuAhkJrYlBKGixfQ==}
-    hasBin: true
-
-  '@ssml-utilities/highlighter@0.3.3':
-    resolution: {integrity: sha512-SuJvaHAP3hFEjP8hcQj3Lrix5QKAM9ahP+DRV6gSg6MjOvElMtcpoBJSUGc58FQdMN9tvmwPXM0pyfE29tSsXQ==}
-    peerDependencies:
-      react: ^17.0.0 || ^18.0.0
-      react-dom: ^17.0.0 || ^18.0.0
 
   '@tootallnate/once@1.1.2':
     resolution: {integrity: sha512-RbzJvlNzmRq5c3O09UipeuXno4tA1FE6ikOjxZK0tuxVv3412l64l5t1W5pj4+rJq9vpkm/kwiR07aZXnsKPxw==}
@@ -4236,7 +4226,7 @@ snapshots:
   '@pkgjs/parseargs@0.11.0':
     optional: true
 
-  '@rollup/plugin-typescript@11.1.6(rollup@2.79.2)(tslib@2.8.1)(typescript@4.9.5)':
+  '@rollup/plugin-typescript@12.1.2(rollup@2.79.2)(tslib@2.8.1)(typescript@4.9.5)':
     dependencies:
       '@rollup/pluginutils': 5.1.4(rollup@2.79.2)
       resolve: 1.22.10
@@ -4245,7 +4235,7 @@ snapshots:
       rollup: 2.79.2
       tslib: 2.8.1
 
-  '@rollup/plugin-typescript@11.1.6(rollup@4.34.9)(tslib@2.8.1)(typescript@5.8.2)':
+  '@rollup/plugin-typescript@12.1.2(rollup@4.34.9)(tslib@2.8.1)(typescript@5.8.2)':
     dependencies:
       '@rollup/pluginutils': 5.1.4(rollup@4.34.9)
       resolve: 1.22.10
@@ -4371,19 +4361,6 @@ snapshots:
   '@sinonjs/fake-timers@8.1.0':
     dependencies:
       '@sinonjs/commons': 1.8.6
-
-  '@ssml-utilities/core@1.2.3': {}
-
-  '@ssml-utilities/highlighter@0.3.3(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(rollup@4.34.9)(tslib@2.8.1)(typescript@5.8.2)':
-    dependencies:
-      '@rollup/plugin-typescript': 11.1.6(rollup@4.34.9)(tslib@2.8.1)(typescript@5.8.2)
-      '@ssml-utilities/core': 1.2.3
-      react: 18.3.1
-      react-dom: 18.3.1(react@18.3.1)
-    transitivePeerDependencies:
-      - rollup
-      - tslib
-      - typescript
 
   '@tootallnate/once@1.1.2': {}
 
