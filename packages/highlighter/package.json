@@ -38,7 +38,7 @@
   },
   "homepage": "https://github.com/jabelic-works/ssml-utilities/tree/main/packages/highlighter#readme",
   "dependencies": {
-    "@rollup/plugin-typescript": "^11.1.6",
+    "@rollup/plugin-typescript": "^12.1.2",
     "@ssml-utilities/core": "workspace:*"
   },
   "peerDependencies": {
