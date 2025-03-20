@@ -288,6 +288,14 @@ export const SSMLEditor: React.FC<SSMLEditorProps> = ({
   };
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    // Escキーで候補を閉じる
+    if (e.key === "Escape" && suggestions.length > 0) {
+      e.preventDefault();
+      setSuggestions([]);
+      setSuggestionPosition(null);
+      return;
+    }
+
     if (suggestions.length > 0) {
       if (e.key === "ArrowDown") {
         e.preventDefault();
@@ -459,6 +467,16 @@ export const SSMLEditor: React.FC<SSMLEditorProps> = ({
           onChange={handleInput}
           onScroll={syncScroll}
           onKeyDown={handleKeyDown}
+          onClick={() => {
+            // クリックでカーソル位置変更時に候補を消す
+            setSuggestions([]);
+            setSuggestionPosition(null);
+          }}
+          onBlur={() => {
+            // フォーカスを失った時に候補を消す
+            setSuggestions([]);
+            setSuggestionPosition(null);
+          }}
           style={{
             ...commonStyles,
             backgroundColor: "transparent",
@@ -496,7 +514,24 @@ export const SSMLEditor: React.FC<SSMLEditorProps> = ({
                 applySuggestion(s);
               }}
             >
-              {s.label}
+              <p
+                style={{
+                  fontSize: "12px",
+                  fontWeight: "bold",
+                  margin: "0px",
+                }}
+              >
+                {s.label}
+              </p>
+              <p
+                style={{
+                  fontSize: "10px",
+                  color: "#6b6b6b",
+                  margin: "0px",
+                }}
+              >
+                {s.value}
+              </p>
             </div>
           ))}
         </div>
