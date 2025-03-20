@@ -142,8 +142,9 @@ export function getCaretCoordinates(
   div.appendChild(span);
 
   const coordinates: CaretCoordinates = {
-    top: span.offsetTop + parseInt(computed.borderTopWidth),
-    left: span.offsetLeft + parseInt(computed.borderLeftWidth),
+    top: span.offsetTop + parseInt(computed.borderTopWidth) - element.scrollTop,
+    left:
+      span.offsetLeft + parseInt(computed.borderLeftWidth) - element.scrollLeft,
     height: parseInt(computed.lineHeight),
   };
 
