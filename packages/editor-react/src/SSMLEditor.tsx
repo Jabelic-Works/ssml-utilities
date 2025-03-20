@@ -106,10 +106,28 @@ export const SSMLEditor: React.FC<SSMLEditorProps> = ({
     setSSML(newValue);
     onChange && onChange(newValue);
     checkForEmbeddedCompletion(newValue);
+
+    ensureCorrectScroll();
+  };
+
+  const ensureCorrectScroll = () => {
+    if (textareaRef.current) {
+      // カーソルがテキストエリアの表示範囲外にある場合、スクロール位置を調整
+      const textarea = textareaRef.current;
+      const cursorPosition = textarea.selectionStart;
+
+      // 最終行を表示するために、まずスクロールを一番下に移動させて、
+      // それからカーソル位置が見えるように戻す処理も追加できる
+      syncScroll();
+    }
   };
 
   const checkForEmbeddedCompletion = (value: string) => {
-    if (textareaRef.current && embeddeds.length > 0) {
+    const isSuggestionOpen = textareaRef.current && embeddeds.length > 0;
+    if (!isSuggestionOpen) {
+      setSuggestions([]);
+      setSuggestionPosition(null);
+    } else {
       const pos = textareaRef.current.selectionStart;
       const textBeforeCursor = value.slice(0, pos);
       for (const embed of embeddeds) {
@@ -151,8 +169,6 @@ export const SSMLEditor: React.FC<SSMLEditorProps> = ({
         }
       }
     }
-    setSuggestions([]);
-    setSuggestionPosition(null);
   };
 
   const applySuggestion = (candidate: { value: string; label: string }) => {
@@ -189,15 +205,29 @@ export const SSMLEditor: React.FC<SSMLEditorProps> = ({
   };
 
   const syncScroll = () => {
-    requestAnimationFrame(() => {
-      if (textareaRef.current && highlightRef.current) {
-        highlightRef.current.scrollTop = textareaRef.current.scrollTop;
-        highlightRef.current.scrollLeft = textareaRef.current.scrollLeft;
+    if (textareaRef.current && highlightRef.current) {
+      // テキストエリアのスクロール位置をハイライト用divに反映
+      highlightRef.current.scrollTop = textareaRef.current.scrollTop;
+      highlightRef.current.scrollLeft = textareaRef.current.scrollLeft;
+
+      if (lineNumbersRef.current) {
+        lineNumbersRef.current.scrollTop = textareaRef.current.scrollTop;
+      }
+
+      // 最終行の表示を確保するため、必要に応じて強制的にスクロール調整
+      const textarea = textareaRef.current;
+      if (
+        textarea.scrollHeight - textarea.clientHeight <=
+        textarea.scrollTop + 10
+      ) {
+        // 最下部付近にいる場合は最下部に強制スクロール
+        textarea.scrollTop = textarea.scrollHeight - textarea.clientHeight;
+        highlightRef.current.scrollTop = textarea.scrollTop;
         if (lineNumbersRef.current) {
-          lineNumbersRef.current.scrollTop = textareaRef.current.scrollTop;
+          lineNumbersRef.current.scrollTop = textarea.scrollTop;
         }
       }
-    });
+    }
   };
 
   const wrapSelectionWithTag = (
