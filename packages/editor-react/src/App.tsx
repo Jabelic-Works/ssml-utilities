@@ -99,6 +99,18 @@ function App() {
                 e.key === "f" && e.shiftKey && (e.ctrlKey || e.metaKey),
             },
           ]}
+          embeddeds={[
+            {
+              id: "name",
+              startKey: "{{",
+              endKey: "}}",
+              recommends: [
+                { value: "山田", label: "山田" },
+                { value: "田中", label: "田中" },
+                { value: "佐藤", label: "佐藤" },
+              ],
+            },
+          ]}
         />
       </div>
     </>
