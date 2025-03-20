@@ -105,9 +105,18 @@ function App() {
               startKey: "{{",
               endKey: "}}",
               recommends: [
-                { value: "山田", label: "山田" },
-                { value: "田中", label: "田中" },
-                { value: "佐藤", label: "佐藤" },
+                {
+                  value: "low",
+                  label: "低",
+                },
+                {
+                  value: "middle",
+                  label: "中",
+                },
+                {
+                  value: "high",
+                  label: "高",
+                },
               ],
             },
           ]}
