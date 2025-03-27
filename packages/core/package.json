@@ -29,7 +29,7 @@
   "keywords": [],
   "devDependencies": {
     "@rollup/plugin-typescript": "^11.1.6",
-    "@types/node": "^22.5.5",
+    "@types/node": "^22.13.14",
     "@typescript-eslint/eslint-plugin": "^8.5.0",
     "@typescript-eslint/parser": "^8.5.0",
     "eslint": "^9.10.0",
