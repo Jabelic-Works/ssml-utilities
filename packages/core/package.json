@@ -2,10 +2,10 @@
   "name": "@ssml-utilities/core",
   "version": "1.2.7",
   "description": "",
-  "main": "dist/index.js",
-  "module": "dist/index.js",
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
   "type": "module",
-  "types": "dist/index.d.ts",
+  "types": "./dist/index.d.ts",
   "author": "Jabelic",
   "license": "MIT",
   "publishConfig": {
