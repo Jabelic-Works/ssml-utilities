@@ -16,10 +16,10 @@ export function highlightNode(
   switch (node.type) {
     case "element": {
       const tagMatch = node.value!.match(
-        /^<(\/?(?:[\w-]+(?::[\w-]+)*))(.*)>?$/s
+        /^<(\/?(?:[\w:-]+(?:[\w:-]+)*))(.*)>?$/s
       );
       if (tagMatch) {
-        const [_, tagName, rest] = tagMatch;
+        const [_, tagName, rest] = tagMatch; // restはタグ名の後に続く属性部分の文字列
         const attributesResult = highlightAttributes(
           extractAttributesFromNode(node),
           options
@@ -39,7 +39,7 @@ export function highlightNode(
           }
           tagContent += "&gt;"; // > 文字実体参照
         } else {
-          tagContent = `&lt;${escapeHtml(tagName)}${rest}`;
+          tagContent = `&lt;${escapeHtml(tagName)}${escapeHtml(rest)}`;
         }
 
         return success(

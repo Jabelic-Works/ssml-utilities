@@ -66,7 +66,7 @@ export function extractAttributesFromNode(node: DAGNode): string {
   const value = node.value;
 
   // 自己閉じタグ: <tag ... />
-  const selfClosingMatch = value.match(/^<([\w-]+)([\s\S]*?)\/>/);
+  const selfClosingMatch = value.match(/^<([\w:-]+)([\s\S]*?)\/>/);
   if (selfClosingMatch) {
     // タグ名の直後から、'/>' の直前までを抽出（末尾のスペースを保持）
     const extracted = value.substring(
@@ -77,7 +77,7 @@ export function extractAttributesFromNode(node: DAGNode): string {
   }
 
   // 開始タグ: <tag ...>
-  const openingTagMatch = value.match(/^<([\w-]+)([\s\S]*?)>/);
+  const openingTagMatch = value.match(/^<([\w:-]+)([\s\S]*?)>/);
   if (openingTagMatch) {
     // タグ名の直後から、'>' の直前までを抽出
     const extracted = value.substring(
