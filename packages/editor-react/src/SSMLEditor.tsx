@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { ssmlHighlighter, HighlightOptions } from "@ssml-utilities/highlighter";
+import { getCaretCoordinates } from "./textareaCaretPosition";
 
 interface SSMLEditorProps {
   initialValue?: string;
@@ -21,6 +22,15 @@ interface SSMLEditorProps {
   }[];
   showLineNumbers?: boolean;
   onInsertPhrase?: (insertFn: (text: string) => void) => void;
+  embeddeds?: {
+    id: string;
+    startKey: string;
+    endKey: string;
+    recommends: {
+      value: string;
+      label: string;
+    }[];
+  }[];
 }
 
 interface TagAttributes {
@@ -36,6 +46,7 @@ export const SSMLEditor: React.FC<SSMLEditorProps> = ({
   wrapTagShortCuts,
   showLineNumbers = false,
   onInsertPhrase,
+  embeddeds = [],
 }) => {
   const [ssml, setSSML] = useState(initialValue);
   const [highlightedHtml, setHighlightedHtml] = useState("");
@@ -43,6 +54,14 @@ export const SSMLEditor: React.FC<SSMLEditorProps> = ({
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const highlightRef = useRef<HTMLDivElement>(null);
   const lineNumbersRef = useRef<HTMLDivElement>(null);
+  const [suggestions, setSuggestions] = useState<
+    { value: string; label: string }[]
+  >([]);
+  const [suggestionPosition, setSuggestionPosition] = useState<{
+    top: number;
+    left: number;
+  } | null>(null);
+  const [activeSuggestionIndex, setActiveSuggestionIndex] = useState(0);
 
   // タグをラップする関数を受け取る
   useEffect(() => {
@@ -83,20 +102,132 @@ export const SSMLEditor: React.FC<SSMLEditorProps> = ({
   }, [onInsertPhrase]);
 
   const handleInput = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    setSSML(e.target.value);
-    onChange && onChange(e.target.value);
+    const newValue = e.target.value;
+    setSSML(newValue);
+    onChange && onChange(newValue);
+    checkForEmbeddedCompletion(newValue);
+
+    ensureCorrectScroll();
+  };
+
+  const ensureCorrectScroll = () => {
+    if (textareaRef.current) {
+      // カーソルがテキストエリアの表示範囲外にある場合、スクロール位置を調整
+      const textarea = textareaRef.current;
+      const cursorPosition = textarea.selectionStart;
+
+      // 最終行を表示するために、まずスクロールを一番下に移動させて、
+      // それからカーソル位置が見えるように戻す処理も追加できる
+      syncScroll();
+    }
+  };
+
+  const checkForEmbeddedCompletion = (value: string) => {
+    const isSuggestionOpen = textareaRef.current && embeddeds.length > 0;
+    if (!isSuggestionOpen) {
+      setSuggestions([]);
+      setSuggestionPosition(null);
+    } else {
+      const pos = textareaRef.current.selectionStart;
+      const textBeforeCursor = value.slice(0, pos);
+      for (const embed of embeddeds) {
+        const { startKey, endKey, recommends } = embed;
+        const startIndex = textBeforeCursor.lastIndexOf(startKey);
+        if (
+          startIndex !== -1 &&
+          textBeforeCursor.indexOf(endKey, startIndex) === -1
+        ) {
+          const currentPrefix = textBeforeCursor.slice(
+            startIndex + startKey.length
+          );
+          const filtered = recommends.filter((candidate) =>
+            candidate.value.startsWith(currentPrefix)
+          );
+          if (filtered.length > 0) {
+            // カーソル位置の座標を取得
+            const caretCoords = getCaretCoordinates(textareaRef.current, pos);
+            const textRect = textareaRef.current.getBoundingClientRect();
+            const parentRect =
+              textareaRef.current.parentElement?.getBoundingClientRect() || {
+                top: 0,
+                left: 0,
+              };
+
+            // テキストエリア内のカーソル位置を画面上の座標に変換
+            const top =
+              textRect.top -
+              parentRect.top +
+              caretCoords.top +
+              caretCoords.height;
+            const left = textRect.left - parentRect.left + caretCoords.left;
+
+            setSuggestionPosition({ top, left });
+            setSuggestions(filtered);
+            setActiveSuggestionIndex(0);
+            return;
+          }
+        }
+      }
+    }
+  };
+
+  const applySuggestion = (candidate: { value: string; label: string }) => {
+    if (!textareaRef.current) return;
+    const pos = textareaRef.current.selectionStart;
+    const textBeforeCursor = ssml.slice(0, pos);
+    for (const embed of embeddeds) {
+      const { startKey, endKey } = embed;
+      const startIndex = textBeforeCursor.lastIndexOf(startKey);
+      if (
+        startIndex !== -1 &&
+        textBeforeCursor.indexOf(endKey, startIndex) === -1
+      ) {
+        const newValue =
+          ssml.slice(0, startIndex + startKey.length) +
+          candidate.value +
+          endKey +
+          ssml.slice(pos);
+        setSSML(newValue);
+        onChange && onChange(newValue);
+        setSuggestions([]);
+        setSuggestionPosition(null);
+        setTimeout(() => {
+          if (textareaRef.current) {
+            textareaRef.current.selectionStart =
+              textareaRef.current.selectionEnd =
+                startIndex + startKey.length + candidate.value.length;
+            textareaRef.current.focus();
+          }
+        }, 0);
+        return;
+      }
+    }
   };
 
   const syncScroll = () => {
-    requestAnimationFrame(() => {
-      if (textareaRef.current && highlightRef.current) {
-        highlightRef.current.scrollTop = textareaRef.current.scrollTop;
-        highlightRef.current.scrollLeft = textareaRef.current.scrollLeft;
+    if (textareaRef.current && highlightRef.current) {
+      // テキストエリアのスクロール位置をハイライト用divに反映
+      highlightRef.current.scrollTop = textareaRef.current.scrollTop;
+      highlightRef.current.scrollLeft = textareaRef.current.scrollLeft;
+
+      if (lineNumbersRef.current) {
+        lineNumbersRef.current.scrollTop = textareaRef.current.scrollTop;
+      }
+
+      // 最終行の表示を確保するため、必要に応じて強制的にスクロール調整
+      const textarea = textareaRef.current;
+      if (
+        textarea.scrollHeight - textarea.clientHeight <=
+        textarea.scrollTop + 10
+      ) {
+        // 最下部付近にいる場合は最下部に強制スクロール
+        textarea.scrollTop = textarea.scrollHeight - textarea.clientHeight;
+        highlightRef.current.scrollTop = textarea.scrollTop;
         if (lineNumbersRef.current) {
-          lineNumbersRef.current.scrollTop = textareaRef.current.scrollTop;
+          lineNumbersRef.current.scrollTop = textarea.scrollTop;
         }
       }
-    });
+    }
   };
 
   const wrapSelectionWithTag = (
@@ -157,6 +288,34 @@ export const SSMLEditor: React.FC<SSMLEditorProps> = ({
   };
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    // Escキーで候補を閉じる
+    if (e.key === "Escape" && suggestions.length > 0) {
+      e.preventDefault();
+      setSuggestions([]);
+      setSuggestionPosition(null);
+      return;
+    }
+
+    if (suggestions.length > 0) {
+      if (e.key === "ArrowDown") {
+        e.preventDefault();
+        setActiveSuggestionIndex((prev) =>
+          prev + 1 < suggestions.length ? prev + 1 : prev
+        );
+        return;
+      }
+      if (e.key === "ArrowUp") {
+        e.preventDefault();
+        setActiveSuggestionIndex((prev) => (prev > 0 ? prev - 1 : prev));
+        return;
+      }
+      if (e.key === "Enter" || e.key === "Tab") {
+        e.preventDefault();
+        applySuggestion(suggestions[activeSuggestionIndex]);
+        return;
+      }
+    }
+
     const shortcutMatch = wrapTagShortCuts?.find((wrapTagShortCut) =>
       wrapTagShortCut.shortcut(e)
     );
@@ -305,12 +464,19 @@ export const SSMLEditor: React.FC<SSMLEditorProps> = ({
         <textarea
           ref={textareaRef}
           value={ssml}
-          onChange={(e) => {
-            handleInput(e);
-            syncScroll();
-          }}
+          onChange={handleInput}
           onScroll={syncScroll}
           onKeyDown={handleKeyDown}
+          onClick={() => {
+            // クリックでカーソル位置変更時に候補を消す
+            setSuggestions([]);
+            setSuggestionPosition(null);
+          }}
+          onBlur={() => {
+            // フォーカスを失った時に候補を消す
+            setSuggestions([]);
+            setSuggestionPosition(null);
+          }}
           style={{
             ...commonStyles,
             backgroundColor: "transparent",
@@ -324,6 +490,52 @@ export const SSMLEditor: React.FC<SSMLEditorProps> = ({
           spellCheck="false"
         />
       </div>
+      {suggestions.length > 0 && suggestionPosition && (
+        <div
+          style={{
+            position: "absolute",
+            top: suggestionPosition.top,
+            left: suggestionPosition.left,
+            background: "white",
+            border: "1px solid #ccc",
+            zIndex: 1000,
+          }}
+        >
+          {suggestions.map((s, index) => (
+            <div
+              key={s.value}
+              style={{
+                padding: "4px 8px",
+                background: index === activeSuggestionIndex ? "#eee" : "white",
+                cursor: "pointer",
+              }}
+              onMouseDown={(e) => {
+                e.preventDefault();
+                applySuggestion(s);
+              }}
+            >
+              <p
+                style={{
+                  fontSize: "12px",
+                  fontWeight: "bold",
+                  margin: "0px",
+                }}
+              >
+                {s.label}
+              </p>
+              <p
+                style={{
+                  fontSize: "10px",
+                  color: "#6b6b6b",
+                  margin: "0px",
+                }}
+              >
+                {s.value}
+              </p>
+            </div>
+          ))}
+        </div>
+      )}
       <style>{`
         .ssml-tag { color: #000fff; }
         .ssml-attribute { color: #FFA500; }
