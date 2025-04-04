@@ -51,8 +51,8 @@ export function buildDAGFromTokens(tokens: Token[]): Result<SSMLDAG, string> {
           if (!node.value || !token.value) return false;
 
           // タグ名を抽出
-          const openTagMatch = node.value.match(/^<([\w-]+)[\s>]/);
-          const closeTagMatch = token.value.match(/^<\/([\w-]+)>/);
+          const openTagMatch = node.value.match(/^<([\w-:]+)[\s>]/);
+          const closeTagMatch = token.value.match(/^<\/([\w-:]+)>/);
 
           if (!openTagMatch || !closeTagMatch) return false;
 
@@ -177,7 +177,7 @@ function createAttributeNode(
 }
 
 export function parseAttributes(tagContent: string): ParsedAttribute[] {
-  const attrRegex = /(\w+)=["']([^"']*)["']/g;
+  const attrRegex = /([\w-:]+)=["']([^"']*)["']/g;
   const attributes: ParsedAttribute[] = [];
   let match;
   while ((match = attrRegex.exec(tagContent)) !== null) {

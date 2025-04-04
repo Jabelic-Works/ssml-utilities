@@ -15,7 +15,9 @@ export function highlightNode(
   }
   switch (node.type) {
     case "element": {
-      const tagMatch = node.value!.match(/^<(\/?[^\s>]+)(.*)>?$/s);
+      const tagMatch = node.value!.match(
+        /^<(\/?(?:[\w-]+(?::[\w-]+)*))(.*)>?$/s
+      );
       if (tagMatch) {
         const [_, tagName, rest] = tagMatch;
         const attributesResult = highlightAttributes(
