@@ -93,40 +93,40 @@ describe("extractAttributesFromNode", () => {
     expect(extractAttributesFromNode(textNode)).toBe("");
   });
 
-  // it("should handle tags with namespace prefix", () => {
-  //   const node = createNode('<mstts:express-as style="customerservice">');
-  //   expect(extractAttributesFromNode(node)).toBe(' style="customerservice"');
-  // });
+  it("should handle tags with namespace prefix", () => {
+    const node = createNode('<mstts:express-as style="customerservice">');
+    expect(extractAttributesFromNode(node)).toBe(' style="customerservice"');
+  });
 
-  // it("should handle self-closing tags with namespace prefix", () => {
-  //   const node = createNode('<mstts:break time="2s" />');
-  //   expect(extractAttributesFromNode(node)).toBe(' time="2s" ');
-  // });
+  it("should handle self-closing tags with namespace prefix", () => {
+    const node = createNode('<mstts:break time="2s" />');
+    expect(extractAttributesFromNode(node)).toBe(' time="2s" ');
+  });
 
-  // it("should handle tags with namespace prefix and multiple attributes", () => {
-  //   const node = createNode('<amazon:emotion name="excited" intensity="high">');
-  //   expect(extractAttributesFromNode(node)).toBe(
-  //     ' name="excited" intensity="high"'
-  //   );
-  // });
+  it("should handle tags with namespace prefix and multiple attributes", () => {
+    const node = createNode('<amazon:emotion name="excited" intensity="high">');
+    expect(extractAttributesFromNode(node)).toBe(
+      ' name="excited" intensity="high"'
+    );
+  });
 
-  // it("should handle attributes with namespace prefix", () => {
-  //   const node = createNode(
-  //     '<speak xmlns:mstts="http://www.w3.org/2001/mstts">'
-  //   );
-  //   expect(extractAttributesFromNode(node)).toBe(
-  //     ' xmlns:mstts="http://www.w3.org/2001/mstts"'
-  //   );
-  // });
+  it("should handle attributes with namespace prefix", () => {
+    const node = createNode(
+      '<speak xmlns:mstts="http://www.w3.org/2001/mstts">'
+    );
+    expect(extractAttributesFromNode(node)).toBe(
+      ' xmlns:mstts="http://www.w3.org/2001/mstts"'
+    );
+  });
 
-  // it("should handle complex namespace scenarios", () => {
-  //   const node = createNode(
-  //     '<mstts:express-as style="customerservice" role="Female" xmlns:mstts="http://example.com">'
-  //   );
-  //   expect(extractAttributesFromNode(node)).toBe(
-  //     ' style="customerservice" role="Female" xmlns:mstts="http://example.com"'
-  //   );
-  // });
+  it("should handle complex namespace scenarios", () => {
+    const node = createNode(
+      '<mstts:express-as style="customerservice" role="Female" xmlns:mstts="http://example.com">'
+    );
+    expect(extractAttributesFromNode(node)).toBe(
+      ' style="customerservice" role="Female" xmlns:mstts="http://example.com"'
+    );
+  });
 });
 
 describe("highlightAttributes", () => {
