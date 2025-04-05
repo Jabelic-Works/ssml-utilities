@@ -1,8 +1,8 @@
 // extractAttributesFromNode.test.ts
 import { describe, it, expect } from "vitest";
 import { extractAttributesFromNode, highlightAttributes } from "../attributes";
-import { DAGNode, Result } from "@ssml-utilities/core";
 import { HighlightOptions } from "../../interfaces";
+import { DAGNode, Result } from "@ssml-utilities/core";
 
 describe("extractAttributesFromNode", () => {
   // ヘルパー関数を作成して、テストデータの作成を簡略化
@@ -20,12 +20,26 @@ describe("extractAttributesFromNode", () => {
   }
 
   it("should return an empty string for a node without value", () => {
-    const node: DAGNode = createNode("");
+    const node: DAGNode = {
+      id: "1",
+      type: "element",
+      value: undefined,
+      name: undefined,
+      children: new Set(),
+      parents: new Set(),
+    };
     expect(extractAttributesFromNode(node)).toBe("");
   });
 
   it("should extract attributes from a self-closing tag", () => {
-    const node = createNode('<break time="2s" />');
+    const node: DAGNode = {
+      id: "1",
+      type: "element",
+      value: '<break time="2s" />',
+      name: undefined,
+      children: new Set(),
+      parents: new Set(),
+    };
     expect(extractAttributesFromNode(node)).toBe(' time="2s" ');
   });
 
@@ -91,6 +105,70 @@ describe("extractAttributesFromNode", () => {
   it("should handle nodes of type other than element", () => {
     const textNode = createNode("Some text", "text");
     expect(extractAttributesFromNode(textNode)).toBe("");
+  });
+
+  it("should handle tags with namespace prefix", () => {
+    const node = createNode('<mstts:express-as style="customerservice">');
+    expect(extractAttributesFromNode(node)).toBe(' style="customerservice"');
+  });
+
+  it("should handle self-closing tags with namespace prefix", () => {
+    const node = createNode('<mstts:break time="2s" />');
+    expect(extractAttributesFromNode(node)).toBe(' time="2s" ');
+  });
+
+  it("should handle tags with namespace prefix and multiple attributes", () => {
+    const node = createNode('<amazon:emotion name="excited" intensity="high">');
+    expect(extractAttributesFromNode(node)).toBe(
+      ' name="excited" intensity="high"'
+    );
+  });
+
+  it("should handle attributes with namespace prefix", () => {
+    const node = createNode(
+      '<speak xmlns:mstts="http://www.w3.org/2001/mstts">'
+    );
+    expect(extractAttributesFromNode(node)).toBe(
+      ' xmlns:mstts="http://www.w3.org/2001/mstts"'
+    );
+  });
+
+  it("should handle complex namespace scenarios", () => {
+    const node = createNode(
+      '<mstts:express-as style="customerservice" role="Female" xmlns:mstts="http://example.com">'
+    );
+    expect(extractAttributesFromNode(node)).toBe(
+      ' style="customerservice" role="Female" xmlns:mstts="http://example.com"'
+    );
+  });
+
+  it("名前空間を含む属性を正しく抽出する", () => {
+    const node: DAGNode = {
+      id: "1",
+      type: "element",
+      value: '<speak xmlns:mstts="http://www.w3.org/2001/mstts">',
+      name: undefined,
+      children: new Set(),
+      parents: new Set(),
+    };
+    expect(extractAttributesFromNode(node)).toBe(
+      ' xmlns:mstts="http://www.w3.org/2001/mstts"'
+    );
+  });
+
+  it("タグ名と属性名にコロンが含まれる場合を正しく処理する", () => {
+    const node: DAGNode = {
+      id: "1",
+      type: "element",
+      value:
+        '<mstts:express-as style="calm" xmlns:mstts="http://www.w3.org/2001/mstts">',
+      name: undefined,
+      children: new Set(),
+      parents: new Set(),
+    };
+    expect(extractAttributesFromNode(node)).toBe(
+      ' style="calm" xmlns:mstts="http://www.w3.org/2001/mstts"'
+    );
   });
 });
 
@@ -190,5 +268,29 @@ describe("highlightAttributes", () => {
     expect(highlighted).toBe(
       '<span class="attr">class</span>=<span class="attr-value">&quot;unclosed</span>'
     );
+  });
+
+  it("名前空間属性のハイライトが正しく行われる", () => {
+    const attributes = ' xmlns:mstts="http://www.w3.org/2001/mstts"';
+    const options: HighlightOptions = {
+      classes: {
+        tag: "tag",
+        attribute: "attribute",
+        attributeValue: "attribute-value",
+        text: "text",
+      },
+      indentation: 2,
+    };
+
+    const result = highlightAttributes(attributes, options);
+    expect(result.ok).toBe(true);
+    if (result.ok) {
+      expect(result.value).toContain(
+        '<span class="attribute">xmlns:mstts</span>'
+      );
+      expect(result.value).toContain(
+        '<span class="attribute-value">http://www.w3.org/2001/mstts</span>'
+      );
+    }
   });
 });

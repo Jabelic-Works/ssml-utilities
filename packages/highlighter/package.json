@@ -14,7 +14,7 @@
   },
   "scripts": {
     "build": "rollup -c rollup.config.mjs",
-    "test": "vitest",
+    "test": "pnpm --filter @ssml-utilities/core build && vitest",
     "test:watch": "vitest watch",
     "lint": "eslint src --ext .ts,.tsx",
     "prepublishOnly": "pnpm run build"
