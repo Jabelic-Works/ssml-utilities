@@ -15,9 +15,11 @@ export function highlightNode(
   }
   switch (node.type) {
     case "element": {
-      const tagMatch = node.value!.match(/^<(\/?[^\s>]+)(.*)>?$/s);
+      const tagMatch = node.value!.match(
+        /^<(\/?(?:[\w:-]+(?:[\w:-]+)*))(.*)>?$/s
+      );
       if (tagMatch) {
-        const [_, tagName, rest] = tagMatch;
+        const [_, tagName, rest] = tagMatch; // restはタグ名の後に続く属性部分の文字列
         const attributesResult = highlightAttributes(
           extractAttributesFromNode(node),
           options
@@ -37,7 +39,22 @@ export function highlightNode(
           }
           tagContent += "&gt;"; // > 文字実体参照
         } else {
-          tagContent = `&lt;${escapeHtml(tagName)}${rest}`;
+          // restは既にフォーマットされている可能性があるため、適切に処理
+          // 基本的なHTMLエンティティのみをエスケープし、既にエスケープされた部分は保持
+          const safeRest = rest.replace(/[<>&]/g, (c) => {
+            switch (c) {
+              case "<":
+                return "&lt;";
+              case ">":
+                return "&gt;";
+              case "&":
+                // &で始まりセミコロンで終わる場合はHTMLエンティティとして保持
+                return /&[a-zA-Z0-9#]+;/.test(rest) ? c : "&amp;";
+              default:
+                return c;
+            }
+          });
+          tagContent = `&lt;${escapeHtml(tagName)}${safeRest}`;
         }
 
         return success(

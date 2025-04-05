@@ -50,7 +50,7 @@ export function tokenize(ssml: string): Token[] {
 }
 
 function isValidTag(tag: string): boolean {
-  return /^<[\w-\\n]+(\s+[\w-]+(?:=(?:"[^"]*"|'[^']*'|[^\s"'=<>`]+))?)*\s*\/?>$/.test(
+  return /^<[\w-:\\n]+(\s+[\w-:]+(?:=(?:"[^"]*"|'[^']*'|[^\s"'=<>`]+))?)*\s*\/?>$/.test(
     tag
   );
 }

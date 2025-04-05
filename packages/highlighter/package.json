@@ -1,6 +1,6 @@
 {
   "name": "@ssml-utilities/highlighter",
-  "version": "0.3.7",
+  "version": "0.3.8",
   "description": "SSML syntax highlighter for the SSML Utilities toolkit",
   "main": "dist/index.js",
   "module": "dist/index.js",
@@ -14,7 +14,7 @@
   },
   "scripts": {
     "build": "rollup -c rollup.config.mjs",
-    "test": "vitest",
+    "test": "pnpm --filter @ssml-utilities/core build && vitest",
     "test:watch": "vitest watch",
     "lint": "eslint src --ext .ts,.tsx",
     "prepublishOnly": "pnpm run build"

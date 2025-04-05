@@ -1,7 +1,8 @@
 {
   "compilerOptions": {
     "target": "ES6",
-    "module": "commonjs",
+    "module": "ESNext",
+    "moduleResolution": "bundler",
     "strict": true,
     "esModuleInterop": true,
     "skipLibCheck": true,
@@ -9,9 +10,10 @@
     "baseUrl": "./",
     "paths": {
       "@core/*": ["packages/core/src/*"],
+      "@highlighter/*": ["packages/highlighter/src/*"],
       "@examples/*": ["packages/examples/src/*"]
     }
   },
-  "include": ["**/*.ts"],
+  "include": ["**/*.ts", "**/*.mts"],
   "exclude": ["node_modules", "**/*.spec.ts"]
 }
