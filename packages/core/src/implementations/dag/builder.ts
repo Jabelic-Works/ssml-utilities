@@ -177,7 +177,11 @@ function createAttributeNode(
 }
 
 export function parseAttributes(tagContent: string): ParsedAttribute[] {
-  const attrRegex = /([\w-:]+)=["']([^"']*)["']/g;
+  // コロンを含む属性名をサポートしつつ、正しい形式の属性のみマッチする正規表現
+  // XMLの名前空間（ns:name）形式をサポートし、属性名の検証を強化
+  // 属性名は英字またはアンダースコアで始まり、数字や :不正な形式で始まる属性名を除外
+  const attrRegex =
+    /(?:^|\s)([a-zA-Z_][\w-]*(?::[\w][\w-]*)?)=["']([^"']*)["']/g;
   const attributes: ParsedAttribute[] = [];
   let match;
   while ((match = attrRegex.exec(tagContent)) !== null) {

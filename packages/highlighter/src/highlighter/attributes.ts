@@ -17,8 +17,10 @@ export function highlightAttributes(
       remaining = remaining.slice(leadingSpaceMatch[0].length);
       continue;
     }
-    // 属性名を処理
-    const nameMatch = remaining.match(/^[\w-]+/); // 属性名は、\w(半角英数字と_), - で構成される
+    // 属性名を処理（名前空間のコロンを含む場合も対応）
+    const nameMatch = remaining.match(
+      /^([a-zA-Z_][\w-]*(?::[a-zA-Z_][\w-]*)?)/
+    );
     if (nameMatch) {
       const name = nameMatch[0];
       result += `<span class="${options.classes.attribute}">${escapeHtml(
@@ -65,10 +67,11 @@ export function extractAttributesFromNode(node: DAGNode): string {
 
   const value = node.value;
 
-  // 自己閉じタグ: <tag ... />
-  const selfClosingMatch = value.match(/^<([\w:-]+)([\s\S]*?)\/>/);
+  // 自己閉じタグ: <tag ... /> または <namespace:tag ... />
+  // 名前空間を含むタグ名全体をキャプチャするように正規表現を変更
+  const selfClosingMatch = value.match(/^<([\w-]+(?::[\w-]+)?)([\s\S]*?)\/>/);
   if (selfClosingMatch) {
-    // タグ名の直後から、'/>' の直前までを抽出（末尾のスペースを保持）
+    // タグ名（名前空間含む）の直後から、'/>' の直前までを抽出
     const extracted = value.substring(
       selfClosingMatch[1].length + 1,
       value.lastIndexOf("/>")
@@ -76,10 +79,11 @@ export function extractAttributesFromNode(node: DAGNode): string {
     return extracted;
   }
 
-  // 開始タグ: <tag ...>
-  const openingTagMatch = value.match(/^<([\w:-]+)([\s\S]*?)>/);
+  // 開始タグ: <tag ...> または <namespace:tag ...>
+  // 名前空間を含むタグ名全体をキャプチャするように正規表現を変更
+  const openingTagMatch = value.match(/^<([\w-]+(?::[\w-]+)?)([\s\S]*?)>/);
   if (openingTagMatch) {
-    // タグ名の直後から、'>' の直前までを抽出
+    // タグ名（名前空間含む）の直後から、'>' の直前までを抽出
     const extracted = value.substring(
       openingTagMatch[1].length + 1,
       value.lastIndexOf(">")
