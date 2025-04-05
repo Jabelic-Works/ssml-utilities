@@ -1,5 +1,5 @@
 // extractAttributesFromNode.test.ts
-import { describe, it, expect, vi } from "vitest";
+import { describe, it, expect } from "vitest";
 import { extractAttributesFromNode, highlightAttributes } from "../attributes";
 import { HighlightOptions } from "../../interfaces";
 import { DAGNode, Result } from "@ssml-utilities/core";
