@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import { ssmlHighlighter, HighlightOptions } from "@ssml-utilities/highlighter";
 import { getCaretCoordinates } from "./textareaCaretPosition";
 
@@ -69,11 +69,6 @@ export const SSMLEditor: React.FC<SSMLEditorProps> = ({
   } | null>(null);
   const [activeSuggestionIndex, setActiveSuggestionIndex] = useState(0);
 
-  // タグをラップする関数を受け取る
-  useEffect(() => {
-    if (onWrapTag) onWrapTag(wrapSelectionWithTag);
-  }, [onWrapTag]);
-
   // ハイライトを更新する
   useEffect(() => {
     const options: HighlightOptions = {
@@ -106,11 +101,6 @@ export const SSMLEditor: React.FC<SSMLEditorProps> = ({
     const lines = ssml.split("\n");
     setLineNumbers(lines.map((_, i) => (i + 1).toString()));
   }, [ssml]);
-
-  // 定型文挿入関数を受け取る
-  useEffect(() => {
-    if (onInsertPhrase) onInsertPhrase(insertPhrase);
-  }, [onInsertPhrase]);
 
   const handleInput = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     const newValue = e.target.value;
@@ -239,62 +229,66 @@ export const SSMLEditor: React.FC<SSMLEditorProps> = ({
     }
   };
 
-  const wrapSelectionWithTag = (
-    tagName: string,
-    attributes?: TagAttributes,
-    selfClosing?: boolean
-  ) => {
-    if (textareaRef.current) {
-      const start = textareaRef.current.selectionStart;
-      const end = textareaRef.current.selectionEnd;
-      const selectedText = ssml.substring(start, end);
+  const wrapSelectionWithTag = useCallback(
+    (tagName: string, attributes?: TagAttributes, selfClosing?: boolean) => {
+      if (textareaRef.current) {
+        const start = textareaRef.current.selectionStart;
+        const end = textareaRef.current.selectionEnd;
+        const selectedText = ssml.substring(start, end);
 
-      // 属性文字列の生成
-      const attributesStr = attributes
-        ? Object.entries(attributes)
-            .map(([key, value]) => ` ${key}="${value}"`)
-            .join("")
-        : "";
+        // 属性文字列の生成
+        const attributesStr = attributes
+          ? Object.entries(attributes)
+              .map(([key, value]) => ` ${key}="${value}"`)
+              .join("")
+          : "";
 
-      if (selfClosing) {
-        // 自己閉じタグの場合
-        const tag = `<${tagName}${attributesStr}/>`;
-        const newValue = ssml.substring(0, start) + tag + ssml.substring(end);
+        if (selfClosing) {
+          // 自己閉じタグの場合
+          const tag = `<${tagName}${attributesStr}/>`;
+          const newValue = ssml.substring(0, start) + tag + ssml.substring(end);
 
-        setSSML(newValue);
-        if (onChange) onChange(newValue);
+          setSSML(newValue);
+          if (onChange) onChange(newValue);
 
-        requestAnimationFrame(() => {
-          if (textareaRef.current) {
-            textareaRef.current.selectionStart =
-              textareaRef.current.selectionEnd = start + tag.length;
-          }
-          textareaRef.current?.focus();
-        });
-      } else {
-        // 通常のタグの場合（既存のロジック）
-        const openTag = `<${tagName}${attributesStr}>`;
-        const closeTag = `</${tagName}>`;
-        const newValue =
-          ssml.substring(0, start) +
-          openTag +
-          selectedText +
-          closeTag +
-          ssml.substring(end);
+          requestAnimationFrame(() => {
+            if (textareaRef.current) {
+              textareaRef.current.selectionStart =
+                textareaRef.current.selectionEnd = start + tag.length;
+            }
+            textareaRef.current?.focus();
+          });
+        } else {
+          // 通常のタグの場合（既存のロジック）
+          const openTag = `<${tagName}${attributesStr}>`;
+          const closeTag = `</${tagName}>`;
+          const newValue =
+            ssml.substring(0, start) +
+            openTag +
+            selectedText +
+            closeTag +
+            ssml.substring(end);
 
-        setSSML(newValue);
-        if (onChange) onChange(newValue);
+          setSSML(newValue);
+          if (onChange) onChange(newValue);
 
-        requestAnimationFrame(() => {
-          if (textareaRef.current) {
-            textareaRef.current.selectionStart = start + openTag.length;
-            textareaRef.current.selectionEnd = end + openTag.length;
-          }
-          textareaRef.current?.focus();
-        });
+          requestAnimationFrame(() => {
+            if (textareaRef.current) {
+              textareaRef.current.selectionStart = start + openTag.length;
+              textareaRef.current.selectionEnd = end + openTag.length;
+            }
+            textareaRef.current?.focus();
+          });
+        }
       }
-    }
-  };
+    },
+    [ssml, onChange]
+  );
+
+  // タグをラップする関数を受け取る
+  useEffect(() => {
+    if (onWrapTag) onWrapTag(wrapSelectionWithTag);
+  }, [onWrapTag, wrapSelectionWithTag]);
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     // Escキーで候補を閉じる
@@ -355,24 +349,33 @@ export const SSMLEditor: React.FC<SSMLEditorProps> = ({
     }
   };
 
-  const insertPhrase = (text: string) => {
-    if (textareaRef.current) {
-      const start = textareaRef.current.selectionStart;
-      const newValue = ssml.substring(0, start) + text + ssml.substring(start);
+  const insertPhrase = useCallback(
+    (text: string) => {
+      if (textareaRef.current) {
+        const start = textareaRef.current.selectionStart;
+        const newValue =
+          ssml.substring(0, start) + text + ssml.substring(start);
 
-      setSSML(newValue);
-      if (onChange) onChange(newValue);
+        setSSML(newValue);
+        if (onChange) onChange(newValue);
 
-      requestAnimationFrame(() => {
-        if (textareaRef.current) {
-          const newPosition = start + text.length;
-          textareaRef.current.selectionStart =
-            textareaRef.current.selectionEnd = newPosition;
-        }
-        textareaRef.current?.focus();
-      });
-    }
-  };
+        requestAnimationFrame(() => {
+          if (textareaRef.current) {
+            const newPosition = start + text.length;
+            textareaRef.current.selectionStart =
+              textareaRef.current.selectionEnd = newPosition;
+          }
+          textareaRef.current?.focus();
+        });
+      }
+    },
+    [ssml, onChange]
+  );
+
+  // 定型文挿入関数を受け取る
+  useEffect(() => {
+    if (onInsertPhrase) onInsertPhrase(insertPhrase);
+  }, [onInsertPhrase, insertPhrase]);
 
   const commonStyles: React.CSSProperties = {
     fontFamily: "monospace",
