@@ -31,6 +31,9 @@ interface SSMLEditorProps {
       label: string;
     }[];
   }[];
+  autoExpand?: boolean;
+  minHeight?: string;
+  maxHeight?: string;
 }
 
 interface TagAttributes {
@@ -47,6 +50,9 @@ export const SSMLEditor: React.FC<SSMLEditorProps> = ({
   showLineNumbers = false,
   onInsertPhrase,
   embeddeds = [],
+  autoExpand,
+  minHeight,
+  maxHeight,
 }) => {
   const [ssml, setSSML] = useState(initialValue);
   const [highlightedHtml, setHighlightedHtml] = useState("");
@@ -83,7 +89,12 @@ export const SSMLEditor: React.FC<SSMLEditorProps> = ({
     const highlightResult = ssmlHighlighter.highlight(ssml, options);
 
     if (highlightResult.ok) {
-      setHighlightedHtml(highlightResult.value);
+      // 空行の処理を統一するため、空行を明示的に処理
+      const processedHtml = highlightResult.value
+        .replace(/<div><\/div>/g, "<div>&nbsp;</div>") // 空行を&nbsp;で置換
+        .replace(/<br\s*\/?>/g, "<br>"); // 改行タグを統一
+
+      setHighlightedHtml(processedHtml);
     } else {
       console.error("Error highlighting SSML:", highlightResult.error);
       setHighlightedHtml(
@@ -104,7 +115,7 @@ export const SSMLEditor: React.FC<SSMLEditorProps> = ({
   const handleInput = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     const newValue = e.target.value;
     setSSML(newValue);
-    onChange && onChange(newValue);
+    onChange?.(newValue);
     checkForEmbeddedCompletion(newValue);
 
     ensureCorrectScroll();
@@ -114,6 +125,7 @@ export const SSMLEditor: React.FC<SSMLEditorProps> = ({
     if (textareaRef.current) {
       // カーソルがテキストエリアの表示範囲外にある場合、スクロール位置を調整
       const textarea = textareaRef.current;
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
       const cursorPosition = textarea.selectionStart;
 
       // 最終行を表示するために、まずスクロールを一番下に移動させて、
@@ -188,7 +200,7 @@ export const SSMLEditor: React.FC<SSMLEditorProps> = ({
           endKey +
           ssml.slice(pos);
         setSSML(newValue);
-        onChange && onChange(newValue);
+        if (onChange) onChange(newValue);
         setSuggestions([]);
         setSuggestionPosition(null);
         setTimeout(() => {
@@ -214,18 +226,15 @@ export const SSMLEditor: React.FC<SSMLEditorProps> = ({
         lineNumbersRef.current.scrollTop = textareaRef.current.scrollTop;
       }
 
-      // 最終行の表示を確保するため、必要に応じて強制的にスクロール調整
+      // 最下行での位置ずれを防ぐための処理
       const textarea = textareaRef.current;
-      if (
-        textarea.scrollHeight - textarea.clientHeight <=
-        textarea.scrollTop + 10
-      ) {
-        // 最下部付近にいる場合は最下部に強制スクロール
-        textarea.scrollTop = textarea.scrollHeight - textarea.clientHeight;
-        highlightRef.current.scrollTop = textarea.scrollTop;
-        if (lineNumbersRef.current) {
-          lineNumbersRef.current.scrollTop = textarea.scrollTop;
-        }
+      const isAtBottom =
+        textarea.scrollHeight - textarea.clientHeight <= textarea.scrollTop + 1;
+
+      if (isAtBottom) {
+        // 最下行にいる場合は、ハイライト表示も最下行に強制的にスクロール
+        highlightRef.current.scrollTop =
+          highlightRef.current.scrollHeight - highlightRef.current.clientHeight;
       }
     }
   };
@@ -253,7 +262,7 @@ export const SSMLEditor: React.FC<SSMLEditorProps> = ({
         const newValue = ssml.substring(0, start) + tag + ssml.substring(end);
 
         setSSML(newValue);
-        onChange?.(newValue);
+        if (onChange) onChange(newValue);
 
         requestAnimationFrame(() => {
           if (textareaRef.current) {
@@ -274,7 +283,7 @@ export const SSMLEditor: React.FC<SSMLEditorProps> = ({
           ssml.substring(end);
 
         setSSML(newValue);
-        onChange?.(newValue);
+        if (onChange) onChange(newValue);
 
         requestAnimationFrame(() => {
           if (textareaRef.current) {
@@ -352,7 +361,7 @@ export const SSMLEditor: React.FC<SSMLEditorProps> = ({
       const newValue = ssml.substring(0, start) + text + ssml.substring(start);
 
       setSSML(newValue);
-      onChange?.(newValue);
+      if (onChange) onChange(newValue);
 
       requestAnimationFrame(() => {
         if (textareaRef.current) {
@@ -381,7 +390,27 @@ export const SSMLEditor: React.FC<SSMLEditorProps> = ({
     textAlign: "left",
     whiteSpace: "pre-wrap",
     overflow: "auto",
+    boxSizing: "border-box",
+    wordWrap: "break-word",
   };
+
+  useEffect(() => {
+    if (textareaRef.current && autoExpand) {
+      // 一度高さをリセット
+      textareaRef.current.style.height = "auto";
+
+      // 新しい高さを計算（minHeightとmaxHeightの間に制限）
+      const newHeight = Math.min(
+        Math.max(
+          textareaRef.current.scrollHeight,
+          minHeight ? parseInt(minHeight) : 0
+        ),
+        maxHeight ? parseInt(maxHeight) : Infinity
+      );
+
+      textareaRef.current.style.height = `${newHeight}px`;
+    }
+  }, [ssml, autoExpand, minHeight, maxHeight]);
 
   return (
     <div
@@ -447,6 +476,9 @@ export const SSMLEditor: React.FC<SSMLEditorProps> = ({
             pointerEvents: "none",
             border: "1px solid #ddd",
             borderRadius: showLineNumbers ? "0px 10px 10px 0px" : "10px",
+            overflow: "auto",
+            paddingBottom: "20px",
+            minHeight: "100%",
           }}
           onScroll={(e) => {
             requestAnimationFrame(() => {
@@ -486,6 +518,8 @@ export const SSMLEditor: React.FC<SSMLEditorProps> = ({
             zIndex: 1,
             left: "0",
             outline: "none",
+            paddingBottom: "20px",
+            minHeight: "100%",
           }}
           spellCheck="false"
         />
