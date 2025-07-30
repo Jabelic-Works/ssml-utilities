@@ -2,6 +2,17 @@
  * SSML要素のバリデーション機能
  */
 
+import {
+  extractTagName,
+  parseAttributesFromString,
+  parseTagStructure,
+} from "./tag-parser";
+import {
+  CUSTOM_TAG_PATTERN,
+  ATTRIBUTE_NAME_PATTERN,
+  ATTRIBUTE_VALUE_PATTERN,
+} from "./regex";
+
 // SSMLで標準的にサポートされるタグ名
 // 複数のTTSプロバイダー（Microsoft, Google, Amazon等）の仕様に基づく
 export const STANDARD_SSML_TAGS = [
@@ -27,6 +38,7 @@ export const STANDARD_SSML_TAGS = [
   "mstts:audioduration",
   "mstts:backgroundaudio",
   "mstts:voiceconversion",
+  "mstts:ttsembedding",
   "mstts:embedding",
   "mstts:express-as",
   "mstts:silence",
@@ -120,17 +132,6 @@ export const STANDARD_SSML_TAGS = [
 //   voice: [], // mstts:backgroundaudio と speak 以外のすべての要素（実装時に除外ルールを適用）
 // };
 
-// カスタムタグ名のパターン（日本語文字も含む）
-export const CUSTOM_TAG_PATTERN =
-  /^[a-zA-Z\u3040-\u309F\u30A0-\u30FF\u4E00-\u9FAF][a-zA-Z0-9\u3040-\u309F\u30A0-\u30FF\u4E00-\u9FAF_-]*$/;
-
-// 属性名のパターン
-export const ATTRIBUTE_NAME_PATTERN =
-  /^[a-zA-Z_][a-zA-Z0-9_-]*(?::[a-zA-Z_][a-zA-Z0-9_-]*)?$/;
-
-// 属性値のパターン（引用符付きまたは引用符なし）
-export const ATTRIBUTE_VALUE_PATTERN = /^(?:"[^"]*"|'[^']*'|[^\s"'=<>`]+)$/;
-
 export interface ValidationOptions {
   /**
    * tag validation mode
@@ -212,34 +213,24 @@ export function isValidTag(
   tag: string,
   options: ValidationOptions = DEFAULT_VALIDATION_OPTIONS
 ): boolean {
-  if (
-    !tag ||
-    !tag.startsWith("<") ||
-    !tag.endsWith(">")
-    // ||tag.startsWith("< ") ||
-    // tag.startsWith("<　") // < の後に 空白 を書いた場合、無効.
-  ) {
-    return false;
-  }
-  const content = tag.slice(1, -1); // .trim(); // <tag> または <tag/> の内容: tag, /tag, tag/, break time="500ms"/
-  if (
-    content.length === 0 ||
-    content.startsWith(" ") || // < の後に 空白 を書いた場合、無効.
-    content.startsWith("　")
-  ) {
+  // 共通ロジックを使用してタグ構造を解析
+  // const tagStructure = parseTagStructure(tag);
+  const tagName = extractTagName(tag);
+  if (!tagName) {
     return false;
   }
 
-  const isSelfClosing = content.endsWith("/");
-  const tagContent = isSelfClosing ? content.slice(0, -1).trim() : content; // break time="500ms", speak
+  // タグ名をバリデーション
+  if (!isValidTagName(tagName, options)) {
+    return false;
+  }
 
-  const parts = tagContent.split(/\s+/);
-  const tagName = parts[0];
+  const attributes = parseAttributesFromString(tag);
 
-  if (!isValidTagName(tagName, options)) return false;
-
-  for (let i = 1; i < parts.length; i++) {
-    if (!isValidAttribute(parts[i])) {
+  // 属性をバリデーション
+  for (const attribute of attributes) {
+    const attributeString = `${attribute.name}="${attribute.value}"`;
+    if (!isValidAttribute(attributeString)) {
       return false;
     }
   }

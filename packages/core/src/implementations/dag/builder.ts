@@ -1,6 +1,11 @@
 import { SSMLDAG, DAGNode } from ".";
-import { Token, ParsedAttribute } from "../parser/types";
+import { Token } from "../parser/types";
 import { failure, Result, success } from "../result"; // Result型の定義をimport
+import {
+  ParsedAttribute,
+  parseAttributesFromString,
+  areMatchingTagPair,
+} from "../tag/tag-parser";
 
 export function buildDAGFromTokens(tokens: Token[]): Result<SSMLDAG, string> {
   const dag = new SSMLDAG();
@@ -50,14 +55,8 @@ export function buildDAGFromTokens(tokens: Token[]): Result<SSMLDAG, string> {
         const openTagNode = stack.find((node) => {
           if (!node.value || !token.value) return false;
 
-          // タグ名を抽出
-          const openTagMatch = node.value.match(/^<([\w-:]+)[\s>]/);
-          const closeTagMatch = token.value.match(/^<\/([\w-:]+)>/);
-
-          if (!openTagMatch || !closeTagMatch) return false;
-
-          // タグ名だけを比較
-          return openTagMatch[1] === closeTagMatch[1];
+          // 共通ロジックを使用してタグペアが一致するかチェック
+          return areMatchingTagPair(node.value, token.value);
         });
         if (!openTagNode) {
           // 対応するopenTagが見つからない場合は、テキストとして扱う
@@ -165,7 +164,7 @@ function createElementNode(
   tagContent: string
 ): [Result<DAGNode, string>, ParsedAttribute[]] {
   const tagNodeResult = dag.createNode("element", undefined, tagContent);
-  const attributes = parseAttributes(tagContent);
+  const attributes = parseAttributesFromString(tagContent);
   return [tagNodeResult, attributes];
 }
 
@@ -176,17 +175,17 @@ function createAttributeNode(
   return dag.createNode("attribute", attr.name, attr.value);
 }
 
-export function parseAttributes(tagContent: string): ParsedAttribute[] {
-  // コロンを含む属性名をサポートしつつ、正しい形式の属性のみマッチする正規表現
-  // XMLの名前空間（ns:name）形式をサポートし、属性名の検証を強化
-  // 属性名は英字またはアンダースコアで始まり、数字や :不正な形式で始まる属性名を除外
-  const attrRegex =
-    /(?:^|\s)([a-zA-Z_][\w-]*(?::[\w][\w-]*)?)=["']([^"']*)["']/g;
-  const attributes: ParsedAttribute[] = [];
-  let match;
-  while ((match = attrRegex.exec(tagContent)) !== null) {
-    const [, name, value] = match;
-    attributes.push({ name, value });
-  }
-  return attributes;
-}
+// export function parseAttributes(tagContent: string): ParsedAttribute[] {
+//   // コロンを含む属性名をサポートしつつ、正しい形式の属性のみマッチする正規表現
+//   // XMLの名前空間（ns:name）形式をサポートし、属性名の検証を強化
+//   // 属性名は英字またはアンダースコアで始まり、数字や :不正な形式で始まる属性名を除外
+//   const attrRegex =
+//     /(?:^|\s)([a-zA-Z_][\w-]*(?::[\w][\w-]*)?)=["']([^"']*)["']/g;
+//   const attributes: ParsedAttribute[] = [];
+//   let match;
+//   while ((match = attrRegex.exec(tagContent)) !== null) {
+//     const [, name, value] = match;
+//     attributes.push({ name, value });
+//   }
+//   return attributes;
+// }

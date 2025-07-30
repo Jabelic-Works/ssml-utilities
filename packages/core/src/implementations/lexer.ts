@@ -1,5 +1,5 @@
 import { Token, TokenType } from "./parser/types";
-import { isValidTag as validateTag } from "./validate";
+import { isValidTag, isValidTagName } from "./tag/validate";
 
 export function determineTagType(tag: string): TokenType {
   if (tag.startsWith("</")) return "closeTag";
@@ -29,7 +29,7 @@ export function tokenize(ssml: string): Token[] {
       }
     } else if (char === ">" && inTag) {
       buffer += char;
-      if (validateTag(buffer)) {
+      if (isValidTag(buffer, { allowMode: "STRICT" })) {
         const type = determineTagType(buffer);
         tokens.push({ type, value: buffer });
       } else {
@@ -44,7 +44,7 @@ export function tokenize(ssml: string): Token[] {
 
   if (buffer) {
     // 残ったバッファをテキストとして扱う
-    if (inTag && validateTag(buffer)) {
+    if (inTag && isValidTag(buffer, { allowMode: "STRICT" })) {
       const type = determineTagType(buffer);
       tokens.push({ type, value: buffer });
     } else {
