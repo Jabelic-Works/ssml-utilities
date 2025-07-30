@@ -8,6 +8,7 @@ import {
   isSelfContainedElement,
   STANDARD_SSML_TAGS,
   DEFAULT_VALIDATION_OPTIONS,
+  isValidTag,
 } from "../../tag/validate";
 
 describe("SSML Validation", () => {
@@ -72,50 +73,50 @@ describe("SSML Validation", () => {
     });
   });
 
-  // describe("isValidTag", () => {
-  //   it("単純なタグを正しく認識する", () => {
-  //     expect(isValidTag("<speak>")).toBe(true);
-  //     expect(isValidTag("</speak>")).toBe(true);
-  //     expect(isValidTag("<break/>")).toBe(true);
-  //   });
+  describe("isValidTag", () => {
+    it("単純なタグを正しく認識する", () => {
+      expect(isValidTag("<speak>")).toBe(true);
+      expect(isValidTag("</speak>")).toBe(true);
+      expect(isValidTag("<break/>")).toBe(true);
+    });
 
-  //   it("Microsoft SSML要素を認識する", () => {
-  //     expect(isValidTag("<bookmark/>")).toBe(true);
-  //     expect(isValidTag("<mstts:express-as>")).toBe(true);
-  //     expect(isValidTag("</mstts:backgroundaudio>")).toBe(true);
-  //     expect(isValidTag("<mstts:viseme/>")).toBe(true);
-  //   });
+    it("Microsoft SSML要素を認識する", () => {
+      expect(isValidTag("<bookmark/>")).toBe(true);
+      expect(isValidTag("<mstts:express-as>")).toBe(true);
+      expect(isValidTag("</mstts:backgroundaudio>")).toBe(true);
+      expect(isValidTag("<mstts:viseme/>")).toBe(true);
+    });
 
-  //   it("属性付きタグを正しく認識する", () => {
-  //     expect(isValidTag("<prosody pitch='high'>")).toBe(true);
-  //     expect(isValidTag('<break time="500ms"/>')).toBe(true);
-  //     expect(isValidTag("<say-as interpret-as='characters'>")).toBe(true);
-  //   });
+    it("属性付きタグを正しく認識する", () => {
+      expect(isValidTag("<prosody pitch='high'>")).toBe(true);
+      expect(isValidTag('<break time="500ms"/>')).toBe(true);
+      expect(isValidTag("<say-as interpret-as='characters'>")).toBe(true);
+    });
 
-  //   it("日本語タグ名を正しく認識する", () => {
-  //     const allowJapaneseOptions = {
-  //       allowMode: "ALLOW_JAPANESE" as const,
-  //     };
-  //     expect(isValidTag("<ああ>", allowJapaneseOptions)).toBe(true);
-  //     expect(isValidTag("</ああ>", allowJapaneseOptions)).toBe(true);
-  //     expect(isValidTag("<日本語/>", allowJapaneseOptions)).toBe(true);
-  //   });
+    it("日本語タグ名を正しく認識する", () => {
+      const allowJapaneseOptions = {
+        allowMode: "ALLOW_JAPANESE" as const,
+      };
+      expect(isValidTag("<ああ>", allowJapaneseOptions)).toBe(true);
+      expect(isValidTag("</ああ>", allowJapaneseOptions)).toBe(true);
+      expect(isValidTag("<日本語/>", allowJapaneseOptions)).toBe(true);
+    });
 
-  //   it("無効なタグを拒否する", () => {
-  //     expect(isValidTag("")).toBe(false);
-  //     expect(isValidTag("speak")).toBe(false); // < > なし
-  //     expect(isValidTag("<>")).toBe(false); // タグ名なし
-  //     expect(isValidTag("< speak>")).toBe(false); // 空白で始まる
-  //   });
+    it("無効なタグを拒否する", () => {
+      expect(isValidTag("")).toBe(false);
+      expect(isValidTag("speak")).toBe(false); // < > なし
+      expect(isValidTag("<>")).toBe(false); // タグ名なし
+      expect(isValidTag("< speak>")).toBe(false); // 空白で始まる
+    });
 
-  //   it("strictModeでカスタムタグを拒否する", () => {
-  //     const strictOptions = { ...DEFAULT_VALIDATION_OPTIONS, strictMode: true };
-  //     expect(isValidTag("<speak>", strictOptions)).toBe(true);
-  //     expect(isValidTag("<mstts:express-as>", strictOptions)).toBe(true);
-  //     expect(isValidTag("<ああ>", strictOptions)).toBe(false);
-  //     expect(isValidTag("<customTag>", strictOptions)).toBe(false);
-  //   });
-  // });
+    it("strictModeでカスタムタグを拒否する", () => {
+      const strictOptions = { ...DEFAULT_VALIDATION_OPTIONS, strictMode: true };
+      expect(isValidTag("<speak>", strictOptions)).toBe(true);
+      expect(isValidTag("<mstts:express-as>", strictOptions)).toBe(true);
+      expect(isValidTag("<ああ>", strictOptions)).toBe(false);
+      expect(isValidTag("<customTag>", strictOptions)).toBe(false);
+    });
+  });
 
   describe("isTextOnlyElement", () => {
     it("子要素にテキストのみを持つ要素を正しく認識する", () => {
