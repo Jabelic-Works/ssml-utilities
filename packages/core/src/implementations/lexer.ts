@@ -1,4 +1,5 @@
 import { Token, TokenType } from "./parser/types";
+import { isValidTag as validateTag } from "./validate";
 
 export function determineTagType(tag: string): TokenType {
   if (tag.startsWith("</")) return "closeTag";
@@ -21,14 +22,19 @@ export function tokenize(ssml: string): Token[] {
         buffer = char;
         inTag = true;
       } else {
-        // タグ内で < を検出した場合、前の < をテキストとして扱う
+        // タグ内で < を検出した場合、前の < をテキストとして扱う(<<<)
         tokens.push({ type: "text", value: buffer });
+        // charをタグの開始として検出
         buffer = char;
       }
     } else if (char === ">" && inTag) {
       buffer += char;
-      const type = determineTagType(buffer);
-      tokens.push({ type, value: buffer });
+      if (validateTag(buffer)) {
+        const type = determineTagType(buffer);
+        tokens.push({ type, value: buffer });
+      } else {
+        tokens.push({ type: "text", value: buffer });
+      }
       buffer = "";
       inTag = false;
     } else {
@@ -38,7 +44,7 @@ export function tokenize(ssml: string): Token[] {
 
   if (buffer) {
     // 残ったバッファをテキストとして扱う
-    if (inTag && isValidTag(buffer)) {
+    if (inTag && validateTag(buffer)) {
       const type = determineTagType(buffer);
       tokens.push({ type, value: buffer });
     } else {
@@ -47,10 +53,4 @@ export function tokenize(ssml: string): Token[] {
   }
 
   return tokens;
-}
-
-function isValidTag(tag: string): boolean {
-  return /^<[\w-:\\n]+(\s+[\w-:]+(?:=(?:"[^"]*"|'[^']*'|[^\s"'=<>`]+))?)*\s*\/?>$/.test(
-    tag
-  );
 }

@@ -16,7 +16,6 @@ describe("buildDAGFromTokens", () => {
     expect(result.ok).toBe(true);
     if (result.ok) {
       const dag = result.value;
-      console.log(dag.debugPrint());
       expect(dag.nodes.size).toBe(4); // root, speak, テキスト, speak
     }
   });
