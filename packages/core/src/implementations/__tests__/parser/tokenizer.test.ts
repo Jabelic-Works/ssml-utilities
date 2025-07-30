@@ -53,15 +53,46 @@ describe("tokenizer", () => {
       ];
       expect(tokenize(input)).toEqual(expected);
     });
-  });
-  it("say-asタグを含むSSMLをトークン化する", () => {
-    const input = "<say-as>Hello, world!</say-as>";
-    const expected: Token[] = [
-      { type: "openTag", value: "<say-as>" },
-      { type: "text", value: "Hello, world!" },
-      { type: "closeTag", value: "</say-as>" },
-    ];
-    expect(tokenize(input)).toEqual(expected);
+
+    it("say-asタグを含むSSMLをトークン化する", () => {
+      const input = "<say-as>Hello, world!</say-as>";
+      const expected: Token[] = [
+        { type: "openTag", value: "<say-as>" },
+        { type: "text", value: "Hello, world!" },
+        { type: "closeTag", value: "</say-as>" },
+      ];
+      expect(tokenize(input)).toEqual(expected);
+    });
+
+    it("日本語タグ名を含むSSMLをトークン化する", () => {
+      const input = "{{あああ<ああ>}}";
+      const expected: Token[] = [
+        { type: "text", value: "{{あああ" },
+        { type: "text", value: "<ああ>" },
+        { type: "text", value: "}}" },
+      ];
+      expect(tokenize(input)).toEqual(expected);
+    });
+
+    it("英語タグ名と日本語", () => {
+      // 英語タグ名（正常に動作すると期待）
+      const input1 = "{{あああ<sub>}}";
+      const expected1: Token[] = [
+        { type: "text", value: "{{あああ" },
+        { type: "openTag", value: "<sub>" },
+        { type: "text", value: "}}" },
+      ];
+      expect(tokenize(input1)).toEqual(expected1);
+
+      // 日本語タグ名（現在は失敗すると予想）
+      const input2 = "{{あああ<ああ>}}";
+      const expected2: Token[] = [
+        { type: "text", value: "{{あああ" },
+        { type: "text", value: "<ああ>" },
+        { type: "text", value: "}}" },
+      ];
+      expect(tokenize(input2)).toEqual(expected2);
+    });
   });
 });
 
@@ -71,19 +102,28 @@ describe("tokenize: white editing", () => {
     const expected: Token[] = [{ type: "text", value: "<" }];
     expect(tokenize(input)).toEqual(expected);
   });
-  it("<<a", () => {
-    const input = "<<a";
+  it("<<p", () => {
+    const input = "<<p";
     const expected: Token[] = [
       { type: "text", value: "<" },
-      { type: "text", value: "<a" },
+      { type: "text", value: "<p" },
     ];
     expect(tokenize(input)).toEqual(expected);
   });
   it("<が続く場合は、<をテキストとして認識する", () => {
-    const input = "<<a>";
+    const input = "<<p>";
     const expected: Token[] = [
       { type: "text", value: "<" },
-      { type: "openTag", value: "<a>" },
+      { type: "openTag", value: "<p>" },
+    ];
+    expect(tokenize(input)).toEqual(expected);
+  });
+  it("<が3回続く場合は、<をテキストとして認識する", () => {
+    const input = "<<<p>";
+    const expected: Token[] = [
+      { type: "text", value: "<" },
+      { type: "text", value: "<" },
+      { type: "openTag", value: "<p>" },
     ];
     expect(tokenize(input)).toEqual(expected);
   });
