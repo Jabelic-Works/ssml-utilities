@@ -67,7 +67,7 @@ jobs:
 
       - name: Test examples
         run: |
-          cd examples
+          cd examples/react
           pnpm install
           pnpm build
 
