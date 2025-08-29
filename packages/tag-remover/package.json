@@ -1,6 +1,6 @@
 {
   "name": "@ssml-utilities/tag-remover",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "SSML tag remover for the SSML Utilities toolkit",
   "author": "Jabelic",
   "license": "MIT",
