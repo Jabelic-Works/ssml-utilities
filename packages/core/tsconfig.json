@@ -8,6 +8,7 @@
     "strict": true,
     "esModuleInterop": true,
     "moduleResolution": "bundler",
+    "skipLibCheck": true,
     "types": ["vitest/globals"]
   },
   "include": ["src"],
