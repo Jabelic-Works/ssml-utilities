@@ -14,7 +14,11 @@
   "scripts": {
     "build": "rollup -c rollup.config.mjs --bundleConfigAsCjs",
     "test": "vitest",
-    "test:watch": "vitest watch"
+    "test:watch": "vitest watch",
+    "lint": "eslint src --ext .ts,.tsx",
+    "type-check": "tsc --noEmit",
+    "clean": "rm -rf dist",
+    "prepublishOnly": "pnpm run build"
   },
   "bin": {
     "core": "dist/index.js"

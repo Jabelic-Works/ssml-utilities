@@ -1,0 +1,63 @@
+{
+  "name": "@ssml-utilities/tag-remover",
+  "version": "0.1.0",
+  "description": "SSML tag remover for the SSML Utilities toolkit",
+  "author": "Jabelic",
+  "license": "MIT",
+  "main": "dist/index.js",
+  "module": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "type": "module",
+  "files": [
+    "dist"
+  ],
+  "publishConfig": {
+    "access": "public"
+  },
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "require": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    }
+  },
+  "scripts": {
+    "build": "rollup -c rollup.config.mjs --bundleConfigAsCjs",
+    "test": "vitest",
+    "test:watch": "vitest watch",
+    "lint": "eslint src --ext .ts,.tsx",
+    "type-check": "tsc --noEmit",
+    "clean": "rm -rf dist",
+    "prepublishOnly": "pnpm run build"
+  },
+  "keywords": [
+    "ssml",
+    "tag-remover",
+    "parser",
+    "speech",
+    "markup"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/jabelic-works/ssml-utilities.git",
+    "directory": "packages/tag-remover"
+  },
+  "bugs": {
+    "url": "https://github.com/jabelic-works/ssml-utilities/issues"
+  },
+  "homepage": "https://github.com/jabelic-works/ssml-utilities/tree/main/packages/tag-remover#readme",
+  "dependencies": {
+    "@ssml-utilities/core": "workspace:*"
+  },
+  "devDependencies": {
+    "@rollup/plugin-typescript": "^11.1.6",
+    "@types/node": "^22.5.5",
+    "@typescript-eslint/eslint-plugin": "^8.5.0",
+    "@typescript-eslint/parser": "^8.5.0",
+    "eslint": "^9.10.0",
+    "rollup": "^4.21.3",
+    "rollup-plugin-dts": "^6.1.1",
+    "tslib": "^2.7.0",
+    "vitest": "^2.1.1"
+  }
+}

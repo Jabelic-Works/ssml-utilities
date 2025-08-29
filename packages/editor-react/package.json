@@ -26,6 +26,10 @@
     "build": "vite build",
     "pkg:build": "vite build",
     "preview": "vite preview",
+    "test": "echo 'No tests specified for editor-react' && exit 0",
+    "lint": "eslint src --ext .ts,.tsx",
+    "type-check": "tsc --noEmit",
+    "clean": "rm -rf dist",
     "prepublishOnly": "pnpm run pkg:build"
   },
   "dependencies": {
