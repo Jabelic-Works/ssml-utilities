@@ -32,7 +32,7 @@ jobs:
           cache: "pnpm"
 
       - name: Install dependencies
-        run: pnpm install --no-frozen-lockfile
+        run: pnpm install --prefer-frozen-lockfile
 
       - name: Type check all packages
         run: |
@@ -89,7 +89,7 @@ jobs:
           cache: "pnpm"
 
       - name: Install dependencies
-        run: pnpm install --no-frozen-lockfile
+        run: pnpm install --prefer-frozen-lockfile
 
       # Skip linting until ESLint configs are fixed
       # - name: Lint packages
