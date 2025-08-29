@@ -10,7 +10,8 @@ on:
         options:
           - "@ssml-utilities/core"
           - "@ssml-utilities/highlighter"
-          - "@ssml-utilities/react-editor"
+          - "@ssml-utilities/tag-remover"
+          - "@ssml-utilities/editor-react"
       version:
         description: "バージョン (major, minor, patch, または具体的なバージョン)"
         required: true
@@ -39,14 +40,14 @@ jobs:
           ref: ${{ github.head_ref }}
 
       - name: Setup Node.js
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
-          node-version: "18.x"
+          node-version: "22.x"
           registry-url: "https://registry.npmjs.org"
 
-      - uses: pnpm/action-setup@v2
+      - uses: pnpm/action-setup@v4
         with:
-          version: 8
+          version: latest
 
       - name: Install dependencies
         run: pnpm install
@@ -56,7 +57,7 @@ jobs:
         run: |
           # スコープ名を除去してディレクトリ名を取得
           PACKAGE_NAME="${{ github.event.inputs.package }}"
-          if [ "$PACKAGE_NAME" = "@ssml-utilities/react-editor" ]; then
+          if [ "$PACKAGE_NAME" = "@ssml-utilities/editor-react" ]; then
             echo "directory=editor-react" >> $GITHUB_OUTPUT
           else
             DIRECTORY_NAME=${PACKAGE_NAME#@ssml-utilities/}
@@ -104,21 +105,28 @@ jobs:
               HIGHLIGHTER_NEW_VERSION=$(semver -i patch $HIGHLIGHTER_VERSION)
               pnpm pkg set version=$HIGHLIGHTER_NEW_VERSION
               UPDATED_PACKAGES="$UPDATED_PACKAGES @ssml-utilities/highlighter@$HIGHLIGHTER_NEW_VERSION"
+
+              # tag-remover を更新
+              cd $GITHUB_WORKSPACE/packages/tag-remover
+              TAG_REMOVER_VERSION=$(node -p "require('./package.json').version")
+              TAG_REMOVER_NEW_VERSION=$(semver -i patch $TAG_REMOVER_VERSION)
+              pnpm pkg set version=$TAG_REMOVER_NEW_VERSION
+              UPDATED_PACKAGES="$UPDATED_PACKAGES @ssml-utilities/tag-remover@$TAG_REMOVER_NEW_VERSION"
               
-              # react-editor を更新
+              # editor-react を更新
               cd $GITHUB_WORKSPACE/packages/editor-react
               EDITOR_VERSION=$(node -p "require('./package.json').version")
               EDITOR_NEW_VERSION=$(semver -i patch $EDITOR_VERSION)
               pnpm pkg set version=$EDITOR_NEW_VERSION
-              UPDATED_PACKAGES="$UPDATED_PACKAGES @ssml-utilities/react-editor@$EDITOR_NEW_VERSION"
+              UPDATED_PACKAGES="$UPDATED_PACKAGES @ssml-utilities/editor-react@$EDITOR_NEW_VERSION"
               
             elif [ "$PACKAGE_NAME" = "@ssml-utilities/highlighter" ]; then
-              # react-editor を更新
+              # editor-react を更新
               cd $GITHUB_WORKSPACE/packages/editor-react
               EDITOR_VERSION=$(node -p "require('./package.json').version")
               EDITOR_NEW_VERSION=$(semver -i patch $EDITOR_VERSION)
               pnpm pkg set version=$EDITOR_NEW_VERSION
-              UPDATED_PACKAGES="$UPDATED_PACKAGES @ssml-utilities/react-editor@$EDITOR_NEW_VERSION"
+              UPDATED_PACKAGES="$UPDATED_PACKAGES @ssml-utilities/editor-react@$EDITOR_NEW_VERSION"
             fi
             
             echo "updated_packages=$UPDATED_PACKAGES" >> $GITHUB_OUTPUT
@@ -130,9 +138,16 @@ jobs:
           # 依存するパッケージを適切な順序でビルド
           if [ "${{ github.event.inputs.package }}" = "@ssml-utilities/core" ]; then
             pnpm --filter "@ssml-utilities/highlighter" run build
-            pnpm --filter "@ssml-utilities/react-editor" run build
+            pnpm --filter "@ssml-utilities/editor-react" run build
+            pnpm --filter "@ssml-utilities/tag-remover" run build
           elif [ "${{ github.event.inputs.package }}" = "@ssml-utilities/highlighter" ]; then
-            pnpm --filter "@ssml-utilities/react-editor" run build
+            pnpm --filter "@ssml-utilities/editor-react" run build
+          elif [ "${{ github.event.inputs.package }}" = "@ssml-utilities/tag-remover" ]; then
+            # tag-remover は core に依存するが、core は既にビルド済みと仮定
+            echo "tag-remover のビルドは main build step で実行されます"
+          elif [ "${{ github.event.inputs.package }}" = "@ssml-utilities/editor-react" ]; then
+            # editor-react は highlighter に依存するが、highlighter も core に依存する
+            echo "editor-react のビルドは main build step で実行されます"
           fi
 
       - name: Commit changes and create tags
@@ -228,15 +243,19 @@ jobs:
               # highlighter を公開
               cd $GITHUB_WORKSPACE/packages/highlighter
               pnpm publish --access public --tag ${{ github.event.inputs.tag }} --no-git-checks || echo "highlighterパッケージが既に公開されているか、権限がありません"
+
+              # tag-remover を公開
+              cd $GITHUB_WORKSPACE/packages/tag-remover
+              pnpm publish --access public --tag ${{ github.event.inputs.tag }} --no-git-checks || echo "tag-removerパッケージが既に公開されているか、権限がありません"
               
-              # react-editor を公開
+              # editor-react を公開
               cd $GITHUB_WORKSPACE/packages/editor-react
-              pnpm publish --access public --tag ${{ github.event.inputs.tag }} --no-git-checks || echo "react-editorパッケージが既に公開されているか、権限がありません"
+              pnpm publish --access public --tag ${{ github.event.inputs.tag }} --no-git-checks || echo "editor-reactパッケージが既に公開されているか、権限がありません"
             
             elif [ "${{ github.event.inputs.package }}" = "@ssml-utilities/highlighter" ]; then
-              # react-editor を公開
+              # editor-react を公開
               cd $GITHUB_WORKSPACE/packages/editor-react
-              pnpm publish --access public --tag ${{ github.event.inputs.tag }} --no-git-checks || echo "react-editorパッケージが既に公開されているか、権限がありません"
+              pnpm publish --access public --tag ${{ github.event.inputs.tag }} --no-git-checks || echo "editor-reactパッケージが既に公開されているか、権限がありません"
             fi
           fi
         env:
