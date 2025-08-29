@@ -40,7 +40,7 @@ jobs:
           ref: ${{ github.head_ref }}
 
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v3
         with:
           node-version: "22.x"
           registry-url: "https://registry.npmjs.org"
@@ -50,7 +50,7 @@ jobs:
           version: latest
 
       - name: Install dependencies
-        run: pnpm install
+        run: pnpm install --prefer-frozen-lockfile
 
       - name: Get package directory name
         id: get-directory
@@ -138,16 +138,10 @@ jobs:
           # 依存するパッケージを適切な順序でビルド
           if [ "${{ github.event.inputs.package }}" = "@ssml-utilities/core" ]; then
             pnpm --filter "@ssml-utilities/highlighter" run build
-            pnpm --filter "@ssml-utilities/editor-react" run build
             pnpm --filter "@ssml-utilities/tag-remover" run build
+            pnpm --filter "@ssml-utilities/editor-react" run build
           elif [ "${{ github.event.inputs.package }}" = "@ssml-utilities/highlighter" ]; then
             pnpm --filter "@ssml-utilities/editor-react" run build
-          elif [ "${{ github.event.inputs.package }}" = "@ssml-utilities/tag-remover" ]; then
-            # tag-remover は core に依存するが、core は既にビルド済みと仮定
-            echo "tag-remover のビルドは main build step で実行されます"
-          elif [ "${{ github.event.inputs.package }}" = "@ssml-utilities/editor-react" ]; then
-            # editor-react は highlighter に依存するが、highlighter も core に依存する
-            echo "editor-react のビルドは main build step で実行されます"
           fi
 
       - name: Commit changes and create tags
