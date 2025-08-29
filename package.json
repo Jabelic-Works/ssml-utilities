@@ -2,6 +2,12 @@
   "name": "ssml-utilities",
   "private": true,
   "scripts": {
+    "build": "pnpm --recursive build",
+    "test": "pnpm --recursive test",
+    "lint": "pnpm --recursive lint",
+    "type-check": "pnpm --recursive type-check",
+    "dev": "pnpm --recursive dev",
+    "clean": "pnpm --recursive clean",
     "changeset": "changeset",
     "version": "changeset version",
     "release": "changeset publish"

@@ -17,6 +17,8 @@
     "test": "pnpm --filter @ssml-utilities/core build && vitest",
     "test:watch": "vitest watch",
     "lint": "eslint src --ext .ts,.tsx",
+    "type-check": "tsc --noEmit",
+    "clean": "rm -rf dist",
     "prepublishOnly": "pnpm run build"
   },
   "keywords": [
