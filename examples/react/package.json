@@ -8,8 +8,7 @@
     "build": "tsc -b && vite build",
     "lint": "eslint .",
     "preview": "vite preview",
-    "test": "echo 'No tests specified for react'",
-    "deploy": "vercel dist --prod"
+    "test": "echo 'No tests specified for react'"
   },
   "dependencies": {
     "@ssml-utilities/editor-react": "workspace:*",
