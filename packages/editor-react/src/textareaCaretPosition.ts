@@ -62,6 +62,7 @@ export function getCaretCoordinates(
   // ブラウザとFirefoxの検出
   const isFirefox =
     typeof window !== "undefined" &&
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     (window as any).mozInnerScreenX !== undefined; // FIXME: types
 
   if (typeof window === "undefined") {
@@ -86,7 +87,8 @@ export function getCaretCoordinates(
   const style = div.style;
   const computed = window.getComputedStyle
     ? window.getComputedStyle(element)
-    : (element as any).currentStyle; // IE < 9用
+    : // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (element as any).currentStyle; // IE < 9用
   const isInput = element.nodeName === "INPUT";
 
   // デフォルトのテキストエリアスタイル
@@ -120,6 +122,7 @@ export function getCaretCoordinates(
         style.lineHeight = computed.height;
       }
     } else {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       style[prop as any] = computed[prop];
     }
   });
