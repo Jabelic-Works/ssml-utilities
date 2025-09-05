@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import { ssmlHighlighter, HighlightOptions } from "@ssml-utilities/highlighter";
 import { getCaretCoordinates } from "./textareaCaretPosition";
+import { useIsWindows } from "./useIsWindows";
 
 interface SSMLEditorProps {
   initialValue?: string;
@@ -54,6 +55,7 @@ export const SSMLEditor: React.FC<SSMLEditorProps> = ({
   minHeight,
   maxHeight,
 }) => {
+  const isWindows = useIsWindows();
   const [ssml, setSSML] = useState(initialValue);
   const [highlightedHtml, setHighlightedHtml] = useState("");
   const [lineNumbers, setLineNumbers] = useState<string[]>([]);
@@ -378,9 +380,15 @@ export const SSMLEditor: React.FC<SSMLEditorProps> = ({
   }, [onInsertPhrase, insertPhrase]);
 
   const commonStyles: React.CSSProperties = {
-    fontFamily: "monospace",
+    fontFamily: isWindows
+      ? '"Consolas", "Monaco", "Lucida Console", "Liberation Mono", "DejaVu Sans Mono", "Bitstream Vera Sans Mono", "Courier New", monospace'
+      : "monospace",
     fontSize: "14px",
-    lineHeight: "1.5",
+    lineHeight: isWindows ? "21px" : "1.5", // Windows: 固定値、他: 相対値
+    ...(isWindows && {
+      fontVariantLigatures: "none", // WindowsのみLigaturesを無効化
+      textRendering: "geometricPrecision", // Windowsのみより正確なレンダリング
+    }),
     padding: "10px",
     margin: "0",
     position: "absolute",
@@ -388,7 +396,7 @@ export const SSMLEditor: React.FC<SSMLEditorProps> = ({
     left: "0",
     width: "100%",
     height: "100%",
-    scrollBehavior: "revert",
+    scrollBehavior: "auto",
     border: "none",
     textAlign: "left",
     whiteSpace: "pre-wrap",
@@ -435,9 +443,15 @@ export const SSMLEditor: React.FC<SSMLEditorProps> = ({
             color: "#6b6b6b",
             border: "1px solid #ddd",
             borderRadius: "10px 0px 0px 10px",
-            fontFamily: "monospace",
+            fontFamily: isWindows
+              ? '"Consolas", "Monaco", "Lucida Console", "Liberation Mono", "DejaVu Sans Mono", "Bitstream Vera Sans Mono", "Courier New", monospace'
+              : "monospace",
             fontSize: "14px",
-            lineHeight: "1.5",
+            lineHeight: isWindows ? "21px" : "1.5", // Windows: 固定値、他: 相対値
+            ...(isWindows && {
+              fontVariantLigatures: "none", // Windowsのみリガチャを無効化
+              textRendering: "geometricPrecision", // Windowsのみより正確なレンダリング
+            }),
             padding: "10px",
             margin: "0",
             position: "absolute",
@@ -454,8 +468,8 @@ export const SSMLEditor: React.FC<SSMLEditorProps> = ({
               key={num}
               style={{
                 display: "block",
-                minHeight: "1.5em",
-                lineHeight: "1.5",
+                minHeight: isWindows ? "21px" : "1.5em", // OS判定に基づく高さ
+                lineHeight: isWindows ? "21px" : "1.5", // OS判定に基づくlineHeight
                 padding: "0 5px",
               }}
             >
@@ -585,6 +599,20 @@ export const SSMLEditor: React.FC<SSMLEditorProps> = ({
         }
         textarea::-webkit-scrollbar {
           display: none;
+        }
+        
+        ${
+          isWindows
+            ? `
+        /* Windows でのみ文字レンダリング最適化を適用 */
+        textarea, div[dangerouslySetInnerHTML] {
+          -webkit-font-feature-settings: "liga" 0;
+          font-feature-settings: "liga" 0;
+          -webkit-font-smoothing: antialiased;
+          -moz-osx-font-smoothing: grayscale;
+        }
+        `
+            : ""
         }
       `}</style>
     </div>
