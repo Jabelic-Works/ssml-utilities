@@ -14,7 +14,7 @@ importers:
     devDependencies:
       '@changesets/cli':
         specifier: ^2.29.7
-        version: 2.29.7(@types/node@24.3.1)
+        version: 2.29.7(@types/node@24.8.1)
       '@typescript-eslint/eslint-plugin':
         specifier: ^8.26.0
         version: 8.26.0(@typescript-eslint/parser@8.26.0(eslint@9.21.0)(typescript@5.6.2))(eslint@9.21.0)(typescript@5.6.2)
@@ -48,7 +48,7 @@ importers:
         version: 18.3.7(@types/react@18.3.24)
       '@vitejs/plugin-react':
         specifier: ^4.3.3
-        version: 4.7.0(vite@5.4.20(@types/node@24.3.1))
+        version: 4.7.0(vite@5.4.20(@types/node@24.8.1))
       eslint:
         specifier: ^9.13.0
         version: 9.35.0
@@ -69,22 +69,22 @@ importers:
         version: 8.43.0(eslint@9.35.0)(typescript@5.6.3)
       vite:
         specifier: ^5.4.10
-        version: 5.4.20(@types/node@24.3.1)
+        version: 5.4.20(@types/node@24.8.1)
 
   packages/core:
     devDependencies:
       '@rollup/plugin-typescript':
         specifier: ^11.1.6
-        version: 11.1.6(rollup@4.50.1)(tslib@2.8.1)(typescript@5.9.2)
+        version: 11.1.6(rollup@4.50.1)(tslib@2.8.1)(typescript@5.9.3)
       '@types/node':
-        specifier: ^22.5.5
-        version: 22.18.1
+        specifier: ^24.8.1
+        version: 24.8.1
       '@typescript-eslint/eslint-plugin':
         specifier: ^8.5.0
-        version: 8.43.0(@typescript-eslint/parser@8.43.0(eslint@9.35.0)(typescript@5.9.2))(eslint@9.35.0)(typescript@5.9.2)
+        version: 8.43.0(@typescript-eslint/parser@8.43.0(eslint@9.35.0)(typescript@5.9.3))(eslint@9.35.0)(typescript@5.9.3)
       '@typescript-eslint/parser':
         specifier: ^8.5.0
-        version: 8.43.0(eslint@9.35.0)(typescript@5.9.2)
+        version: 8.43.0(eslint@9.35.0)(typescript@5.9.3)
       eslint:
         specifier: ^9.10.0
         version: 9.35.0
@@ -93,13 +93,13 @@ importers:
         version: 4.50.1
       rollup-plugin-dts:
         specifier: ^6.1.1
-        version: 6.2.3(rollup@4.50.1)(typescript@5.9.2)
+        version: 6.2.3(rollup@4.50.1)(typescript@5.9.3)
       tslib:
         specifier: ^2.7.0
         version: 2.8.1
       vitest:
         specifier: ^2.1.1
-        version: 2.1.9(@types/node@22.18.1)(jsdom@16.7.0)
+        version: 2.1.9(@types/node@24.8.1)(jsdom@16.7.0)
 
   packages/editor-react:
     dependencies:
@@ -121,19 +121,19 @@ importers:
         version: 18.3.7(@types/react@18.3.24)
       '@vitejs/plugin-react':
         specifier: ^4.3.4
-        version: 4.7.0(vite@4.5.14(@types/node@24.3.1))
+        version: 4.7.0(vite@4.5.14(@types/node@24.8.1))
       tsup:
         specifier: ^8.3.6
-        version: 8.5.0(@microsoft/api-extractor@7.43.0(@types/node@24.3.1))(postcss@8.5.6)(typescript@5.9.2)
+        version: 8.5.0(@microsoft/api-extractor@7.43.0(@types/node@24.8.1))(postcss@8.5.6)(typescript@5.9.2)
       typescript:
         specifier: ^5.7.3
         version: 5.9.2
       vite:
         specifier: ^4.5.9
-        version: 4.5.14(@types/node@24.3.1)
+        version: 4.5.14(@types/node@24.8.1)
       vite-plugin-dts:
         specifier: ^3.9.1
-        version: 3.9.1(@types/node@24.3.1)(rollup@4.50.1)(typescript@5.9.2)(vite@4.5.14(@types/node@24.3.1))
+        version: 3.9.1(@types/node@24.8.1)(rollup@4.50.1)(typescript@5.9.2)(vite@4.5.14(@types/node@24.8.1))
 
   packages/highlighter:
     dependencies:
@@ -185,7 +185,7 @@ importers:
         version: 2.8.1
       tsup:
         specifier: ^8.3.6
-        version: 8.5.0(@microsoft/api-extractor@7.43.0(@types/node@24.3.1))(postcss@8.5.6)(typescript@4.9.5)
+        version: 8.5.0(@microsoft/api-extractor@7.43.0(@types/node@24.8.1))(postcss@8.5.6)(typescript@4.9.5)
       typescript:
         specifier: ^4.9.5
         version: 4.9.5
@@ -194,7 +194,7 @@ importers:
         version: 8.43.0(eslint@9.35.0)(typescript@4.9.5)
       vitest:
         specifier: ^2.1.8
-        version: 2.1.9(@types/node@24.3.1)(jsdom@16.7.0)
+        version: 2.1.9(@types/node@24.8.1)(jsdom@16.7.0)
 
   packages/tag-remover:
     dependencies:
@@ -204,16 +204,16 @@ importers:
     devDependencies:
       '@rollup/plugin-typescript':
         specifier: ^11.1.6
-        version: 11.1.6(rollup@4.50.1)(tslib@2.8.1)(typescript@5.9.2)
+        version: 11.1.6(rollup@4.50.1)(tslib@2.8.1)(typescript@5.9.3)
       '@types/node':
-        specifier: ^22.5.5
-        version: 22.18.1
+        specifier: ^24.8.1
+        version: 24.8.1
       '@typescript-eslint/eslint-plugin':
         specifier: ^8.5.0
-        version: 8.43.0(@typescript-eslint/parser@8.43.0(eslint@9.35.0)(typescript@5.9.2))(eslint@9.35.0)(typescript@5.9.2)
+        version: 8.43.0(@typescript-eslint/parser@8.43.0(eslint@9.35.0)(typescript@5.9.3))(eslint@9.35.0)(typescript@5.9.3)
       '@typescript-eslint/parser':
         specifier: ^8.5.0
-        version: 8.43.0(eslint@9.35.0)(typescript@5.9.2)
+        version: 8.43.0(eslint@9.35.0)(typescript@5.9.3)
       eslint:
         specifier: ^9.10.0
         version: 9.35.0
@@ -222,13 +222,13 @@ importers:
         version: 4.50.1
       rollup-plugin-dts:
         specifier: ^6.1.1
-        version: 6.2.3(rollup@4.50.1)(typescript@5.9.2)
+        version: 6.2.3(rollup@4.50.1)(typescript@5.9.3)
       tslib:
         specifier: ^2.7.0
         version: 2.8.1
       vitest:
         specifier: ^2.1.1
-        version: 2.1.9(@types/node@22.18.1)(jsdom@16.7.0)
+        version: 2.1.9(@types/node@24.8.1)(jsdom@16.7.0)
 
 packages:
 
@@ -1314,11 +1314,8 @@ packages:
   '@types/node@12.20.55':
     resolution: {integrity: sha512-J8xLz7q2OFulZ2cyGTLE1TbbZcjpno7FaN6zdJNrgAdrJ+DZzh/uFR6YrTb4C+nXakvud8Q4+rbhoIWlYQbUFQ==}
 
-  '@types/node@22.18.1':
-    resolution: {integrity: sha512-rzSDyhn4cYznVG+PCzGe1lwuMYJrcBS1fc3JqSa2PvtABwWo+dZ1ij5OVok3tqfpEBCBoaR4d7upFJk73HRJDw==}
-
-  '@types/node@24.3.1':
-    resolution: {integrity: sha512-3vXmQDXy+woz+gnrTvuvNrPzekOi+Ds0ReMxw0LzBiK3a+1k0kQn9f2NWk+lgD4rJehFUmYy2gMhJ2ZI+7YP9g==}
+  '@types/node@24.8.1':
+    resolution: {integrity: sha512-alv65KGRadQVfVcG69MuB4IzdYVpRwMG/mq8KWOaoOdyY617P5ivaDiMCGOFDWD2sAn5Q0mR3mRtUOgm99hL9Q==}
 
   '@types/prettier@2.7.3':
     resolution: {integrity: sha512-+68kP9yzs4LMp7VNh8gdzMSPZFL44MLGqiHWvttYJe+6qnuVr4Ek9wSBQoveqY/r+LwjCcU29kNVkidwim+kYA==}
@@ -3319,14 +3316,16 @@ packages:
     engines: {node: '>=14.17'}
     hasBin: true
 
+  typescript@5.9.3:
+    resolution: {integrity: sha512-jl1vZzPDinLr9eUt3J/t7V6FgNEw9QjvBPdysz9KfQDD41fQrC2Y4vKQdiaUpFT4bXlb1RHhLpp8wtm6M5TgSw==}
+    engines: {node: '>=14.17'}
+    hasBin: true
+
   ufo@1.6.1:
     resolution: {integrity: sha512-9a4/uxlTWJ4+a5i0ooc1rU7C7YOw3wT+UGqdeNNHWnOF9qcMBgLRS+4IYUqbczewFx4mLEig6gawh7X6mFlEkA==}
 
-  undici-types@6.21.0:
-    resolution: {integrity: sha512-iwDZqg0QAGrg9Rav5H4n0M64c3mkR59cJ6wQp+7C4nI0gsmExaedaYLNO44eT4AtBBwjbTiGPMlt2Md0T9H9JQ==}
-
-  undici-types@7.10.0:
-    resolution: {integrity: sha512-t5Fy/nfn+14LuOc2KNYg75vZqClpAiqscVvMygNnlsHBFpSXdJaYtXMcdNLpl/Qvc3P2cB3s6lOV51nqsFq4ag==}
+  undici-types@7.14.0:
+    resolution: {integrity: sha512-QQiYxHuyZ9gQUIrmPo3IA+hUl4KYk8uSA7cHrcKd/l3p1OTpZcM0Tbp9x7FAtXdAYhlasd60ncPpgu6ihG6TOA==}
 
   universalify@0.1.2:
     resolution: {integrity: sha512-rBJeI5CXAlmy1pV+617WB9J63U6XcazHHF2f2dbJix4XzpUF0RS3Zbj0FGIOCAva5P/d/GBOYaACQ1w+0azUkg==}
@@ -3799,7 +3798,7 @@ snapshots:
     dependencies:
       '@changesets/types': 6.1.0
 
-  '@changesets/cli@2.29.7(@types/node@24.3.1)':
+  '@changesets/cli@2.29.7(@types/node@24.8.1)':
     dependencies:
       '@changesets/apply-release-plan': 7.0.13
       '@changesets/assemble-release-plan': 6.0.9
@@ -3815,7 +3814,7 @@ snapshots:
       '@changesets/should-skip-package': 0.1.2
       '@changesets/types': 6.1.0
       '@changesets/write': 0.4.0
-      '@inquirer/external-editor': 1.0.1(@types/node@24.3.1)
+      '@inquirer/external-editor': 1.0.1(@types/node@24.8.1)
       '@manypkg/get-packages': 1.1.3
       ansi-colors: 4.1.3
       ci-info: 3.9.0
@@ -4234,12 +4233,12 @@ snapshots:
 
   '@humanwhocodes/retry@0.4.3': {}
 
-  '@inquirer/external-editor@1.0.1(@types/node@24.3.1)':
+  '@inquirer/external-editor@1.0.1(@types/node@24.8.1)':
     dependencies:
       chardet: 2.1.0
       iconv-lite: 0.6.3
     optionalDependencies:
-      '@types/node': 24.3.1
+      '@types/node': 24.8.1
 
   '@isaacs/cliui@8.0.2':
     dependencies:
@@ -4263,7 +4262,7 @@ snapshots:
   '@jest/console@27.5.1':
     dependencies:
       '@jest/types': 27.5.1
-      '@types/node': 24.3.1
+      '@types/node': 24.8.1
       chalk: 4.1.2
       jest-message-util: 27.5.1
       jest-util: 27.5.1
@@ -4276,7 +4275,7 @@ snapshots:
       '@jest/test-result': 27.5.1
       '@jest/transform': 27.5.1
       '@jest/types': 27.5.1
-      '@types/node': 24.3.1
+      '@types/node': 24.8.1
       ansi-escapes: 4.3.2
       chalk: 4.1.2
       emittery: 0.8.1
@@ -4310,14 +4309,14 @@ snapshots:
     dependencies:
       '@jest/fake-timers': 27.5.1
       '@jest/types': 27.5.1
-      '@types/node': 24.3.1
+      '@types/node': 24.8.1
       jest-mock: 27.5.1
 
   '@jest/fake-timers@27.5.1':
     dependencies:
       '@jest/types': 27.5.1
       '@sinonjs/fake-timers': 8.1.0
-      '@types/node': 24.3.1
+      '@types/node': 24.8.1
       jest-message-util: 27.5.1
       jest-mock: 27.5.1
       jest-util: 27.5.1
@@ -4335,7 +4334,7 @@ snapshots:
       '@jest/test-result': 27.5.1
       '@jest/transform': 27.5.1
       '@jest/types': 27.5.1
-      '@types/node': 24.3.1
+      '@types/node': 24.8.1
       chalk: 4.1.2
       collect-v8-coverage: 1.0.2
       exit: 0.1.2
@@ -4404,7 +4403,7 @@ snapshots:
     dependencies:
       '@types/istanbul-lib-coverage': 2.0.6
       '@types/istanbul-reports': 3.0.4
-      '@types/node': 24.3.1
+      '@types/node': 24.8.1
       '@types/yargs': 16.0.9
       chalk: 4.1.2
 
@@ -4443,23 +4442,23 @@ snapshots:
       globby: 11.1.0
       read-yaml-file: 1.1.0
 
-  '@microsoft/api-extractor-model@7.28.13(@types/node@24.3.1)':
+  '@microsoft/api-extractor-model@7.28.13(@types/node@24.8.1)':
     dependencies:
       '@microsoft/tsdoc': 0.14.2
       '@microsoft/tsdoc-config': 0.16.2
-      '@rushstack/node-core-library': 4.0.2(@types/node@24.3.1)
+      '@rushstack/node-core-library': 4.0.2(@types/node@24.8.1)
     transitivePeerDependencies:
       - '@types/node'
 
-  '@microsoft/api-extractor@7.43.0(@types/node@24.3.1)':
+  '@microsoft/api-extractor@7.43.0(@types/node@24.8.1)':
     dependencies:
-      '@microsoft/api-extractor-model': 7.28.13(@types/node@24.3.1)
+      '@microsoft/api-extractor-model': 7.28.13(@types/node@24.8.1)
       '@microsoft/tsdoc': 0.14.2
       '@microsoft/tsdoc-config': 0.16.2
-      '@rushstack/node-core-library': 4.0.2(@types/node@24.3.1)
+      '@rushstack/node-core-library': 4.0.2(@types/node@24.8.1)
       '@rushstack/rig-package': 0.5.2
-      '@rushstack/terminal': 0.10.0(@types/node@24.3.1)
-      '@rushstack/ts-command-line': 4.19.1(@types/node@24.3.1)
+      '@rushstack/terminal': 0.10.0(@types/node@24.8.1)
+      '@rushstack/ts-command-line': 4.19.1(@types/node@24.8.1)
       lodash: 4.17.21
       minimatch: 3.0.8
       resolve: 1.22.10
@@ -4504,11 +4503,11 @@ snapshots:
       rollup: 2.79.2
       tslib: 2.8.1
 
-  '@rollup/plugin-typescript@11.1.6(rollup@4.50.1)(tslib@2.8.1)(typescript@5.9.2)':
+  '@rollup/plugin-typescript@11.1.6(rollup@4.50.1)(tslib@2.8.1)(typescript@5.9.3)':
     dependencies:
       '@rollup/pluginutils': 5.3.0(rollup@4.50.1)
       resolve: 1.22.10
-      typescript: 5.9.2
+      typescript: 5.9.3
     optionalDependencies:
       rollup: 4.50.1
       tslib: 2.8.1
@@ -4597,7 +4596,7 @@ snapshots:
   '@rollup/rollup-win32-x64-msvc@4.50.1':
     optional: true
 
-  '@rushstack/node-core-library@4.0.2(@types/node@24.3.1)':
+  '@rushstack/node-core-library@4.0.2(@types/node@24.8.1)':
     dependencies:
       fs-extra: 7.0.1
       import-lazy: 4.0.0
@@ -4606,23 +4605,23 @@ snapshots:
       semver: 7.5.4
       z-schema: 5.0.5
     optionalDependencies:
-      '@types/node': 24.3.1
+      '@types/node': 24.8.1
 
   '@rushstack/rig-package@0.5.2':
     dependencies:
       resolve: 1.22.10
       strip-json-comments: 3.1.1
 
-  '@rushstack/terminal@0.10.0(@types/node@24.3.1)':
+  '@rushstack/terminal@0.10.0(@types/node@24.8.1)':
     dependencies:
-      '@rushstack/node-core-library': 4.0.2(@types/node@24.3.1)
+      '@rushstack/node-core-library': 4.0.2(@types/node@24.8.1)
       supports-color: 8.1.1
     optionalDependencies:
-      '@types/node': 24.3.1
+      '@types/node': 24.8.1
 
-  '@rushstack/ts-command-line@4.19.1(@types/node@24.3.1)':
+  '@rushstack/ts-command-line@4.19.1(@types/node@24.8.1)':
     dependencies:
-      '@rushstack/terminal': 0.10.0(@types/node@24.3.1)
+      '@rushstack/terminal': 0.10.0(@types/node@24.8.1)
       '@types/argparse': 1.0.38
       argparse: 1.0.10
       string-argv: 0.3.2
@@ -4668,7 +4667,7 @@ snapshots:
 
   '@types/graceful-fs@4.1.9':
     dependencies:
-      '@types/node': 24.3.1
+      '@types/node': 24.8.1
 
   '@types/istanbul-lib-coverage@2.0.6': {}
 
@@ -4689,13 +4688,9 @@ snapshots:
 
   '@types/node@12.20.55': {}
 
-  '@types/node@22.18.1':
+  '@types/node@24.8.1':
     dependencies:
-      undici-types: 6.21.0
-
-  '@types/node@24.3.1':
-    dependencies:
-      undici-types: 7.10.0
+      undici-types: 7.14.0
 
   '@types/prettier@2.7.3': {}
 
@@ -4777,20 +4772,20 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  '@typescript-eslint/eslint-plugin@8.43.0(@typescript-eslint/parser@8.43.0(eslint@9.35.0)(typescript@5.9.2))(eslint@9.35.0)(typescript@5.9.2)':
+  '@typescript-eslint/eslint-plugin@8.43.0(@typescript-eslint/parser@8.43.0(eslint@9.35.0)(typescript@5.9.3))(eslint@9.35.0)(typescript@5.9.3)':
     dependencies:
       '@eslint-community/regexpp': 4.12.1
-      '@typescript-eslint/parser': 8.43.0(eslint@9.35.0)(typescript@5.9.2)
+      '@typescript-eslint/parser': 8.43.0(eslint@9.35.0)(typescript@5.9.3)
       '@typescript-eslint/scope-manager': 8.43.0
-      '@typescript-eslint/type-utils': 8.43.0(eslint@9.35.0)(typescript@5.9.2)
-      '@typescript-eslint/utils': 8.43.0(eslint@9.35.0)(typescript@5.9.2)
+      '@typescript-eslint/type-utils': 8.43.0(eslint@9.35.0)(typescript@5.9.3)
+      '@typescript-eslint/utils': 8.43.0(eslint@9.35.0)(typescript@5.9.3)
       '@typescript-eslint/visitor-keys': 8.43.0
       eslint: 9.35.0
       graphemer: 1.4.0
       ignore: 7.0.5
       natural-compare: 1.4.0
-      ts-api-utils: 2.1.0(typescript@5.9.2)
-      typescript: 5.9.2
+      ts-api-utils: 2.1.0(typescript@5.9.3)
+      typescript: 5.9.3
     transitivePeerDependencies:
       - supports-color
 
@@ -4830,15 +4825,15 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  '@typescript-eslint/parser@8.43.0(eslint@9.35.0)(typescript@5.9.2)':
+  '@typescript-eslint/parser@8.43.0(eslint@9.35.0)(typescript@5.9.3)':
     dependencies:
       '@typescript-eslint/scope-manager': 8.43.0
       '@typescript-eslint/types': 8.43.0
-      '@typescript-eslint/typescript-estree': 8.43.0(typescript@5.9.2)
+      '@typescript-eslint/typescript-estree': 8.43.0(typescript@5.9.3)
       '@typescript-eslint/visitor-keys': 8.43.0
       debug: 4.4.1
       eslint: 9.35.0
-      typescript: 5.9.2
+      typescript: 5.9.3
     transitivePeerDependencies:
       - supports-color
 
@@ -4860,12 +4855,12 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  '@typescript-eslint/project-service@8.43.0(typescript@5.9.2)':
+  '@typescript-eslint/project-service@8.43.0(typescript@5.9.3)':
     dependencies:
-      '@typescript-eslint/tsconfig-utils': 8.43.0(typescript@5.9.2)
+      '@typescript-eslint/tsconfig-utils': 8.43.0(typescript@5.9.3)
       '@typescript-eslint/types': 8.43.0
       debug: 4.4.1
-      typescript: 5.9.2
+      typescript: 5.9.3
     transitivePeerDependencies:
       - supports-color
 
@@ -4887,9 +4882,9 @@ snapshots:
     dependencies:
       typescript: 5.6.3
 
-  '@typescript-eslint/tsconfig-utils@8.43.0(typescript@5.9.2)':
+  '@typescript-eslint/tsconfig-utils@8.43.0(typescript@5.9.3)':
     dependencies:
-      typescript: 5.9.2
+      typescript: 5.9.3
 
   '@typescript-eslint/type-utils@8.26.0(eslint@9.21.0)(typescript@5.6.2)':
     dependencies:
@@ -4926,15 +4921,15 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  '@typescript-eslint/type-utils@8.43.0(eslint@9.35.0)(typescript@5.9.2)':
+  '@typescript-eslint/type-utils@8.43.0(eslint@9.35.0)(typescript@5.9.3)':
     dependencies:
       '@typescript-eslint/types': 8.43.0
-      '@typescript-eslint/typescript-estree': 8.43.0(typescript@5.9.2)
-      '@typescript-eslint/utils': 8.43.0(eslint@9.35.0)(typescript@5.9.2)
+      '@typescript-eslint/typescript-estree': 8.43.0(typescript@5.9.3)
+      '@typescript-eslint/utils': 8.43.0(eslint@9.35.0)(typescript@5.9.3)
       debug: 4.4.1
       eslint: 9.35.0
-      ts-api-utils: 2.1.0(typescript@5.9.2)
-      typescript: 5.9.2
+      ts-api-utils: 2.1.0(typescript@5.9.3)
+      typescript: 5.9.3
     transitivePeerDependencies:
       - supports-color
 
@@ -4988,10 +4983,10 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  '@typescript-eslint/typescript-estree@8.43.0(typescript@5.9.2)':
+  '@typescript-eslint/typescript-estree@8.43.0(typescript@5.9.3)':
     dependencies:
-      '@typescript-eslint/project-service': 8.43.0(typescript@5.9.2)
-      '@typescript-eslint/tsconfig-utils': 8.43.0(typescript@5.9.2)
+      '@typescript-eslint/project-service': 8.43.0(typescript@5.9.3)
+      '@typescript-eslint/tsconfig-utils': 8.43.0(typescript@5.9.3)
       '@typescript-eslint/types': 8.43.0
       '@typescript-eslint/visitor-keys': 8.43.0
       debug: 4.4.1
@@ -4999,8 +4994,8 @@ snapshots:
       is-glob: 4.0.3
       minimatch: 9.0.5
       semver: 7.7.2
-      ts-api-utils: 2.1.0(typescript@5.9.2)
-      typescript: 5.9.2
+      ts-api-utils: 2.1.0(typescript@5.9.3)
+      typescript: 5.9.3
     transitivePeerDependencies:
       - supports-color
 
@@ -5037,14 +5032,14 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  '@typescript-eslint/utils@8.43.0(eslint@9.35.0)(typescript@5.9.2)':
+  '@typescript-eslint/utils@8.43.0(eslint@9.35.0)(typescript@5.9.3)':
     dependencies:
       '@eslint-community/eslint-utils': 4.9.0(eslint@9.35.0)
       '@typescript-eslint/scope-manager': 8.43.0
       '@typescript-eslint/types': 8.43.0
-      '@typescript-eslint/typescript-estree': 8.43.0(typescript@5.9.2)
+      '@typescript-eslint/typescript-estree': 8.43.0(typescript@5.9.3)
       eslint: 9.35.0
-      typescript: 5.9.2
+      typescript: 5.9.3
     transitivePeerDependencies:
       - supports-color
 
@@ -5058,7 +5053,7 @@ snapshots:
       '@typescript-eslint/types': 8.43.0
       eslint-visitor-keys: 4.2.1
 
-  '@vitejs/plugin-react@4.7.0(vite@4.5.14(@types/node@24.3.1))':
+  '@vitejs/plugin-react@4.7.0(vite@4.5.14(@types/node@24.8.1))':
     dependencies:
       '@babel/core': 7.28.4
       '@babel/plugin-transform-react-jsx-self': 7.27.1(@babel/core@7.28.4)
@@ -5066,11 +5061,11 @@ snapshots:
       '@rolldown/pluginutils': 1.0.0-beta.27
       '@types/babel__core': 7.20.5
       react-refresh: 0.17.0
-      vite: 4.5.14(@types/node@24.3.1)
+      vite: 4.5.14(@types/node@24.8.1)
     transitivePeerDependencies:
       - supports-color
 
-  '@vitejs/plugin-react@4.7.0(vite@5.4.20(@types/node@24.3.1))':
+  '@vitejs/plugin-react@4.7.0(vite@5.4.20(@types/node@24.8.1))':
     dependencies:
       '@babel/core': 7.28.4
       '@babel/plugin-transform-react-jsx-self': 7.27.1(@babel/core@7.28.4)
@@ -5078,7 +5073,7 @@ snapshots:
       '@rolldown/pluginutils': 1.0.0-beta.27
       '@types/babel__core': 7.20.5
       react-refresh: 0.17.0
-      vite: 5.4.20(@types/node@24.3.1)
+      vite: 5.4.20(@types/node@24.8.1)
     transitivePeerDependencies:
       - supports-color
 
@@ -5089,21 +5084,13 @@ snapshots:
       chai: 5.3.3
       tinyrainbow: 1.2.0
 
-  '@vitest/mocker@2.1.9(vite@5.4.20(@types/node@22.18.1))':
+  '@vitest/mocker@2.1.9(vite@5.4.20(@types/node@24.8.1))':
     dependencies:
       '@vitest/spy': 2.1.9
       estree-walker: 3.0.3
       magic-string: 0.30.19
     optionalDependencies:
-      vite: 5.4.20(@types/node@22.18.1)
-
-  '@vitest/mocker@2.1.9(vite@5.4.20(@types/node@24.3.1))':
-    dependencies:
-      '@vitest/spy': 2.1.9
-      estree-walker: 3.0.3
-      magic-string: 0.30.19
-    optionalDependencies:
-      vite: 5.4.20(@types/node@24.3.1)
+      vite: 5.4.20(@types/node@24.8.1)
 
   '@vitest/pretty-format@2.1.9':
     dependencies:
@@ -6107,7 +6094,7 @@ snapshots:
       '@jest/environment': 27.5.1
       '@jest/test-result': 27.5.1
       '@jest/types': 27.5.1
-      '@types/node': 24.3.1
+      '@types/node': 24.8.1
       chalk: 4.1.2
       co: 4.6.0
       dedent: 0.7.0
@@ -6203,7 +6190,7 @@ snapshots:
       '@jest/environment': 27.5.1
       '@jest/fake-timers': 27.5.1
       '@jest/types': 27.5.1
-      '@types/node': 24.3.1
+      '@types/node': 24.8.1
       jest-mock: 27.5.1
       jest-util: 27.5.1
       jsdom: 16.7.0
@@ -6218,7 +6205,7 @@ snapshots:
       '@jest/environment': 27.5.1
       '@jest/fake-timers': 27.5.1
       '@jest/types': 27.5.1
-      '@types/node': 24.3.1
+      '@types/node': 24.8.1
       jest-mock: 27.5.1
       jest-util: 27.5.1
 
@@ -6228,7 +6215,7 @@ snapshots:
     dependencies:
       '@jest/types': 27.5.1
       '@types/graceful-fs': 4.1.9
-      '@types/node': 24.3.1
+      '@types/node': 24.8.1
       anymatch: 3.1.3
       fb-watchman: 2.0.2
       graceful-fs: 4.2.11
@@ -6247,7 +6234,7 @@ snapshots:
       '@jest/source-map': 27.5.1
       '@jest/test-result': 27.5.1
       '@jest/types': 27.5.1
-      '@types/node': 24.3.1
+      '@types/node': 24.8.1
       chalk: 4.1.2
       co: 4.6.0
       expect: 27.5.1
@@ -6290,7 +6277,7 @@ snapshots:
   jest-mock@27.5.1:
     dependencies:
       '@jest/types': 27.5.1
-      '@types/node': 24.3.1
+      '@types/node': 24.8.1
 
   jest-pnp-resolver@1.2.3(jest-resolve@27.5.1):
     optionalDependencies:
@@ -6326,7 +6313,7 @@ snapshots:
       '@jest/test-result': 27.5.1
       '@jest/transform': 27.5.1
       '@jest/types': 27.5.1
-      '@types/node': 24.3.1
+      '@types/node': 24.8.1
       chalk: 4.1.2
       emittery: 0.8.1
       graceful-fs: 4.2.11
@@ -6377,7 +6364,7 @@ snapshots:
 
   jest-serializer@27.5.1:
     dependencies:
-      '@types/node': 24.3.1
+      '@types/node': 24.8.1
       graceful-fs: 4.2.11
 
   jest-snapshot@27.5.1:
@@ -6410,7 +6397,7 @@ snapshots:
   jest-util@27.5.1:
     dependencies:
       '@jest/types': 27.5.1
-      '@types/node': 24.3.1
+      '@types/node': 24.8.1
       chalk: 4.1.2
       ci-info: 3.9.0
       graceful-fs: 4.2.11
@@ -6429,7 +6416,7 @@ snapshots:
     dependencies:
       '@jest/test-result': 27.5.1
       '@jest/types': 27.5.1
-      '@types/node': 24.3.1
+      '@types/node': 24.8.1
       ansi-escapes: 4.3.2
       chalk: 4.1.2
       jest-util: 27.5.1
@@ -6437,7 +6424,7 @@ snapshots:
 
   jest-worker@27.5.1:
     dependencies:
-      '@types/node': 24.3.1
+      '@types/node': 24.8.1
       merge-stream: 2.0.0
       supports-color: 8.1.1
 
@@ -6868,11 +6855,11 @@ snapshots:
     dependencies:
       glob: 7.2.3
 
-  rollup-plugin-dts@6.2.3(rollup@4.50.1)(typescript@5.9.2):
+  rollup-plugin-dts@6.2.3(rollup@4.50.1)(typescript@5.9.3):
     dependencies:
       magic-string: 0.30.19
       rollup: 4.50.1
-      typescript: 5.9.2
+      typescript: 5.9.3
     optionalDependencies:
       '@babel/code-frame': 7.27.1
 
@@ -7128,9 +7115,9 @@ snapshots:
     dependencies:
       typescript: 5.6.3
 
-  ts-api-utils@2.1.0(typescript@5.9.2):
+  ts-api-utils@2.1.0(typescript@5.9.3):
     dependencies:
-      typescript: 5.9.2
+      typescript: 5.9.3
 
   ts-interface-checker@0.1.13: {}
 
@@ -7155,7 +7142,7 @@ snapshots:
 
   tslib@2.8.1: {}
 
-  tsup@8.5.0(@microsoft/api-extractor@7.43.0(@types/node@24.3.1))(postcss@8.5.6)(typescript@4.9.5):
+  tsup@8.5.0(@microsoft/api-extractor@7.43.0(@types/node@24.8.1))(postcss@8.5.6)(typescript@4.9.5):
     dependencies:
       bundle-require: 5.1.0(esbuild@0.25.9)
       cac: 6.7.14
@@ -7175,7 +7162,7 @@ snapshots:
       tinyglobby: 0.2.15
       tree-kill: 1.2.2
     optionalDependencies:
-      '@microsoft/api-extractor': 7.43.0(@types/node@24.3.1)
+      '@microsoft/api-extractor': 7.43.0(@types/node@24.8.1)
       postcss: 8.5.6
       typescript: 4.9.5
     transitivePeerDependencies:
@@ -7184,7 +7171,7 @@ snapshots:
       - tsx
       - yaml
 
-  tsup@8.5.0(@microsoft/api-extractor@7.43.0(@types/node@24.3.1))(postcss@8.5.6)(typescript@5.9.2):
+  tsup@8.5.0(@microsoft/api-extractor@7.43.0(@types/node@24.8.1))(postcss@8.5.6)(typescript@5.9.2):
     dependencies:
       bundle-require: 5.1.0(esbuild@0.25.9)
       cac: 6.7.14
@@ -7204,7 +7191,7 @@ snapshots:
       tinyglobby: 0.2.15
       tree-kill: 1.2.2
     optionalDependencies:
-      '@microsoft/api-extractor': 7.43.0(@types/node@24.3.1)
+      '@microsoft/api-extractor': 7.43.0(@types/node@24.8.1)
       postcss: 8.5.6
       typescript: 5.9.2
     transitivePeerDependencies:
@@ -7257,11 +7244,11 @@ snapshots:
 
   typescript@5.9.2: {}
 
+  typescript@5.9.3: {}
+
   ufo@1.6.1: {}
 
-  undici-types@6.21.0: {}
-
-  undici-types@7.10.0: {}
+  undici-types@7.14.0: {}
 
   universalify@0.1.2: {}
 
@@ -7290,13 +7277,13 @@ snapshots:
 
   validator@13.15.15: {}
 
-  vite-node@2.1.9(@types/node@22.18.1):
+  vite-node@2.1.9(@types/node@24.8.1):
     dependencies:
       cac: 6.7.14
       debug: 4.4.1
       es-module-lexer: 1.7.0
       pathe: 1.1.2
-      vite: 5.4.20(@types/node@22.18.1)
+      vite: 5.4.20(@types/node@24.8.1)
     transitivePeerDependencies:
       - '@types/node'
       - less
@@ -7308,27 +7295,9 @@ snapshots:
       - supports-color
       - terser
 
-  vite-node@2.1.9(@types/node@24.3.1):
+  vite-plugin-dts@3.9.1(@types/node@24.8.1)(rollup@4.50.1)(typescript@5.9.2)(vite@4.5.14(@types/node@24.8.1)):
     dependencies:
-      cac: 6.7.14
-      debug: 4.4.1
-      es-module-lexer: 1.7.0
-      pathe: 1.1.2
-      vite: 5.4.20(@types/node@24.3.1)
-    transitivePeerDependencies:
-      - '@types/node'
-      - less
-      - lightningcss
-      - sass
-      - sass-embedded
-      - stylus
-      - sugarss
-      - supports-color
-      - terser
-
-  vite-plugin-dts@3.9.1(@types/node@24.3.1)(rollup@4.50.1)(typescript@5.9.2)(vite@4.5.14(@types/node@24.3.1)):
-    dependencies:
-      '@microsoft/api-extractor': 7.43.0(@types/node@24.3.1)
+      '@microsoft/api-extractor': 7.43.0(@types/node@24.8.1)
       '@rollup/pluginutils': 5.3.0(rollup@4.50.1)
       '@vue/language-core': 1.8.27(typescript@5.9.2)
       debug: 4.4.1
@@ -7337,43 +7306,34 @@ snapshots:
       typescript: 5.9.2
       vue-tsc: 1.8.27(typescript@5.9.2)
     optionalDependencies:
-      vite: 4.5.14(@types/node@24.3.1)
+      vite: 4.5.14(@types/node@24.8.1)
     transitivePeerDependencies:
       - '@types/node'
       - rollup
       - supports-color
 
-  vite@4.5.14(@types/node@24.3.1):
+  vite@4.5.14(@types/node@24.8.1):
     dependencies:
       esbuild: 0.18.20
       postcss: 8.5.6
       rollup: 3.29.5
     optionalDependencies:
-      '@types/node': 24.3.1
+      '@types/node': 24.8.1
       fsevents: 2.3.3
 
-  vite@5.4.20(@types/node@22.18.1):
+  vite@5.4.20(@types/node@24.8.1):
     dependencies:
       esbuild: 0.21.5
       postcss: 8.5.6
       rollup: 4.50.1
     optionalDependencies:
-      '@types/node': 22.18.1
+      '@types/node': 24.8.1
       fsevents: 2.3.3
 
-  vite@5.4.20(@types/node@24.3.1):
-    dependencies:
-      esbuild: 0.21.5
-      postcss: 8.5.6
-      rollup: 4.50.1
-    optionalDependencies:
-      '@types/node': 24.3.1
-      fsevents: 2.3.3
-
-  vitest@2.1.9(@types/node@22.18.1)(jsdom@16.7.0):
+  vitest@2.1.9(@types/node@24.8.1)(jsdom@16.7.0):
     dependencies:
       '@vitest/expect': 2.1.9
-      '@vitest/mocker': 2.1.9(vite@5.4.20(@types/node@22.18.1))
+      '@vitest/mocker': 2.1.9(vite@5.4.20(@types/node@24.8.1))
       '@vitest/pretty-format': 2.1.9
       '@vitest/runner': 2.1.9
       '@vitest/snapshot': 2.1.9
@@ -7389,47 +7349,11 @@ snapshots:
       tinyexec: 0.3.2
       tinypool: 1.1.1
       tinyrainbow: 1.2.0
-      vite: 5.4.20(@types/node@22.18.1)
-      vite-node: 2.1.9(@types/node@22.18.1)
+      vite: 5.4.20(@types/node@24.8.1)
+      vite-node: 2.1.9(@types/node@24.8.1)
       why-is-node-running: 2.3.0
     optionalDependencies:
-      '@types/node': 22.18.1
-      jsdom: 16.7.0
-    transitivePeerDependencies:
-      - less
-      - lightningcss
-      - msw
-      - sass
-      - sass-embedded
-      - stylus
-      - sugarss
-      - supports-color
-      - terser
-
-  vitest@2.1.9(@types/node@24.3.1)(jsdom@16.7.0):
-    dependencies:
-      '@vitest/expect': 2.1.9
-      '@vitest/mocker': 2.1.9(vite@5.4.20(@types/node@24.3.1))
-      '@vitest/pretty-format': 2.1.9
-      '@vitest/runner': 2.1.9
-      '@vitest/snapshot': 2.1.9
-      '@vitest/spy': 2.1.9
-      '@vitest/utils': 2.1.9
-      chai: 5.3.3
-      debug: 4.4.1
-      expect-type: 1.2.2
-      magic-string: 0.30.19
-      pathe: 1.1.2
-      std-env: 3.9.0
-      tinybench: 2.9.0
-      tinyexec: 0.3.2
-      tinypool: 1.1.1
-      tinyrainbow: 1.2.0
-      vite: 5.4.20(@types/node@24.3.1)
-      vite-node: 2.1.9(@types/node@24.3.1)
-      why-is-node-running: 2.3.0
-    optionalDependencies:
-      '@types/node': 24.3.1
+      '@types/node': 24.8.1
       jsdom: 16.7.0
     transitivePeerDependencies:
       - less
