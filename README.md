@@ -2,6 +2,12 @@
 
 SSML Utilities は、Speech Synthesis Markup Language (SSML) を扱うための包括的なツールキットです。このプロジェクトは、SSML の編集、ハイライト表示、および関連機能を提供し、開発者が SSML を効率的に操作できるようサポートします。
 
+## デモ
+
+動作確認用のデモはこちらです。
+
+- https://ssml-utilities-demo.jabelic.workers.dev
+
 ## パッケージ
 
 SSML Utilities は以下のパッケージを提供しています：

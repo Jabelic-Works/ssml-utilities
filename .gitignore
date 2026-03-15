@@ -21,6 +21,7 @@ pnpm-debug.log*
 .env
 .env.local
 .env.*.local
+.dev.vars*
 
 # IDE - VSCode
 .vscode/*
@@ -44,6 +45,7 @@ coverage/
 # Temporary files
 *.tmp
 *.temp
+.wrangler
 
 # Optional: Uncomment if you're using Yarn
 # yarn.lock
