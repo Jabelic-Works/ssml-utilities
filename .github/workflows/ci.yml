@@ -66,10 +66,7 @@ jobs:
         run: echo "editor-react package has no tests"
 
       - name: Test examples
-        run: |
-          cd examples/react
-          pnpm install
-          pnpm build
+        run: pnpm --dir examples/react build
 
   lint:
     runs-on: ubuntu-latest
