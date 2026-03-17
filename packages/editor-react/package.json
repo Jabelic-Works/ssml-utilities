@@ -33,21 +33,21 @@
     "prepublishOnly": "pnpm run pkg:build"
   },
   "dependencies": {
-    "@ssml-utilities/highlighter": "workspace:*",
-    "react": "^18.2.0",
-    "react-dom": "^18.2.0"
+    "@ssml-utilities/highlighter": "workspace:*"
   },
   "devDependencies": {
     "@types/react": "^18.3.18",
     "@types/react-dom": "^18.3.5",
     "@vitejs/plugin-react": "^4.3.4",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
     "tsup": "^8.3.6",
     "typescript": "^5.8.3",
     "vite": "^8.0.0",
     "vite-plugin-dts": "^4.5.4"
   },
   "peerDependencies": {
-    "react": "^18.2.0",
-    "react-dom": "^18.2.0"
+    "react": "^18.2.0 || ^19.0.0",
+    "react-dom": "^18.2.0 || ^19.0.0"
   }
 }

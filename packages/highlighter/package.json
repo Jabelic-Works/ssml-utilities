@@ -40,17 +40,12 @@
   },
   "homepage": "https://github.com/jabelic-works/ssml-utilities/tree/main/packages/highlighter#readme",
   "dependencies": {
-    "@rollup/plugin-typescript": "^11.1.6",
     "@ssml-utilities/core": "workspace:*"
-  },
-  "peerDependencies": {
-    "react": "^17.0.0 || ^18.0.0",
-    "react-dom": "^17.0.0 || ^18.0.0"
   },
   "devDependencies": {
     "@eslint/js": "^9.13.0",
+    "@rollup/plugin-typescript": "^11.1.6",
     "@types/jest": "^27.5.2",
-    "@types/react": "^17.0.83",
     "@typescript-eslint/eslint-plugin": "^8.26.0",
     "@typescript-eslint/parser": "^8.26.0",
     "eslint": "^9.21.0",
