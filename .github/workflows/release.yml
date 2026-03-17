@@ -229,27 +229,27 @@ jobs:
 
           # メインのパッケージを公開
           cd packages/${{ steps.get-directory.outputs.directory }}
-          pnpm publish --access public --tag ${{ github.event.inputs.tag }} --no-git-checks || echo "パッケージが既に公開されているか、権限がありません"
+          pnpm publish --access public --tag ${{ github.event.inputs.tag }} --no-git-checks
 
           # 依存パッケージも公開
           if [[ "${{ github.event.inputs.update_dependent_packages }}" == "true" ]]; then
             if [ "${{ github.event.inputs.package }}" = "@ssml-utilities/core" ]; then
               # highlighter を公開
               cd $GITHUB_WORKSPACE/packages/highlighter
-              pnpm publish --access public --tag ${{ github.event.inputs.tag }} --no-git-checks || echo "highlighterパッケージが既に公開されているか、権限がありません"
+              pnpm publish --access public --tag ${{ github.event.inputs.tag }} --no-git-checks
 
               # tag-remover を公開
               cd $GITHUB_WORKSPACE/packages/tag-remover
-              pnpm publish --access public --tag ${{ github.event.inputs.tag }} --no-git-checks || echo "tag-removerパッケージが既に公開されているか、権限がありません"
+              pnpm publish --access public --tag ${{ github.event.inputs.tag }} --no-git-checks
               
               # editor-react を公開
               cd $GITHUB_WORKSPACE/packages/editor-react
-              pnpm publish --access public --tag ${{ github.event.inputs.tag }} --no-git-checks || echo "editor-reactパッケージが既に公開されているか、権限がありません"
+              pnpm publish --access public --tag ${{ github.event.inputs.tag }} --no-git-checks
             
             elif [ "${{ github.event.inputs.package }}" = "@ssml-utilities/highlighter" ]; then
               # editor-react を公開
               cd $GITHUB_WORKSPACE/packages/editor-react
-              pnpm publish --access public --tag ${{ github.event.inputs.tag }} --no-git-checks || echo "editor-reactパッケージが既に公開されているか、権限がありません"
+              pnpm publish --access public --tag ${{ github.event.inputs.tag }} --no-git-checks
             fi
           fi
         env:
