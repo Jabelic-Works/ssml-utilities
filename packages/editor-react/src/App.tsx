@@ -39,11 +39,6 @@ function App() {
           boxSizing: "border-box",
         }}
       >
-        <div style={{ width: "100%", maxWidth: "800px", marginBottom: "20px" }}>
-          <h1 style={{ marginTop: 0, marginBottom: "12px" }}>
-            SSML Editor IME / Tab Repro
-          </h1>
-        </div>
         <div style={{ marginBottom: "20px" }}>
           <button
             onClick={handleWrapButtonClick}
