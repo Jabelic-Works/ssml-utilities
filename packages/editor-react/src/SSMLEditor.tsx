@@ -70,6 +70,13 @@ export const SSMLEditor: React.FC<SSMLEditorProps> = ({
     left: number;
   } | null>(null);
   const [activeSuggestionIndex, setActiveSuggestionIndex] = useState(0);
+  const isComposingRef = useRef(false);
+
+  const closeSuggestions = () => {
+    setSuggestions([]);
+    setSuggestionPosition(null);
+    setActiveSuggestionIndex(0);
+  };
 
   // ハイライトを更新する
   useEffect(() => {
@@ -108,7 +115,12 @@ export const SSMLEditor: React.FC<SSMLEditorProps> = ({
     const newValue = e.target.value;
     setSSML(newValue);
     onChange?.(newValue);
-    checkForEmbeddedCompletion(newValue);
+
+    if (isComposingRef.current) {
+      closeSuggestions();
+    } else {
+      checkForEmbeddedCompletion(newValue);
+    }
 
     ensureCorrectScroll();
   };
@@ -127,52 +139,53 @@ export const SSMLEditor: React.FC<SSMLEditorProps> = ({
   };
 
   const checkForEmbeddedCompletion = (value: string) => {
-    const isSuggestionOpen = textareaRef.current && embeddeds.length > 0;
-    if (!isSuggestionOpen) {
-      setSuggestions([]);
-      setSuggestionPosition(null);
-    } else {
-      const pos = textareaRef.current.selectionStart;
-      const textBeforeCursor = value.slice(0, pos);
-      for (const embed of embeddeds) {
-        const { startKey, endKey, recommends } = embed;
-        const startIndex = textBeforeCursor.lastIndexOf(startKey);
-        if (
-          startIndex !== -1 &&
-          textBeforeCursor.indexOf(endKey, startIndex) === -1
-        ) {
-          const currentPrefix = textBeforeCursor.slice(
-            startIndex + startKey.length
-          );
-          const filtered = recommends.filter((candidate) =>
-            candidate.value.startsWith(currentPrefix)
-          );
-          if (filtered.length > 0) {
-            // カーソル位置の座標を取得
-            const caretCoords = getCaretCoordinates(textareaRef.current, pos);
-            const textRect = textareaRef.current.getBoundingClientRect();
-            const parentRect =
-              textareaRef.current.parentElement?.getBoundingClientRect() || {
-                top: 0,
-                left: 0,
-              };
+    if (!textareaRef.current || embeddeds.length === 0 || isComposingRef.current) {
+      closeSuggestions();
+      return;
+    }
 
-            // テキストエリア内のカーソル位置を画面上の座標に変換
-            const top =
-              textRect.top -
-              parentRect.top +
-              caretCoords.top +
-              caretCoords.height;
-            const left = textRect.left - parentRect.left + caretCoords.left;
+    const pos = textareaRef.current.selectionStart;
+    const textBeforeCursor = value.slice(0, pos);
+    for (const embed of embeddeds) {
+      const { startKey, endKey, recommends } = embed;
+      const startIndex = textBeforeCursor.lastIndexOf(startKey);
+      if (
+        startIndex !== -1 &&
+        textBeforeCursor.indexOf(endKey, startIndex) === -1
+      ) {
+        const currentPrefix = textBeforeCursor.slice(
+          startIndex + startKey.length
+        );
+        const filtered = recommends.filter((candidate) =>
+          candidate.value.startsWith(currentPrefix)
+        );
+        if (filtered.length > 0) {
+          // カーソル位置の座標を取得
+          const caretCoords = getCaretCoordinates(textareaRef.current, pos);
+          const textRect = textareaRef.current.getBoundingClientRect();
+          const parentRect =
+            textareaRef.current.parentElement?.getBoundingClientRect() || {
+              top: 0,
+              left: 0,
+            };
 
-            setSuggestionPosition({ top, left });
-            setSuggestions(filtered);
-            setActiveSuggestionIndex(0);
-            return;
-          }
+          // テキストエリア内のカーソル位置を画面上の座標に変換
+          const top =
+            textRect.top -
+            parentRect.top +
+            caretCoords.top +
+            caretCoords.height;
+          const left = textRect.left - parentRect.left + caretCoords.left;
+
+          setSuggestionPosition({ top, left });
+          setSuggestions(filtered);
+          setActiveSuggestionIndex(0);
+          return;
         }
       }
     }
+
+    closeSuggestions();
   };
 
   const applySuggestion = (candidate: { value: string; label: string }) => {
@@ -192,9 +205,8 @@ export const SSMLEditor: React.FC<SSMLEditorProps> = ({
           endKey +
           ssml.slice(pos);
         setSSML(newValue);
-        if (onChange) onChange(newValue);
-        setSuggestions([]);
-        setSuggestionPosition(null);
+        onChange?.(newValue);
+        closeSuggestions();
         setTimeout(() => {
           if (textareaRef.current) {
             textareaRef.current.selectionStart =
@@ -292,12 +304,33 @@ export const SSMLEditor: React.FC<SSMLEditorProps> = ({
     if (onWrapTag) onWrapTag(wrapSelectionWithTag);
   }, [onWrapTag, wrapSelectionWithTag]);
 
+  const handleCompositionStart = () => {
+    isComposingRef.current = true;
+    closeSuggestions();
+  };
+
+  const handleCompositionEnd = (
+    e: React.CompositionEvent<HTMLTextAreaElement>
+  ) => {
+    isComposingRef.current = false;
+    checkForEmbeddedCompletion(e.currentTarget.value);
+    ensureCorrectScroll();
+  };
+
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    const isComposing =
+      isComposingRef.current ||
+      e.nativeEvent.isComposing ||
+      e.nativeEvent.keyCode === 229;
+
+    if (isComposing) {
+      return;
+    }
+
     // Escキーで候補を閉じる
     if (e.key === "Escape" && suggestions.length > 0) {
       e.preventDefault();
-      setSuggestions([]);
-      setSuggestionPosition(null);
+      closeSuggestions();
       return;
     }
 
@@ -341,6 +374,8 @@ export const SSMLEditor: React.FC<SSMLEditorProps> = ({
       const end = e.currentTarget.selectionEnd;
       const newValue = ssml.substring(0, start) + "  " + ssml.substring(end);
       setSSML(newValue);
+      onChange?.(newValue);
+      checkForEmbeddedCompletion(newValue);
       requestAnimationFrame(() => {
         if (textareaRef.current) {
           textareaRef.current.selectionStart =
@@ -348,6 +383,7 @@ export const SSMLEditor: React.FC<SSMLEditorProps> = ({
         }
         textareaRef.current?.focus();
       });
+      return;
     }
   };
 
@@ -516,15 +552,16 @@ export const SSMLEditor: React.FC<SSMLEditorProps> = ({
           onChange={handleInput}
           onScroll={syncScroll}
           onKeyDown={handleKeyDown}
+          onCompositionStart={handleCompositionStart}
+          onCompositionEnd={handleCompositionEnd}
           onClick={() => {
             // クリックでカーソル位置変更時に候補を消す
-            setSuggestions([]);
-            setSuggestionPosition(null);
+            closeSuggestions();
           }}
           onBlur={() => {
             // フォーカスを失った時に候補を消す
-            setSuggestions([]);
-            setSuggestionPosition(null);
+            isComposingRef.current = false;
+            closeSuggestions();
           }}
           style={{
             ...commonStyles,

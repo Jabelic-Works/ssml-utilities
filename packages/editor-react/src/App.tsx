@@ -1,8 +1,7 @@
-import { useRef, useState } from "react";
+import { useRef } from "react";
 import { SSMLEditor } from "./SSMLEditor";
 
 function App() {
-  const [ssml, setSSML] = useState("");
   const wrapWithTagRef =
     useRef<(tagName: string, attributes?: { [key: string]: string }) => void>();
   const insertPhraseRef = useRef<(text: string) => void>();
@@ -30,13 +29,13 @@ function App() {
         style={{
           display: "flex",
           flexDirection: "column",
-          justifyContent: "center",
           alignItems: "center",
-          height: "100vh",
+          minHeight: "100vh",
           width: "100vw",
-          padding: "0px",
+          padding: "24px",
           margin: "0px",
           backgroundColor: "#f0f0f0",
+          boxSizing: "border-box",
         }}
       >
         <div style={{ marginBottom: "20px" }}>
@@ -52,8 +51,7 @@ function App() {
           <button onClick={handleInsertPhrase2}>お礼</button>
         </div>
         <SSMLEditor
-          initialValue={ssml}
-          onChange={setSSML}
+          initialValue="<speak>Hello, world!</speak>"
           height="200px"
           onWrapTag={(wrapFn) => {
             wrapWithTagRef.current = wrapFn;
