@@ -12,31 +12,44 @@ npm install @ssml-utilities/editor-react
 
 ```tsx
 import { SSMLEditor } from "@ssml-utilities/editor-react";
+import { useState } from "react";
 
 function App() {
-  const [ssml, setSSML] = useState("<speak>Hello, world!</speak>");
+  const initialSSML = "<speak>Hello, world!</speak>";
+  const [latestSSML, setLatestSSML] = useState(initialSSML);
 
   return (
-    <SSMLEditor
-      initialValue={ssml}
-      onChange={(value) => setSSML(value)}
-      width="800px"
-      height="400px"
-    />
+    <>
+      <SSMLEditor
+        initialValue={initialSSML}
+        onChange={setLatestSSML}
+        width="800px"
+        height="400px"
+      />
+      <pre>{latestSSML}</pre>
+    </>
   );
 }
 ```
 
+`initialValue` はマウント時の初期値としてのみ使われます。編集中の最新値を受け取りたい場合は `onChange` を利用してください。
+
 ## プロパティ
 
-| プロパティ名 | 型                      | 必須   | デフォルト値 | 説明                                                      |
-| ------------ | ----------------------- | ------ | ------------ | --------------------------------------------------------- |
-| initialValue | string                  | いいえ | `''`         | エディタの初期値として表示される SSML テキスト            |
-| onChange     | (value: string) => void | いいえ | -            | SSML テキストが変更された時に呼び出されるコールバック関数 |
-| width        | string                  | いいえ | `'600px'`    | エディタの幅                                              |
-| height       | string                  | いいえ | `'300px'`    | エディタの高さ                                            |
-| onWrapTag | (wrapFn: (tagName: string, attributes?: TagAttributes) => void) => void | いいえ | - | タグでテキストを囲む関数を受け取るコールバック |
-| wrapTagShortCuts | { tagName: string; shortcut: (e: KeyboardEvent) => boolean; attributes?: TagAttributes }[] | いいえ | - | キーボードショートカットの設定 |
+| プロパティ名 | 型 | 必須 | デフォルト値 | 説明 |
+| ------------ | --- | ---- | ------------ | ---- |
+| initialValue | string | いいえ | `''` | マウント時の初期値として表示される SSML テキスト |
+| onChange | (value: string) => void | いいえ | - | SSML テキストが変更された時に呼び出されるコールバック関数 |
+| width | string | いいえ | `'600px'` | エディタの幅 |
+| height | string | いいえ | `'500px'` | エディタの高さ |
+| onWrapTag | (wrapFn: (tagName: string, attributes?: TagAttributes, selfClosing?: boolean) => void) => void | いいえ | - | タグでテキストを囲む関数を受け取るコールバック |
+| wrapTagShortCuts | { tagName: string; shortcut: (e: KeyboardEvent) => boolean; attributes?: TagAttributes; selfClosing?: boolean }[] | いいえ | - | キーボードショートカットの設定 |
+| showLineNumbers | boolean | いいえ | `false` | 行番号を表示するかどうか |
+| onInsertPhrase | (insertFn: (text: string) => void) => void | いいえ | - | 定型文を挿入する関数を受け取るコールバック |
+| embeddeds | { id: string; startKey: string; endKey: string; recommends: { value: string; label: string }[] }[] | いいえ | `[]` | 埋め込み候補の補完設定 |
+| autoExpand | boolean | いいえ | - | 内容に応じて高さを自動調整するかどうか |
+| minHeight | string | いいえ | - | `autoExpand` 時の最小高さ |
+| maxHeight | string | いいえ | - | `autoExpand` 時の最大高さ |
 
 ## 機能
 
@@ -45,6 +58,7 @@ function App() {
 - エラー表示
 - カスタマイズ可能なスタイリング
 - キーボードショートカット
+- 日本語 IME 変換中は `Tab` / `Enter` / 矢印キーの既定動作を優先
 - タグ属性のサポート
 
 ## 例
@@ -79,6 +93,7 @@ function App() {
           tagName: "break",
           shortcut: (e) => e.key === "b" && e.shiftKey && (e.ctrlKey || e.metaKey),
           attributes: { time: "200ms" },
+          selfClosing: true,
         },
         {
           tagName: "prosody",
@@ -88,6 +103,8 @@ function App() {
       ]}
     />
 ```
+
+IME 変換中はショートカットや補完候補のキー操作よりも、日本語入力側の `Tab` / `Enter` / 矢印キー操作が優先されます。
 
 ## タグ属性の使用例
 ```tsx
