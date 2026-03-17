@@ -1,10 +1,8 @@
 import { SSMLEditor } from "@ssml-utilities/editor-react";
 import { useState } from "react";
 
-const initialSSML = "<speak>Hello, world!</speak>";
-
 function App() {
-  const [ssml, setSSML] = useState(initialSSML);
+  const [ssml, setSSML] = useState("<speak>Hello, world!</speak>");
 
   return (
     <div
@@ -19,7 +17,7 @@ function App() {
     >
       <div style={{ width: "100%", maxWidth: "800px", height: "400px", margin: "0 auto" }}>
         <SSMLEditor
-          initialValue={initialSSML}
+          initialValue="<speak>Hello, world!</speak>"
           onChange={setSSML}
           width="100%"
           height="400px"

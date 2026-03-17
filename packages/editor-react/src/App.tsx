@@ -1,8 +1,6 @@
 import { useRef } from "react";
 import { SSMLEditor } from "./SSMLEditor";
 
-const initialSSML = "<speak>Hello, world!</speak>";
-
 function App() {
   const wrapWithTagRef =
     useRef<(tagName: string, attributes?: { [key: string]: string }) => void>();
@@ -53,7 +51,7 @@ function App() {
           <button onClick={handleInsertPhrase2}>お礼</button>
         </div>
         <SSMLEditor
-          initialValue={initialSSML}
+          initialValue="<speak>Hello, world!</speak>"
           height="200px"
           onWrapTag={(wrapFn) => {
             wrapWithTagRef.current = wrapFn;
