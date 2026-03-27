@@ -2,10 +2,10 @@
   "name": "@ssml-utilities/accent-ir",
   "version": "0.1.0",
   "description": "AccentIR-based SSML emitters for Azure and Google TTS",
-  "main": "./dist/index.js",
-  "module": "./dist/index.js",
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.mjs",
   "type": "module",
-  "types": "./dist/index.d.ts",
+  "types": "./dist/index.d.mts",
   "author": "Jabelic",
   "license": "MIT",
   "publishConfig": {
@@ -16,13 +16,18 @@
   ],
   "exports": {
     ".": {
-      "import": "./dist/index.js",
-      "require": "./dist/index.js",
-      "types": "./dist/index.d.ts"
+      "import": {
+        "types": "./dist/index.d.mts",
+        "default": "./dist/index.mjs"
+      },
+      "require": {
+        "types": "./dist/index.d.cts",
+        "default": "./dist/index.cjs"
+      }
     }
   },
   "scripts": {
-    "build": "rollup -c rollup.config.mjs --bundleConfigAsCjs",
+    "build": "tsdown",
     "test": "vitest",
     "test:watch": "vitest watch",
     "lint": "eslint src --ext .ts,.tsx",
@@ -47,13 +52,11 @@
   },
   "homepage": "https://github.com/jabelic-works/ssml-utilities/tree/main/packages/accent-ir#readme",
   "devDependencies": {
-    "@rollup/plugin-typescript": "^11.1.6",
     "@types/node": "^25.5.0",
     "@typescript-eslint/eslint-plugin": "^8.5.0",
     "@typescript-eslint/parser": "^8.5.0",
     "eslint": "^9.10.0",
-    "rollup": "^4.21.3",
-    "tslib": "^2.7.0",
+    "tsdown": "^0.21.6",
     "vitest": "^2.1.1"
   }
 }
