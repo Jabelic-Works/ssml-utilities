@@ -17,14 +17,13 @@ SSML Utilities は以下のパッケージを提供しています：
 - [@ssml-utilities/highlighter](#ssml-utilitieshighlighter)
 - [@ssml-utilities/core](#ssml-utilitiescore)
 
-各パッケージは個別にインストールして使用することができます。
+公開済みの各パッケージは個別にインストールして使用することができます。
 
 ## インストール
 
 各パッケージを個別にインストールするには、以下のコマンドを使用します：
 
 ```bash
-npm install @ssml-utilities/accent-ir
 npm install @ssml-utilities/editor-react
 npm install @ssml-utilities/highlighter
 npm install @ssml-utilities/core
@@ -33,6 +32,8 @@ npm install @ssml-utilities/core
 ### @ssml-utilities/accent-ir
 
 `AccentIR` を正本にして、Azure TTS / Google TTS 向けの `SSML` を生成します。
+
+現在は開発中の workspace package で、まだ npm / pnpm からの公開インストールはできません。
 
 ```typescript
 import { emitAzureSSML, emitGoogleSSML } from "@ssml-utilities/accent-ir";

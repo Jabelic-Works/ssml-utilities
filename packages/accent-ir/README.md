@@ -2,11 +2,11 @@
 
 `AccentIR` を正本にして、Azure TTS / Google TTS 向けの `SSML` を生成するパッケージです。
 
-## インストール
+## ステータス
 
-```bash
-pnpm add @ssml-utilities/accent-ir
-```
+この package はまだ未リリースです。
+
+そのため、現時点では npm / pnpm からインストールする前提ではなく、workspace 内での開発対象として扱います。
 
 ## 使用例
 
