@@ -329,3 +329,7 @@ export type {
   UniDicTokenSource,
 } from "./unidic-contract";
 export { mockUniDicRawTokens } from "./unidic-contract.mock";
+export {
+  adaptUniDicTokensToAccentIR,
+  uniDicAccentIRAdapter,
+} from "./unidic-adapter";
