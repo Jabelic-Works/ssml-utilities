@@ -1,62 +1,8 @@
-import type { AccentIR } from "./index";
+import type { UniDicRawToken } from "./unidic-contract";
 
-export interface UniDicPartOfSpeech {
-  level1: string;
-  level2?: string | null;
-  level3?: string | null;
-  level4?: string | null;
-}
-
-export interface UniDicInflection {
-  type?: string | null;
-  form?: string | null;
-}
-
-export interface UniDicAccentMetadata {
-  accentType?: string | null;
-  accentConnectionType?: string | null;
-  accentModificationType?: string | null;
-}
-
-export interface UniDicTokenSource {
-  dictionary: "unidic";
-  rawFeatures?: readonly string[];
-}
-
-export interface UniDicRawToken {
-  surface: string;
-  lemma?: string | null;
-  orthBase?: string | null;
-  reading?: string | null;
-  pronunciation?: string | null;
-  partOfSpeech: UniDicPartOfSpeech;
-  inflection?: UniDicInflection;
-  accent?: UniDicAccentMetadata;
-  source?: UniDicTokenSource;
-}
-
-export interface UniDicAccentIRAdapterInput {
-  locale?: string;
-  tokens: readonly UniDicRawToken[];
-}
-
-export interface UniDicAccentIRAdapterWarning {
-  code: string;
-  message: string;
-  tokenIndex: number;
-}
-
-export interface UniDicAccentIRAdapterResult {
-  accentIR: AccentIR;
-  warnings: UniDicAccentIRAdapterWarning[];
-}
-
-export interface UniDicAccentIRAdapter {
-  fromUniDic(input: UniDicAccentIRAdapterInput): UniDicAccentIRAdapterResult;
-}
-
-// Illustrative fixture for contract design and tests.
-export const exampleUniDicRawTokens = [
+// Mock tokens for contract design and tests only.
+// These are illustrative fixtures, not the output of a real UniDic runtime.
+export const mockUniDicRawTokens = [
   {
     surface: "箸",
     lemma: "箸",

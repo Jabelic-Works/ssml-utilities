@@ -327,5 +327,5 @@ export type {
   UniDicPartOfSpeech,
   UniDicRawToken,
   UniDicTokenSource,
-} from "./unidic";
-export { exampleUniDicRawTokens } from "./unidic";
+} from "./unidic-contract";
+export { mockUniDicRawTokens } from "./unidic-contract.mock";

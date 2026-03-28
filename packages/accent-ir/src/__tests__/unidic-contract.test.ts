@@ -1,10 +1,10 @@
 import { describe, expect, it } from "vitest";
-import { exampleUniDicRawTokens } from "../unidic";
+import { mockUniDicRawTokens } from "../unidic-contract.mock";
 
 describe("UniDic contract", () => {
-  it("illustrative UniDic tokens を export する", () => {
-    expect(exampleUniDicRawTokens).toHaveLength(3);
-    expect(exampleUniDicRawTokens[0]).toMatchObject({
+  it("mock UniDic tokens を export する", () => {
+    expect(mockUniDicRawTokens).toHaveLength(3);
+    expect(mockUniDicRawTokens[0]).toMatchObject({
       surface: "箸",
       reading: "ハシ",
       partOfSpeech: {
