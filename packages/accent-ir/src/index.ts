@@ -316,3 +316,16 @@ const toHiragana = (value: string): string =>
       return char;
     })
     .join("");
+
+export type {
+  UniDicAccentIRAdapter,
+  UniDicAccentIRAdapterInput,
+  UniDicAccentIRAdapterResult,
+  UniDicAccentIRAdapterWarning,
+  UniDicAccentMetadata,
+  UniDicInflection,
+  UniDicPartOfSpeech,
+  UniDicRawToken,
+  UniDicTokenSource,
+} from "./unidic-contract";
+export { mockUniDicRawTokens } from "./unidic-contract.mock";
