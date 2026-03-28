@@ -25,6 +25,33 @@ const azure = emitAzureSSML(accentIR, { voice: "ja-JP-NanamiNeural" });
 const google = emitGoogleSSML(accentIR, { voice: "ja-JP-Standard-A" });
 ```
 
+## UniDic contract
+
+`UniDic` を最初の解析 backend として扱うために、`@ssml-utilities/accent-ir` では raw token contract と adapter interface も公開します。
+
+```typescript
+import type {
+  UniDicAccentIRAdapter,
+  UniDicRawToken,
+} from "@ssml-utilities/accent-ir";
+
+const tokens: UniDicRawToken[] = [
+  {
+    surface: "箸",
+    reading: "ハシ",
+    pronunciation: "ハシ",
+    partOfSpeech: { level1: "名詞", level2: "普通名詞", level3: "一般" },
+    accent: { accentType: "1" },
+  },
+];
+```
+
+### 境界
+
+- `AccentIR` には `text`, `reading`, `accent`, `break`, `emphasis` など provider 非依存の意味だけを持たせます。
+- `UniDic` 固有の品詞階層、活用情報、生のアクセント表記、feature 配列は `UniDicRawToken` 側に閉じ込めます。
+- `exampleUniDicRawTokens` は contract 設計用の illustrative fixture で、将来の adapter / test の土台として使えます。
+
 ## メモ
 
 - `Google` は `phoneme alphabet="yomigana"` に `^` / `!` を付けてアクセントを表現します。
