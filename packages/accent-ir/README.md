@@ -29,7 +29,7 @@ const google = emitGoogleSSML(accentIR, { voice: "ja-JP-Standard-A" });
 
 `UniDic` を最初の解析 backend として扱うために、`@ssml-utilities/accent-ir` では raw token contract と adapter interface も公開します。
 
-この時点では `UniDic` の実 adapter はまだ未実装です。ここで提供しているのは contract と mock fixture だけです。
+`MeCab` や辞書のロード自体は行いませんが、すでに正規化された `UniDicRawToken[]` から `AccentIR` を組み立てる MVP adapter は提供します。
 
 ```typescript
 import type {
@@ -48,11 +48,18 @@ const tokens: UniDicRawToken[] = [
 ];
 ```
 
+```typescript
+import { adaptUniDicTokensToAccentIR } from "@ssml-utilities/accent-ir";
+
+const result = adaptUniDicTokensToAccentIR({ tokens });
+```
+
 ### 境界
 
 - `AccentIR` には `text`, `reading`, `accent`, `break`, `emphasis` など provider 非依存の意味だけを持たせます。
 - `UniDic` 固有の品詞階層、活用情報、生のアクセント表記、feature 配列は `UniDicRawToken` 側に閉じ込めます。
 - `mockUniDicRawTokens` は contract 設計用の mock fixture で、将来の adapter / test の土台として使えます。
+- 現在の `adaptUniDicTokensToAccentIR()` は MVP で、名詞、固有名詞、助詞連結、文末 pause などの最小範囲のみを対象にします。
 
 ## メモ
 
