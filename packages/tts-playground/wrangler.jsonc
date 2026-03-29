@@ -2,7 +2,7 @@
   "$schema": "./node_modules/wrangler/config-schema.json",
   "name": "ssml-utilities-tts-playground",
   "compatibility_date": "2026-03-15",
-  "main": "./worker/index.js",
+  "main": "./worker/index.ts",
   "assets": {
     "directory": "./dist",
     "binding": "ASSETS",

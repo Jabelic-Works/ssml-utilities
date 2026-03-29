@@ -5,7 +5,9 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "pnpm --filter @ssml-utilities/accent-ir build && vue-tsc -b && vite build",
+    "generate-types": "wrangler types",
+    "type-check": "pnpm run generate-types && vue-tsc -b",
+    "build": "pnpm --filter @ssml-utilities/accent-ir build && pnpm run type-check && vite build",
     "lint": "eslint .",
     "preview": "vite preview",
     "preview:worker": "pnpm run build && wrangler dev",

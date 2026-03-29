@@ -5,7 +5,7 @@ import tseslint from "typescript-eslint";
 import vueParser from "vue-eslint-parser";
 
 export default [
-  { ignores: ["dist", ".wrangler"] },
+  { ignores: ["dist", ".wrangler", "worker-configuration.d.ts"] },
   js.configs.recommended,
   ...pluginVue.configs["flat/recommended"],
   {
@@ -36,6 +36,7 @@ export default [
       "@typescript-eslint": tseslint.plugin,
     },
     rules: {
+      "no-undef": "off",
       "@typescript-eslint/no-unused-vars": [
         "error",
         { argsIgnorePattern: "^_" },
@@ -43,7 +44,7 @@ export default [
     },
   },
   {
-    files: ["worker/**/*.js"],
+    files: ["worker/**/*.ts"],
     languageOptions: {
       ecmaVersion: 2022,
       sourceType: "module",

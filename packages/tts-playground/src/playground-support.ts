@@ -2,7 +2,12 @@ import {
   emitAzureSSML,
   type AccentIR,
   type AccentIREmitWarning,
+  type UniDicRawToken,
 } from "@ssml-utilities/accent-ir";
+import type {
+  AnalyzeErrorResponse,
+  AnalyzeSuccessResponse,
+} from "./analyze-contract";
 
 export const DEFAULT_VOICE = "ja-JP-NanamiNeural";
 export const DEFAULT_OUTPUT_FORMAT = "audio-24khz-48kbitrate-mono-mp3";
@@ -157,10 +162,23 @@ export const readErrorMessage = async (response: Response): Promise<string> => {
   const contentType = response.headers.get("content-type") ?? "";
 
   if (contentType.includes("application/json")) {
-    const payload = (await response.json()) as { error?: string; details?: string };
-    return payload.details
-      ? `${payload.error}: ${payload.details}`
-      : payload.error ?? response.statusText;
+    const payload = (await response.json()) as
+      | AnalyzeErrorResponse
+      | { error?: string; details?: string };
+
+    if (typeof payload.error === "string") {
+      return "details" in payload && typeof payload.details === "string"
+        ? `${payload.error}: ${payload.details}`
+        : payload.error;
+    }
+
+    if (isRecord(payload.error) && typeof payload.error.message === "string") {
+      return typeof payload.error.code === "string"
+        ? `${payload.error.code}: ${payload.error.message}`
+        : payload.error.message;
+    }
+
+    return response.statusText;
   }
 
   const text = await response.text();
@@ -176,30 +194,32 @@ export const readAnalyzeResponse = (
   accentIR: AccentIR;
   azureSSML: string;
   warnings: AccentIREmitWarning[];
-  rawTokens: Array<Record<string, unknown>> | null;
+  rawTokens: UniDicRawToken[] | null;
 } => {
   if (!isRecord(payload)) {
     throw new Error("Analyze API response must be an object.");
   }
 
-  const accentIR = payload.accentIR as AccentIR | undefined;
+  const response = payload as Partial<AnalyzeSuccessResponse>;
+
+  const accentIR = response.accentIR;
   if (!accentIR) {
     throw new Error("Analyze API response is missing accentIR.");
   }
 
   const azureSSML =
-    typeof payload.azureSSML === "string" ? payload.azureSSML : "";
+    typeof response.azureSSML === "string" ? response.azureSSML : "";
   if (!azureSSML) {
     throw new Error("Analyze API response is missing azureSSML.");
   }
 
-  const warnings = Array.isArray(payload.warnings)
-    ? (payload.warnings as AccentIREmitWarning[])
+  const warnings = Array.isArray(response.warnings)
+    ? (response.warnings as AccentIREmitWarning[])
     : [];
 
-  const debug = isRecord(payload.debug) ? payload.debug : undefined;
+  const debug = isRecord(response.debug) ? response.debug : undefined;
   const rawTokens = Array.isArray(debug?.rawTokens)
-    ? (debug.rawTokens.filter(isRecord) as Array<Record<string, unknown>>)
+    ? (debug.rawTokens.filter(isRecord) as UniDicRawToken[])
     : null;
 
   return {
