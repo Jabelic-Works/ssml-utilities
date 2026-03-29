@@ -68,6 +68,9 @@ jobs:
       - name: Test examples
         run: pnpm --dir examples/react build
 
+      - name: Build tts-playground package
+        run: pnpm --filter @ssml-utilities/tts-playground build
+
   lint:
     runs-on: ubuntu-latest
 

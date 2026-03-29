@@ -1,0 +1,35 @@
+{
+  "name": "@ssml-utilities/tts-playground",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "pnpm --filter @ssml-utilities/core build && pnpm --filter @ssml-utilities/highlighter build && pnpm --filter @ssml-utilities/editor-react build && pnpm --filter @ssml-utilities/accent-ir build && tsc -b && vite build",
+    "lint": "eslint .",
+    "preview": "vite preview",
+    "preview:worker": "pnpm run build && wrangler dev",
+    "deploy": "pnpm run build && wrangler deploy",
+    "test": "echo 'No tests specified for tts-playground'"
+  },
+  "dependencies": {
+    "@ssml-utilities/accent-ir": "workspace:*",
+    "@ssml-utilities/editor-react": "workspace:*",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.13.0",
+    "@types/react": "^18.3.12",
+    "@types/react-dom": "^18.3.1",
+    "@vitejs/plugin-react": "^4.3.3",
+    "eslint": "^9.13.0",
+    "eslint-plugin-react-hooks": "^5.0.0",
+    "eslint-plugin-react-refresh": "^0.4.14",
+    "globals": "^17.4.0",
+    "typescript": "~5.8.3",
+    "typescript-eslint": "^8.11.0",
+    "vite": "^8.0.0",
+    "wrangler": "^4.73.0"
+  }
+}
