@@ -12,6 +12,7 @@ import type {
   UniDicAccentIRAdapterWarning,
   UniDicRawToken,
 } from "./unidic-contract";
+import { toHiragana } from "./kana";
 import { appendAzureHintToSegment } from "./unidic-azure-hints";
 
 // MVP adapter only. This does not execute MeCab or load UniDic dictionaries.
@@ -143,20 +144,3 @@ const normalizeReading = (reading?: string | null): string | undefined => {
 
   return toHiragana(reading);
 };
-
-const toHiragana = (value: string): string =>
-  Array.from(value)
-    .map((char) => {
-      const codePoint = char.codePointAt(0);
-
-      if (!codePoint) {
-        return char;
-      }
-
-      if (codePoint >= 0x30a1 && codePoint <= 0x30f6) {
-        return String.fromCodePoint(codePoint - 0x60);
-      }
-
-      return char;
-    })
-    .join("");

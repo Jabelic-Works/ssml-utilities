@@ -110,9 +110,9 @@ describe("AccentIR emitters", () => {
       );
       expect(result.warnings).toEqual([
         {
-          code: "AZURE_ACCENT_FALLBACK",
+          code: "AZURE_FALLBACK_TO_SUB_ALIAS",
           message:
-            "Azure SSML は accent 情報を直接表現せず、reading を sub alias にフォールバックしました。azurePhoneme hint を渡すと精密化できます。",
+            "Azure SSML は azurePhoneme hint が無いため、sub alias にフォールバックしました。",
           segmentIndex: 0,
         },
       ]);
@@ -140,6 +140,58 @@ describe("AccentIR emitters", () => {
       expect(result.ssml).toBe(
         '<speak version="1.0" xmlns="http://www.w3.org/2001/10/synthesis" xml:lang="ja-JP"><phoneme alphabet="sapi" ph="ハ\'シ">箸</phoneme></speak>'
       );
+    });
+
+    it("reading があるが hint が無い場合は sub alias warning を返す", () => {
+      const accentIR: AccentIR = {
+        segments: [
+          {
+            type: "text",
+            text: "東京",
+            reading: "とうきょう",
+          },
+        ],
+      };
+
+      const result = emitAzureSSML(accentIR);
+
+      expect(result.ssml).toBe(
+        '<speak version="1.0" xmlns="http://www.w3.org/2001/10/synthesis" xml:lang="ja-JP"><sub alias="とうきょう">東京</sub></speak>'
+      );
+      expect(result.warnings).toEqual([
+        {
+          code: "AZURE_FALLBACK_TO_SUB_ALIAS",
+          message:
+            "Azure SSML は azurePhoneme hint が無いため、sub alias にフォールバックしました。",
+          segmentIndex: 0,
+        },
+      ]);
+    });
+
+    it("accent だけがある場合は plain text warning を返す", () => {
+      const accentIR: AccentIR = {
+        segments: [
+          {
+            type: "text",
+            text: "箸",
+            accent: { downstep: 1 },
+          },
+        ],
+      };
+
+      const result = emitAzureSSML(accentIR);
+
+      expect(result.ssml).toBe(
+        '<speak version="1.0" xmlns="http://www.w3.org/2001/10/synthesis" xml:lang="ja-JP">箸</speak>'
+      );
+      expect(result.warnings).toEqual([
+        {
+          code: "AZURE_FALLBACK_TO_PLAIN_TEXT",
+          message:
+            "Azure SSML は azurePhoneme hint と reading の両方が無いため、plain text にフォールバックしました。",
+          segmentIndex: 0,
+        },
+      ]);
     });
   });
 });
