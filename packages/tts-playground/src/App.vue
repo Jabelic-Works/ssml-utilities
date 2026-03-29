@@ -1,219 +1,23 @@
 <script setup lang="ts">
 import {
-  emitAzureSSML,
   type AccentIR,
   type AccentIREmitWarning,
 } from "@ssml-utilities/accent-ir";
+import {
+  buildSampleSSML,
+  DEFAULT_OUTPUT_FORMAT,
+  DEFAULT_VOICE,
+  readAnalyzeResponse,
+  readErrorMessage,
+  readSessionValue,
+  SAMPLE_CASES,
+  SESSION_KEYS,
+  writeSessionValue,
+} from "./playground-support";
 import { ref } from "vue";
-
-const DEFAULT_VOICE = "ja-JP-NanamiNeural";
-const DEFAULT_OUTPUT_FORMAT = "audio-24khz-48kbitrate-mono-mp3";
-
-const SESSION_KEYS = {
-  subscriptionKey: "azure-subscription-key",
-  region: "azure-region",
-  voice: "azure-voice",
-  outputFormat: "azure-output-format",
-} as const;
 
 type SynthesisStatus = "idle" | "submitting" | "success" | "error";
 type PlaygroundMode = "sample" | "free-text";
-
-interface AccentIRSample {
-  id: string;
-  label: string;
-  accentIR: AccentIR;
-}
-
-const SAMPLE_CASES: readonly AccentIRSample[] = [
-  {
-    id: "hashi-chopsticks",
-    label: "箸 (1型)",
-    accentIR: {
-      segments: [
-        {
-          type: "text",
-          text: "箸",
-          reading: "はし",
-          accent: { downstep: 1 },
-          hints: {
-            azurePhoneme: {
-              alphabet: "sapi",
-              value: "ハ'シ",
-            },
-          },
-        },
-      ],
-    },
-  },
-  {
-    id: "hashi-bridge",
-    label: "橋 (2型)",
-    accentIR: {
-      segments: [
-        {
-          type: "text",
-          text: "橋",
-          reading: "はし",
-          accent: { downstep: 2 },
-          hints: {
-            azurePhoneme: {
-              alphabet: "sapi",
-              value: "ハシ'",
-            },
-          },
-        },
-      ],
-    },
-  },
-  {
-    id: "hashi-edge",
-    label: "端 (平板)",
-    accentIR: {
-      segments: [
-        {
-          type: "text",
-          text: "端",
-          reading: "はし",
-          accent: { downstep: null },
-          hints: {
-            azurePhoneme: {
-              alphabet: "sapi",
-              value: "ハシ+",
-            },
-          },
-        },
-      ],
-    },
-  },
-  {
-    id: "hashi-wo-motsu",
-    label: "箸を持つ",
-    accentIR: {
-      segments: [
-        {
-          type: "text",
-          text: "箸を",
-          reading: "はしを",
-          accent: { downstep: 1 },
-          hints: {
-            azurePhoneme: {
-              alphabet: "sapi",
-              value: "ハ'シオ",
-            },
-          },
-        },
-        {
-          type: "text",
-          text: "持つ",
-          reading: "もつ",
-          accent: { downstep: 1 },
-          hints: {
-            azurePhoneme: {
-              alphabet: "sapi",
-              value: "モ'ツ",
-            },
-          },
-        },
-      ],
-    },
-  },
-] as const;
-
-const readSessionValue = (key: string, fallback = ""): string => {
-  if (typeof window === "undefined") {
-    return fallback;
-  }
-
-  return window.sessionStorage.getItem(key) ?? fallback;
-};
-
-const writeSessionValue = (key: string, value: string): void => {
-  if (typeof window === "undefined") {
-    return;
-  }
-
-  if (value) {
-    window.sessionStorage.setItem(key, value);
-    return;
-  }
-
-  window.sessionStorage.removeItem(key);
-};
-
-const buildSampleSSML = (
-  sampleId: string,
-  voice: string
-): { ssml: string; warnings: AccentIREmitWarning[] } => {
-  const sample =
-    SAMPLE_CASES.find((candidate) => candidate.id === sampleId) ?? SAMPLE_CASES[0];
-
-  const result = emitAzureSSML(sample.accentIR, {
-    voice: voice || DEFAULT_VOICE,
-  });
-
-  return {
-    ssml: result.ssml,
-    warnings: result.warnings,
-  };
-};
-
-const readErrorMessage = async (response: Response): Promise<string> => {
-  const contentType = response.headers.get("content-type") ?? "";
-
-  if (contentType.includes("application/json")) {
-    const payload = (await response.json()) as { error?: string; details?: string };
-    return payload.details
-      ? `${payload.error}: ${payload.details}`
-      : payload.error ?? response.statusText;
-  }
-
-  const text = await response.text();
-  return text || response.statusText;
-};
-
-const isRecord = (value: unknown): value is Record<string, unknown> =>
-  typeof value === "object" && value !== null;
-
-const readAnalyzeResponse = (
-  payload: unknown
-): {
-  accentIR: AccentIR;
-  azureSSML: string;
-  warnings: AccentIREmitWarning[];
-  rawTokens: Array<Record<string, unknown>> | null;
-} => {
-  if (!isRecord(payload)) {
-    throw new Error("Analyze API response must be an object.");
-  }
-
-  const accentIR = payload.accentIR as AccentIR | undefined;
-  if (!accentIR) {
-    throw new Error("Analyze API response is missing accentIR.");
-  }
-
-  const azureSSML =
-    typeof payload.azureSSML === "string" ? payload.azureSSML : "";
-  if (!azureSSML) {
-    throw new Error("Analyze API response is missing azureSSML.");
-  }
-
-  const warnings = Array.isArray(payload.warnings)
-    ? (payload.warnings as AccentIREmitWarning[])
-    : [];
-
-  const debug = isRecord(payload.debug) ? payload.debug : undefined;
-  const rawTokens = Array.isArray(debug?.rawTokens)
-    ? (debug.rawTokens.filter(isRecord) as Array<Record<string, unknown>>)
-    : null;
-
-  return {
-    accentIR,
-    azureSSML,
-    warnings,
-    rawTokens,
-  };
-};
 
 const subscriptionKey = ref(readSessionValue(SESSION_KEYS.subscriptionKey));
 const region = ref(readSessionValue(SESSION_KEYS.region));
