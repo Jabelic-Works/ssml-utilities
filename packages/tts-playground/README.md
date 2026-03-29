@@ -31,3 +31,5 @@ pnpm --filter @ssml-utilities/tts-playground preview:worker
 ## Free-text roadmap
 
 本物の `UniDic` を使う自由入力モードは、Cloudflare front とは別の analyze backend を前提にします。配置方針は [docs/azure-unidic-backend.md](../../docs/azure-unidic-backend.md) を参照してください。
+
+自由入力 request / response の contract は [docs/azure-analyze-api-contract.md](../../docs/azure-analyze-api-contract.md) を参照してください。

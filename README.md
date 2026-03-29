@@ -20,6 +20,7 @@ SSML Utilities は以下のパッケージを提供しています：
 ## 設計メモ
 
 - [Azure + UniDic backend strategy](docs/azure-unidic-backend.md)
+- [Azure analyze API contract](docs/azure-analyze-api-contract.md)
 
 公開済みの各パッケージは個別にインストールして使用することができます。
 
