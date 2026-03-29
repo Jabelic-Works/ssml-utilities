@@ -27,6 +27,9 @@ importers:
 
   examples/react:
     dependencies:
+      '@ssml-utilities/accent-ir':
+        specifier: workspace:*
+        version: link:../../packages/accent-ir
       '@ssml-utilities/editor-react':
         specifier: workspace:*
         version: link:../../packages/editor-react
