@@ -333,3 +333,9 @@ export {
   adaptUniDicTokensToAccentIR,
   uniDicAccentIRAdapter,
 } from "./unidic-adapter";
+export type { AzurePhonemeHint } from "./unidic-azure-hints";
+export {
+  appendAzureHintToSegment,
+  buildAzurePhonemeHintFromUniDicToken,
+  buildAzurePhonemeHintFromUniDicTokens,
+} from "./unidic-azure-hints";
