@@ -44,7 +44,8 @@ export interface JapanesePitchAccent {
 export type AccentIREmitWarningCode =
   | "MISSING_READING"
   | "INVALID_DOWNSTEP"
-  | "AZURE_ACCENT_FALLBACK";
+  | "AZURE_FALLBACK_TO_SUB_ALIAS"
+  | "AZURE_FALLBACK_TO_PLAIN_TEXT";
 
 export interface AccentIREmitWarning {
   code: AccentIREmitWarningCode;
@@ -212,20 +213,17 @@ const serializeSegmentForAzure = (
     content = `<phoneme alphabet="${alphabet}" ph="${escapeXmlAttribute(value)}">${text}</phoneme>`;
   } else if (segment.reading) {
     content = `<sub alias="${escapeXmlAttribute(segment.reading)}">${text}</sub>`;
-
-    if (segment.accent) {
-      warnings.push({
-        code: "AZURE_ACCENT_FALLBACK",
-        message:
-          "Azure SSML は accent 情報を直接表現せず、reading を sub alias にフォールバックしました。azurePhoneme hint を渡すと精密化できます。",
-        segmentIndex,
-      });
-    }
+    warnings.push({
+      code: "AZURE_FALLBACK_TO_SUB_ALIAS",
+      message:
+        "Azure SSML は azurePhoneme hint が無いため、sub alias にフォールバックしました。",
+      segmentIndex,
+    });
   } else if (segment.accent) {
     warnings.push({
-      code: "AZURE_ACCENT_FALLBACK",
+      code: "AZURE_FALLBACK_TO_PLAIN_TEXT",
       message:
-        "Azure SSML では accent 情報だけを直接表現できないため、plain text にフォールバックしました。",
+        "Azure SSML は azurePhoneme hint と reading の両方が無いため、plain text にフォールバックしました。",
       segmentIndex,
     });
   }

@@ -65,6 +65,8 @@ const result = adaptUniDicTokensToAccentIR({ tokens });
 ## メモ
 
 - `Google` は `phoneme alphabet="yomigana"` に `^` / `!` を付けてアクセントを表現します。
-- `Azure` は `azurePhoneme` hint が無い場合、最初は `sub alias` にフォールバックし、`warnings` を返します。
+- `Azure` は次の優先順位で出力します: `azurePhoneme` -> `sub alias` -> `plain text`。
+- `AZURE_FALLBACK_TO_SUB_ALIAS`: `azurePhoneme` hint が無く、`reading` を使って `sub alias` へ落ちたケースです。
+- `AZURE_FALLBACK_TO_PLAIN_TEXT`: `azurePhoneme` と `reading` の両方が無く、plain text へ落ちたケースです。
 - 共有の評価ケースは `src/__tests__/fixtures/evaluation-cases.ts` に置き、まずは `UniDic -> AccentIR -> Azure SSML` の回帰を固定します。
 - Google 向けの比較期待値は、後続の follow-up で同じ fixture に追加できるようにしています。
