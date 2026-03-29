@@ -51,6 +51,7 @@ jobs:
           pnpm --filter @ssml-utilities/tag-remover build
           pnpm --filter @ssml-utilities/highlighter build
           pnpm --filter @ssml-utilities/editor-react build
+          pnpm --filter @ssml-utilities/accent-ir build
 
       # Test in dependency order (after builds)
       - name: Test core package
