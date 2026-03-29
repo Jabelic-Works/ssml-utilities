@@ -7,7 +7,7 @@ import {
 import type {
   AnalyzeErrorResponse,
   AnalyzeSuccessResponse,
-} from "./analyze-contract";
+} from "@ssml-utilities/analyze-contract";
 
 export const DEFAULT_VOICE = "ja-JP-NanamiNeural";
 export const DEFAULT_OUTPUT_FORMAT = "audio-24khz-48kbitrate-mono-mp3";

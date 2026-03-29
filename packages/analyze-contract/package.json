@@ -1,0 +1,29 @@
+{
+  "name": "@ssml-utilities/analyze-contract",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "types": "./src/index.ts",
+  "exports": {
+    ".": {
+      "types": "./src/index.ts"
+    }
+  },
+  "scripts": {
+    "build": "tsdown",
+    "lint": "eslint src --ext .ts",
+    "type-check": "tsc --noEmit",
+    "clean": "rm -rf dist"
+  },
+  "dependencies": {
+    "@ssml-utilities/accent-ir": "workspace:*"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.35.0",
+    "eslint": "^9.35.0",
+    "globals": "^17.4.0",
+    "tsdown": "^0.21.6",
+    "typescript": "^5.8.3",
+    "typescript-eslint": "^8.43.0"
+  }
+}
