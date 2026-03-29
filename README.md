@@ -17,6 +17,10 @@ SSML Utilities は以下のパッケージを提供しています：
 - [@ssml-utilities/highlighter](#ssml-utilitieshighlighter)
 - [@ssml-utilities/core](#ssml-utilitiescore)
 
+## 設計メモ
+
+- [Azure + UniDic backend strategy](docs/azure-unidic-backend.md)
+
 公開済みの各パッケージは個別にインストールして使用することができます。
 
 ## インストール
