@@ -1,100 +1,61 @@
-/**
- * @typedef {import("@ssml-utilities/accent-ir").AccentIR} AccentIR
- * @typedef {import("@ssml-utilities/accent-ir").AccentIREmitWarning} AccentIREmitWarning
- */
+import type {
+  AccentIR,
+  AccentIREmitWarning,
+  UniDicRawToken,
+} from "@ssml-utilities/accent-ir";
+import type {
+  AnalyzeErrorResponse,
+  AnalyzeSuccessResponse,
+} from "../src/analyze-contract";
 
-/**
- * @typedef {{
- *   surface: string
- *   reading?: string
- *   pronunciation?: string
- *   partOfSpeech?: Record<string, string>
- *   accent?: Record<string, string>
- * }} AnalyzeDebugToken
- */
+interface AnalyzeInput {
+  text: string;
+  locale: string;
+  voice: string;
+  includeDebug: boolean;
+}
 
-/**
- * @typedef {{
- *   text: string
- *   locale?: string
- *   voice?: string
- *   includeDebug?: boolean
- * }} AnalyzeRequest
- */
+interface SampleAnalyzeResponse {
+  accentIR: AccentIR;
+  azureBody: string;
+  warnings: AccentIREmitWarning[];
+  rawTokens: UniDicRawToken[];
+}
 
-/**
- * @typedef {{
- *   text: string
- *   locale: string
- *   accentIR: AccentIR
- *   azureSSML: string
- *   warnings: AccentIREmitWarning[]
- *   debug?: {
- *     rawTokens?: AnalyzeDebugToken[]
- *   }
- * }} AnalyzeSuccessResponse
- */
-
-/**
- * @typedef {{
- *   error: {
- *     code: string
- *     message: string
- *   }
- * }} AnalyzeErrorResponse
- */
-
-export default {
-  async fetch(request, env) {
+const worker = {
+  async fetch(request: Request, env: Env): Promise<Response> {
     const url = new URL(request.url);
 
     if (url.pathname === "/api/analyze") {
       if (request.method === "OPTIONS") {
-        return withCors(
-          new Response(null, {
-            status: 204,
-            headers: {
-              "Access-Control-Allow-Methods": "POST, OPTIONS",
-              "Access-Control-Allow-Headers": "Content-Type",
-            },
-          })
-        );
+        return withCors(createOptionsResponse());
       }
 
       if (request.method !== "POST") {
         return withCors(
-          Response.json(
-            {
-              error: {
-                code: "METHOD_NOT_ALLOWED",
-                message: "Only POST is supported.",
-              },
-            },
-            { status: 405 }
+          createAnalyzeErrorResponse(
+            "METHOD_NOT_ALLOWED",
+            "Only POST is supported.",
+            405
           )
         );
       }
 
-      const payload = await request.json();
-      const text = typeof payload.text === "string" ? payload.text.trim() : "";
-      const locale = typeof payload.locale === "string" ? payload.locale : "ja-JP";
+      const payload: unknown = await request.json();
+      const analyzeRequest = isRecord(payload) ? payload : null;
+      const text =
+        typeof analyzeRequest?.text === "string" ? analyzeRequest.text.trim() : "";
+      const locale =
+        typeof analyzeRequest?.locale === "string" ? analyzeRequest.locale : "ja-JP";
       const voice =
-        typeof payload.voice === "string" && payload.voice
-          ? payload.voice
+        typeof analyzeRequest?.voice === "string" && analyzeRequest.voice
+          ? analyzeRequest.voice
           : "ja-JP-NanamiNeural";
-      const includeDebug = Boolean(payload.includeDebug);
+      const includeDebug = Boolean(analyzeRequest?.includeDebug);
 
       if (!text) {
         return withCors(
-          Response.json(
-            {
-              error: {
-                code: "BAD_REQUEST",
-                message: "text is required.",
-              },
-            },
-            { status: 400 }
-          )
+          createAnalyzeErrorResponse("BAD_REQUEST", "text is required.", 400)
         );
       }
 
@@ -105,15 +66,7 @@ export default {
 
     if (url.pathname === "/api/azure/synthesize") {
       if (request.method === "OPTIONS") {
-        return withCors(
-          new Response(null, {
-            status: 204,
-            headers: {
-              "Access-Control-Allow-Methods": "POST, OPTIONS",
-              "Access-Control-Allow-Headers": "Content-Type",
-            },
-          })
-        );
+        return withCors(createOptionsResponse());
       }
 
       if (request.method !== "POST") {
@@ -127,14 +80,20 @@ export default {
         );
       }
 
-      const payload = await request.json();
+      const payload: unknown = await request.json();
+      const synthesizeRequest = isRecord(payload) ? payload : null;
       const subscriptionKey =
-        typeof payload.subscriptionKey === "string" ? payload.subscriptionKey : "";
-      const region = typeof payload.region === "string" ? payload.region : "";
-      const ssml = typeof payload.ssml === "string" ? payload.ssml : "";
+        typeof synthesizeRequest?.subscriptionKey === "string"
+          ? synthesizeRequest.subscriptionKey
+          : "";
+      const region =
+        typeof synthesizeRequest?.region === "string" ? synthesizeRequest.region : "";
+      const ssml =
+        typeof synthesizeRequest?.ssml === "string" ? synthesizeRequest.ssml : "";
       const outputFormat =
-        typeof payload.outputFormat === "string" && payload.outputFormat
-          ? payload.outputFormat
+        typeof synthesizeRequest?.outputFormat === "string" &&
+        synthesizeRequest.outputFormat
+          ? synthesizeRequest.outputFormat
           : "audio-24khz-48kbitrate-mono-mp3";
 
       if (!subscriptionKey || !region || !ssml) {
@@ -209,17 +168,47 @@ export default {
 
     return env.ASSETS.fetch(request);
   },
-};
+} satisfies ExportedHandler<Env>;
+
+export default worker;
+
+const createOptionsResponse = (): Response =>
+  new Response(null, {
+    status: 204,
+    headers: {
+      "Access-Control-Allow-Methods": "POST, OPTIONS",
+      "Access-Control-Allow-Headers": "Content-Type",
+    },
+  });
+
+const createAnalyzeErrorResponse = (
+  code: AnalyzeErrorResponse["error"]["code"],
+  message: string,
+  status: number
+): Response =>
+  Response.json(
+    {
+      error: {
+        code,
+        message,
+      },
+    },
+    { status }
+  );
 
 /**
  * Contract-aligned mock response builder for the Azure-first free-text flow.
  * This remains a mock until the real UniDic backend is connected.
- *
- * @param {{ text: string; locale: string; voice: string; includeDebug: boolean }} input
- * @returns {AnalyzeSuccessResponse}
  */
-const createAnalyzeResponse = ({ text, locale, voice, includeDebug }) => {
-  const sample = SAMPLE_RESPONSES[text];
+const createAnalyzeResponse = ({
+  text,
+  locale,
+  voice,
+  includeDebug,
+}: AnalyzeInput): AnalyzeSuccessResponse => {
+  const sample = Object.prototype.hasOwnProperty.call(SAMPLE_RESPONSES, text)
+    ? SAMPLE_RESPONSES[text as keyof typeof SAMPLE_RESPONSES]
+    : undefined;
 
   if (sample) {
     return {
@@ -249,7 +238,7 @@ const createAnalyzeResponse = ({ text, locale, voice, includeDebug }) => {
     azureSSML: plainTextSSML,
     warnings: [
       {
-        code: "ANALYZE_MOCK_FALLBACK",
+        code: "AZURE_FALLBACK_TO_PLAIN_TEXT",
         message:
           "現在の /api/analyze は contract 準拠の mock 実装です。未登録テキストは plain text fallback で返します。",
         segmentIndex: 0,
@@ -259,18 +248,21 @@ const createAnalyzeResponse = ({ text, locale, voice, includeDebug }) => {
   };
 };
 
-const wrapWithVoice = (body, locale, voice) =>
+const wrapWithVoice = (body: string, locale: string, voice: string): string =>
   `<speak version="1.0" xmlns="http://www.w3.org/2001/10/synthesis" xml:lang="${locale}"><voice name="${voice}">${body}</voice></speak>`;
 
-const escapeXml = (value) =>
+const escapeXml = (value: string): string =>
   value
     .replace(/&/g, "&amp;")
     .replace(/</g, "&lt;")
     .replace(/>/g, "&gt;")
     .replace(/"/g, "&quot;");
 
+const isRecord = (value: unknown): value is Record<string, unknown> =>
+  typeof value === "object" && value !== null;
+
 const SAMPLE_RESPONSES = {
-  "箸": {
+  箸: {
     accentIR: {
       locale: "ja-JP",
       segments: [
@@ -306,7 +298,7 @@ const SAMPLE_RESPONSES = {
       },
     ],
   },
-  "橋": {
+  橋: {
     accentIR: {
       locale: "ja-JP",
       segments: [
@@ -342,7 +334,7 @@ const SAMPLE_RESPONSES = {
       },
     ],
   },
-  "端": {
+  端: {
     accentIR: {
       locale: "ja-JP",
       segments: [
@@ -461,9 +453,9 @@ const SAMPLE_RESPONSES = {
       },
     ],
   },
-};
+} satisfies Record<string, SampleAnalyzeResponse>;
 
-const withCors = (response) => {
+const withCors = (response: Response): Response => {
   const headers = new Headers(response.headers);
   headers.set("Access-Control-Allow-Origin", "*");
 

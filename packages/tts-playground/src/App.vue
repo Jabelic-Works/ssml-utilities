@@ -2,6 +2,7 @@
 import {
   type AccentIR,
   type AccentIREmitWarning,
+  type UniDicRawToken,
 } from "@ssml-utilities/accent-ir";
 import {
   buildSampleSSML,
@@ -38,7 +39,7 @@ const audioUrl = ref<string | null>(null);
 const mode = ref<PlaygroundMode>("sample");
 const freeText = ref("");
 const latestAccentIR = ref<AccentIR | null>(null);
-const latestRawTokens = ref<Array<Record<string, unknown>> | null>(null);
+const latestRawTokens = ref<UniDicRawToken[] | null>(null);
 
 const replaceAudioUrl = (nextAudioUrl: string | null) => {
   if (audioUrl.value) {
