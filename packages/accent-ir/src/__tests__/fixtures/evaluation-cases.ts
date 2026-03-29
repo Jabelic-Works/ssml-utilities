@@ -1,8 +1,4 @@
-import type {
-  AccentIR,
-  AccentIREmitOptions,
-  AccentIREmitWarning,
-} from "../../index";
+import type { AccentIR, AccentIREmitOptions, AccentIREmitWarning } from "../../index";
 import type { UniDicRawToken } from "../../unidic-contract";
 
 export interface AzureFirstEvaluationCase {
@@ -19,15 +15,6 @@ export interface AzureFirstEvaluationCase {
 const DEFAULT_AZURE_OPTIONS: AccentIREmitOptions = {
   voice: "ja-JP-NanamiNeural",
 };
-
-const createAzureAccentFallbackWarning = (
-  segmentIndex: number
-): AccentIREmitWarning => ({
-  code: "AZURE_ACCENT_FALLBACK",
-  message:
-    "Azure SSML は accent 情報を直接表現せず、reading を sub alias にフォールバックしました。azurePhoneme hint を渡すと精密化できます。",
-  segmentIndex,
-});
 
 // Shared Azure-first fixtures. Google-specific expectations can be added later
 // without changing the adapter-side token contracts or AccentIR expectations.
@@ -58,14 +45,20 @@ export const azureFirstEvaluationCases: readonly AzureFirstEvaluationCase[] = [
           text: "箸",
           reading: "はし",
           accent: { downstep: 1 },
+          hints: {
+            azurePhoneme: {
+              alphabet: "sapi",
+              value: "ハ'シ",
+            },
+          },
         },
       ],
     },
     expectedAdapterWarnings: [],
     azureOptions: DEFAULT_AZURE_OPTIONS,
     expectedAzureSSML:
-      '<speak version="1.0" xmlns="http://www.w3.org/2001/10/synthesis" xml:lang="ja-JP"><voice name="ja-JP-NanamiNeural"><sub alias="はし">箸</sub></voice></speak>',
-    expectedAzureWarnings: [createAzureAccentFallbackWarning(0)],
+      '<speak version="1.0" xmlns="http://www.w3.org/2001/10/synthesis" xml:lang="ja-JP"><voice name="ja-JP-NanamiNeural"><phoneme alphabet="sapi" ph="ハ\'シ">箸</phoneme></voice></speak>',
+    expectedAzureWarnings: [],
   },
   {
     id: "hashi-bridge",
@@ -93,14 +86,20 @@ export const azureFirstEvaluationCases: readonly AzureFirstEvaluationCase[] = [
           text: "橋",
           reading: "はし",
           accent: { downstep: 2 },
+          hints: {
+            azurePhoneme: {
+              alphabet: "sapi",
+              value: "ハシ'",
+            },
+          },
         },
       ],
     },
     expectedAdapterWarnings: [],
     azureOptions: DEFAULT_AZURE_OPTIONS,
     expectedAzureSSML:
-      '<speak version="1.0" xmlns="http://www.w3.org/2001/10/synthesis" xml:lang="ja-JP"><voice name="ja-JP-NanamiNeural"><sub alias="はし">橋</sub></voice></speak>',
-    expectedAzureWarnings: [createAzureAccentFallbackWarning(0)],
+      '<speak version="1.0" xmlns="http://www.w3.org/2001/10/synthesis" xml:lang="ja-JP"><voice name="ja-JP-NanamiNeural"><phoneme alphabet="sapi" ph="ハシ\'">橋</phoneme></voice></speak>',
+    expectedAzureWarnings: [],
   },
   {
     id: "hashi-edge",
@@ -128,14 +127,20 @@ export const azureFirstEvaluationCases: readonly AzureFirstEvaluationCase[] = [
           text: "端",
           reading: "はし",
           accent: { downstep: null },
+          hints: {
+            azurePhoneme: {
+              alphabet: "sapi",
+              value: "ハシ+",
+            },
+          },
         },
       ],
     },
     expectedAdapterWarnings: [],
     azureOptions: DEFAULT_AZURE_OPTIONS,
     expectedAzureSSML:
-      '<speak version="1.0" xmlns="http://www.w3.org/2001/10/synthesis" xml:lang="ja-JP"><voice name="ja-JP-NanamiNeural"><sub alias="はし">端</sub></voice></speak>',
-    expectedAzureWarnings: [createAzureAccentFallbackWarning(0)],
+      '<speak version="1.0" xmlns="http://www.w3.org/2001/10/synthesis" xml:lang="ja-JP"><voice name="ja-JP-NanamiNeural"><phoneme alphabet="sapi" ph="ハシ+">端</phoneme></voice></speak>',
+    expectedAzureWarnings: [],
   },
   {
     id: "tokyo-proper-noun",
@@ -163,14 +168,20 @@ export const azureFirstEvaluationCases: readonly AzureFirstEvaluationCase[] = [
           text: "東京",
           reading: "とうきょう",
           accent: { downstep: null },
+          hints: {
+            azurePhoneme: {
+              alphabet: "sapi",
+              value: "トーキョー+",
+            },
+          },
         },
       ],
     },
     expectedAdapterWarnings: [],
     azureOptions: DEFAULT_AZURE_OPTIONS,
     expectedAzureSSML:
-      '<speak version="1.0" xmlns="http://www.w3.org/2001/10/synthesis" xml:lang="ja-JP"><voice name="ja-JP-NanamiNeural"><sub alias="とうきょう">東京</sub></voice></speak>',
-    expectedAzureWarnings: [createAzureAccentFallbackWarning(0)],
+      '<speak version="1.0" xmlns="http://www.w3.org/2001/10/synthesis" xml:lang="ja-JP"><voice name="ja-JP-NanamiNeural"><phoneme alphabet="sapi" ph="トーキョー+">東京</phoneme></voice></speak>',
+    expectedAzureWarnings: [],
   },
   {
     id: "hashi-wo-motsu",
@@ -219,23 +230,32 @@ export const azureFirstEvaluationCases: readonly AzureFirstEvaluationCase[] = [
           text: "箸を",
           reading: "はしを",
           accent: { downstep: 1 },
+          hints: {
+            azurePhoneme: {
+              alphabet: "sapi",
+              value: "ハ'シオ",
+            },
+          },
         },
         {
           type: "text",
           text: "持つ",
           reading: "もつ",
           accent: { downstep: 1 },
+          hints: {
+            azurePhoneme: {
+              alphabet: "sapi",
+              value: "モ'ツ",
+            },
+          },
         },
       ],
     },
     expectedAdapterWarnings: [],
     azureOptions: DEFAULT_AZURE_OPTIONS,
     expectedAzureSSML:
-      '<speak version="1.0" xmlns="http://www.w3.org/2001/10/synthesis" xml:lang="ja-JP"><voice name="ja-JP-NanamiNeural"><sub alias="はしを">箸を</sub><sub alias="もつ">持つ</sub></voice></speak>',
-    expectedAzureWarnings: [
-      createAzureAccentFallbackWarning(0),
-      createAzureAccentFallbackWarning(1),
-    ],
+      '<speak version="1.0" xmlns="http://www.w3.org/2001/10/synthesis" xml:lang="ja-JP"><voice name="ja-JP-NanamiNeural"><phoneme alphabet="sapi" ph="ハ\'シオ">箸を</phoneme><phoneme alphabet="sapi" ph="モ\'ツ">持つ</phoneme></voice></speak>',
+    expectedAzureWarnings: [],
   },
   {
     id: "motsu-sentence-end",
@@ -269,6 +289,12 @@ export const azureFirstEvaluationCases: readonly AzureFirstEvaluationCase[] = [
           text: "持つ",
           reading: "もつ",
           accent: { downstep: 1 },
+          hints: {
+            azurePhoneme: {
+              alphabet: "sapi",
+              value: "モ'ツ",
+            },
+          },
         },
         {
           type: "break",
@@ -279,7 +305,7 @@ export const azureFirstEvaluationCases: readonly AzureFirstEvaluationCase[] = [
     expectedAdapterWarnings: [],
     azureOptions: DEFAULT_AZURE_OPTIONS,
     expectedAzureSSML:
-      '<speak version="1.0" xmlns="http://www.w3.org/2001/10/synthesis" xml:lang="ja-JP"><voice name="ja-JP-NanamiNeural"><sub alias="もつ">持つ</sub><break strength="strong"/></voice></speak>',
-    expectedAzureWarnings: [createAzureAccentFallbackWarning(0)],
+      '<speak version="1.0" xmlns="http://www.w3.org/2001/10/synthesis" xml:lang="ja-JP"><voice name="ja-JP-NanamiNeural"><phoneme alphabet="sapi" ph="モ\'ツ">持つ</phoneme><break strength="strong"/></voice></speak>',
+    expectedAzureWarnings: [],
   },
 ] as const;

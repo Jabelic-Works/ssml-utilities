@@ -31,6 +31,12 @@ describe("UniDic adapter", () => {
           text: "箸",
           reading: "はし",
           accent: { downstep: 1 },
+          hints: {
+            azurePhoneme: {
+              alphabet: "sapi",
+              value: "ハ'シ",
+            },
+          },
         },
       ],
     });
@@ -62,6 +68,12 @@ describe("UniDic adapter", () => {
         text: "東京",
         reading: "とうきょう",
         accent: { downstep: null },
+        hints: {
+          azurePhoneme: {
+            alphabet: "sapi",
+            value: "トーキョー+",
+          },
+        },
       },
     ]);
   });
@@ -112,12 +124,24 @@ describe("UniDic adapter", () => {
         text: "箸を",
         reading: "はしを",
         accent: { downstep: 1 },
+        hints: {
+          azurePhoneme: {
+            alphabet: "sapi",
+            value: "ハ'シオ",
+          },
+        },
       },
       {
         type: "text",
         text: "持つ",
         reading: "もつ",
         accent: { downstep: 1 },
+        hints: {
+          azurePhoneme: {
+            alphabet: "sapi",
+            value: "モ'ツ",
+          },
+        },
       },
     ]);
   });
@@ -153,6 +177,12 @@ describe("UniDic adapter", () => {
         text: "持つ",
         reading: "もつ",
         accent: { downstep: 1 },
+        hints: {
+          azurePhoneme: {
+            alphabet: "sapi",
+            value: "モ'ツ",
+          },
+        },
       },
       {
         type: "break",

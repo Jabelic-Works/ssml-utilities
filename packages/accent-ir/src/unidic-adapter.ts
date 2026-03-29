@@ -12,6 +12,7 @@ import type {
   UniDicAccentIRAdapterWarning,
   UniDicRawToken,
 } from "./unidic-contract";
+import { appendAzureHintToSegment } from "./unidic-azure-hints";
 
 // MVP adapter only. This does not execute MeCab or load UniDic dictionaries.
 // It converts already-normalized UniDicRawToken arrays into AccentIR.
@@ -62,13 +63,16 @@ const createTextSegmentFromToken = (
   warnings: UniDicAccentIRAdapterWarning[]
 ): AccentIRTextSegment => {
   const accent = parseAccent(token, tokenIndex, warnings);
-
-  return {
+  const segment: AccentIRTextSegment = {
     type: "text",
     text: token.surface,
     reading: normalizeReading(token.reading),
     accent,
   };
+
+  appendAzureHintToSegment(segment, token);
+
+  return segment;
 };
 
 const mergeParticleIntoSegment = (
@@ -79,10 +83,12 @@ const mergeParticleIntoSegment = (
 
   const normalizedReading = normalizeReading(token.reading);
   if (!normalizedReading) {
+    appendAzureHintToSegment(segment, token);
     return;
   }
 
   segment.reading = `${segment.reading ?? ""}${normalizedReading}`;
+  appendAzureHintToSegment(segment, token);
 };
 
 const parseAccent = (

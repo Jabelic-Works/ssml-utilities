@@ -60,6 +60,7 @@ const result = adaptUniDicTokensToAccentIR({ tokens });
 - `UniDic` 固有の品詞階層、活用情報、生のアクセント表記、feature 配列は `UniDicRawToken` 側に閉じ込めます。
 - `mockUniDicRawTokens` は contract 設計用の mock fixture で、将来の adapter / test の土台として使えます。
 - 現在の `adaptUniDicTokensToAccentIR()` は MVP で、名詞、固有名詞、助詞連結、文末 pause などの最小範囲のみを対象にします。
+- Azure 向けの `azurePhoneme` hint は、`pronunciation` / `reading` / `accentType` から組み立てるヒューリスティックな MVP です。
 
 ## メモ
 
