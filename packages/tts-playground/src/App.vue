@@ -17,6 +17,26 @@ const SESSION_KEYS = {
 } as const;
 
 type SynthesisStatus = "idle" | "submitting" | "success" | "error";
+type PlaygroundMode = "sample" | "free-text";
+
+interface UniDicRawTokenDebug {
+  surface: string;
+  reading?: string;
+  pronunciation?: string;
+  partOfSpeech?: Record<string, string>;
+  accent?: Record<string, string>;
+}
+
+interface AnalyzeSuccessResponse {
+  text: string;
+  locale: string;
+  accentIR: AccentIR;
+  azureSSML: string;
+  warnings: AccentIREmitWarning[];
+  debug?: {
+    rawTokens?: UniDicRawTokenDebug[];
+  };
+}
 
 interface AccentIRSample {
   id: string;
@@ -187,6 +207,10 @@ const generationWarnings = ref<AccentIREmitWarning[]>(initialSample.warnings);
 const status = ref<SynthesisStatus>("idle");
 const statusText = ref("");
 const audioUrl = ref<string | null>(null);
+const mode = ref<PlaygroundMode>("sample");
+const freeText = ref("");
+const latestAccentIR = ref<AccentIR | null>(null);
+const latestRawTokens = ref<UniDicRawTokenDebug[] | null>(null);
 
 const replaceAudioUrl = (nextAudioUrl: string | null) => {
   if (audioUrl.value) {
@@ -196,41 +220,33 @@ const replaceAudioUrl = (nextAudioUrl: string | null) => {
   audioUrl.value = nextAudioUrl;
 };
 
-const handleFieldChange = (
-  key: string,
-  assign: (value: string) => void,
-  value: string
-) => {
-  assign(value);
-  writeSessionValue(key, value);
+const resetAnalyzeOutputs = () => {
+  latestAccentIR.value = null;
+  latestRawTokens.value = null;
 };
 
 const handleSubscriptionKeyInput = (event: Event) => {
   const value = (event.target as HTMLInputElement).value;
-  handleFieldChange(SESSION_KEYS.subscriptionKey, (next) => {
-    subscriptionKey.value = next;
-  }, value);
+  subscriptionKey.value = value;
+  writeSessionValue(SESSION_KEYS.subscriptionKey, value);
 };
 
 const handleRegionInput = (event: Event) => {
   const value = (event.target as HTMLInputElement).value;
-  handleFieldChange(SESSION_KEYS.region, (next) => {
-    region.value = next;
-  }, value);
+  region.value = value;
+  writeSessionValue(SESSION_KEYS.region, value);
 };
 
 const handleVoiceInput = (event: Event) => {
   const value = (event.target as HTMLInputElement).value;
-  handleFieldChange(SESSION_KEYS.voice, (next) => {
-    voice.value = next;
-  }, value);
+  voice.value = value;
+  writeSessionValue(SESSION_KEYS.voice, value);
 };
 
 const handleOutputFormatChange = (event: Event) => {
   const value = (event.target as HTMLSelectElement).value;
-  handleFieldChange(SESSION_KEYS.outputFormat, (next) => {
-    outputFormat.value = next;
-  }, value);
+  outputFormat.value = value;
+  writeSessionValue(SESSION_KEYS.outputFormat, value);
 };
 
 const handleLoadSample = () => {
@@ -241,6 +257,7 @@ const handleLoadSample = () => {
   status.value = "idle";
   statusText.value = "";
   replaceAudioUrl(null);
+  resetAnalyzeOutputs();
 };
 
 const handleClearCredentials = () => {
@@ -299,6 +316,52 @@ const handleSynthesize = async () => {
     replaceAudioUrl(null);
   }
 };
+
+const handleAnalyzeText = async () => {
+  if (!freeText.value.trim()) {
+    status.value = "error";
+    statusText.value = "解析する日本語テキストを入力してください。";
+    return;
+  }
+
+  status.value = "submitting";
+  statusText.value = "Analyze API に送信しています...";
+
+  try {
+    const response = await fetch("/api/analyze", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        text: freeText.value,
+        locale: "ja-JP",
+        voice: voice.value || DEFAULT_VOICE,
+        includeDebug: true,
+      }),
+    });
+
+    if (!response.ok) {
+      status.value = "error";
+      statusText.value = await readErrorMessage(response);
+      return;
+    }
+
+    const payload = (await response.json()) as AnalyzeSuccessResponse;
+
+    ssml.value = payload.azureSSML;
+    generationWarnings.value = payload.warnings;
+    latestAccentIR.value = payload.accentIR;
+    latestRawTokens.value = payload.debug?.rawTokens ?? null;
+    replaceAudioUrl(null);
+    status.value = "success";
+    statusText.value = "Analyze API から SSML を取得しました。";
+  } catch (error) {
+    status.value = "error";
+    statusText.value =
+      error instanceof Error ? error.message : "解析に失敗しました。";
+  }
+};
 </script>
 
 <template>
@@ -309,6 +372,17 @@ const handleSynthesize = async () => {
         `AccentIR -&gt; Azure SSML` の最小動作確認用 UI です。credential は
         `sessionStorage` のみを使って保持し、Worker 経由で Azure に転送します。
       </p>
+
+      <section class="panel mode-panel">
+        <label class="mode-option">
+          <input v-model="mode" type="radio" value="sample" />
+          <span>Sample mode</span>
+        </label>
+        <label class="mode-option">
+          <input v-model="mode" type="radio" value="free-text" />
+          <span>Free-text mode</span>
+        </label>
+      </section>
 
       <section class="panel grid-panel">
         <label class="field">
@@ -358,7 +432,7 @@ const handleSynthesize = async () => {
         </div>
       </section>
 
-      <section class="panel sample-panel">
+      <section v-if="mode === 'sample'" class="panel sample-panel">
         <label class="field sample-field">
           <span>AccentIR sample</span>
           <select v-model="selectedSampleId">
@@ -368,15 +442,37 @@ const handleSynthesize = async () => {
           </select>
         </label>
         <button @click="handleLoadSample">Load sample into textarea</button>
-        <button :disabled="status === 'submitting'" @click="handleSynthesize">
-          {{ status === "submitting" ? "Generating..." : "Send to Azure" }}
-        </button>
       </section>
 
       <p class="helper">
-        Voice は sample から SSML を生成するときだけ反映されます。手動編集した
+        Voice は sample / free-text の両モードで生成時に反映されます。手動編集した
         SSML はそのまま送信されます。
       </p>
+
+      <section v-if="mode === 'free-text'" class="panel">
+        <label class="field">
+          <span>Analyze input text</span>
+          <textarea
+            v-model="freeText"
+            class="free-text-input"
+            placeholder="ここに自由入力テキストを入れて Analyze します"
+          />
+        </label>
+        <div class="free-text-actions">
+          <button :disabled="status === 'submitting'" @click="handleAnalyzeText">
+            {{ status === "submitting" ? "Analyzing..." : "Analyze text" }}
+          </button>
+          <button :disabled="status === 'submitting'" @click="handleSynthesize">
+            {{ status === "submitting" ? "Generating..." : "Send current SSML to Azure" }}
+          </button>
+        </div>
+      </section>
+
+      <section v-if="mode === 'sample'" class="panel action-panel">
+        <button :disabled="status === 'submitting'" @click="handleSynthesize">
+          {{ status === "submitting" ? "Generating..." : "Send current SSML to Azure" }}
+        </button>
+      </section>
 
       <section v-if="generationWarnings.length > 0" class="warning-panel">
         <strong>Generation warnings</strong>
@@ -385,6 +481,16 @@ const handleSynthesize = async () => {
             {{ warning.code }}: {{ warning.message }}
           </li>
         </ul>
+      </section>
+
+      <section v-if="latestAccentIR" class="panel">
+        <h2>AccentIR</h2>
+        <pre class="ssml-preview">{{ JSON.stringify(latestAccentIR, null, 2) }}</pre>
+      </section>
+
+      <section v-if="latestRawTokens" class="panel">
+        <h2>Raw tokens (debug)</h2>
+        <pre class="ssml-preview">{{ JSON.stringify(latestRawTokens, null, 2) }}</pre>
       </section>
 
       <section class="panel">
@@ -452,9 +558,20 @@ h2 {
   gap: 16px;
 }
 
+.mode-panel {
+  display: flex;
+  gap: 20px;
+}
+
+.mode-option {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
 .sample-panel {
   display: grid;
-  grid-template-columns: 1fr auto auto;
+  grid-template-columns: 1fr auto;
   gap: 12px;
   align-items: end;
 }
@@ -496,6 +613,28 @@ h2 {
   font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
   font-size: 14px;
   line-height: 1.6;
+}
+
+.free-text-input {
+  min-height: 140px;
+  width: 100%;
+  box-sizing: border-box;
+  padding: 16px;
+  border: 1px solid #ddd;
+  border-radius: 10px;
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+.free-text-actions {
+  margin-top: 16px;
+  display: flex;
+  gap: 12px;
+}
+
+.action-panel {
+  display: flex;
+  justify-content: flex-end;
 }
 
 .audio-player {
