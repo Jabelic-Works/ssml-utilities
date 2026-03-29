@@ -1,3 +1,5 @@
+import { splitKanaIntoMoras, toHiragana } from "./kana";
+
 export type AccentIREmphasis = "strong" | "moderate" | "reduced";
 
 export type AccentIRBreakStrength =
@@ -63,28 +65,7 @@ export interface AccentIREmitOptions {
   voice?: string;
 }
 
-const SMALL_KANA =
-  /[ぁぃぅぇぉゃゅょゎゕゖァィゥェォャュョヮヵヶ]/u;
-const PROLONGED_SOUND_MARK = "ー";
 const DEFAULT_LOCALE = "ja-JP";
-
-export const splitKanaIntoMoras = (reading: string): string[] => {
-  const moras: string[] = [];
-
-  for (const char of Array.from(reading)) {
-    if (
-      moras.length > 0 &&
-      (SMALL_KANA.test(char) || char === PROLONGED_SOUND_MARK)
-    ) {
-      moras[moras.length - 1] += char;
-      continue;
-    }
-
-    moras.push(char);
-  }
-
-  return moras;
-};
 
 export const buildGoogleYomigana = (
   reading: string,
@@ -298,23 +279,6 @@ const escapeXmlText = (value: string): string =>
 const escapeXmlAttribute = (value: string): string =>
   escapeXmlText(value).replace(/"/g, "&quot;");
 
-const toHiragana = (value: string): string =>
-  Array.from(value)
-    .map((char) => {
-      const codePoint = char.codePointAt(0);
-
-      if (!codePoint) {
-        return char;
-      }
-
-      if (codePoint >= 0x30a1 && codePoint <= 0x30f6) {
-        return String.fromCodePoint(codePoint - 0x60);
-      }
-
-      return char;
-    })
-    .join("");
-
 export type {
   UniDicAccentIRAdapter,
   UniDicAccentIRAdapterInput,
@@ -331,6 +295,7 @@ export {
   adaptUniDicTokensToAccentIR,
   uniDicAccentIRAdapter,
 } from "./unidic-adapter";
+export { splitKanaIntoMoras } from "./kana";
 export type { AzurePhonemeHint } from "./unidic-azure-hints";
 export {
   appendAzureHintToSegment,

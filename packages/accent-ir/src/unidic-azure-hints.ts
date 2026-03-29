@@ -1,4 +1,5 @@
 import type { AccentIRTextSegment } from "./index";
+import { splitKanaIntoMoras, toKatakana } from "./kana";
 import type { UniDicRawToken } from "./unidic-contract";
 
 export interface AzurePhonemeHint {
@@ -102,41 +103,5 @@ const normalizeToKatakana = (value?: string): string | undefined => {
     return undefined;
   }
 
-  return Array.from(value)
-    .map((char) => {
-      const codePoint = char.codePointAt(0);
-
-      if (!codePoint) {
-        return char;
-      }
-
-      if (codePoint >= 0x3041 && codePoint <= 0x3096) {
-        return String.fromCodePoint(codePoint + 0x60);
-      }
-
-      return char;
-    })
-    .join("");
-};
-
-const SMALL_KANA =
-  /[ぁぃぅぇぉゃゅょゎゕゖァィゥェォャュョヮヵヶ]/u;
-const PROLONGED_SOUND_MARK = "ー";
-
-const splitKanaIntoMoras = (reading: string): string[] => {
-  const moras: string[] = [];
-
-  for (const char of Array.from(reading)) {
-    if (
-      moras.length > 0 &&
-      (SMALL_KANA.test(char) || char === PROLONGED_SOUND_MARK)
-    ) {
-      moras[moras.length - 1] += char;
-      continue;
-    }
-
-    moras.push(char);
-  }
-
-  return moras;
+  return toKatakana(value);
 };
