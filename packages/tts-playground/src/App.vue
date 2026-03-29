@@ -19,25 +19,6 @@ const SESSION_KEYS = {
 type SynthesisStatus = "idle" | "submitting" | "success" | "error";
 type PlaygroundMode = "sample" | "free-text";
 
-interface UniDicRawTokenDebug {
-  surface: string;
-  reading?: string;
-  pronunciation?: string;
-  partOfSpeech?: Record<string, string>;
-  accent?: Record<string, string>;
-}
-
-interface AnalyzeSuccessResponse {
-  text: string;
-  locale: string;
-  accentIR: AccentIR;
-  azureSSML: string;
-  warnings: AccentIREmitWarning[];
-  debug?: {
-    rawTokens?: UniDicRawTokenDebug[];
-  };
-}
-
 interface AccentIRSample {
   id: string;
   label: string;
@@ -191,6 +172,49 @@ const readErrorMessage = async (response: Response): Promise<string> => {
   return text || response.statusText;
 };
 
+const isRecord = (value: unknown): value is Record<string, unknown> =>
+  typeof value === "object" && value !== null;
+
+const readAnalyzeResponse = (
+  payload: unknown
+): {
+  accentIR: AccentIR;
+  azureSSML: string;
+  warnings: AccentIREmitWarning[];
+  rawTokens: Array<Record<string, unknown>> | null;
+} => {
+  if (!isRecord(payload)) {
+    throw new Error("Analyze API response must be an object.");
+  }
+
+  const accentIR = payload.accentIR as AccentIR | undefined;
+  if (!accentIR) {
+    throw new Error("Analyze API response is missing accentIR.");
+  }
+
+  const azureSSML =
+    typeof payload.azureSSML === "string" ? payload.azureSSML : "";
+  if (!azureSSML) {
+    throw new Error("Analyze API response is missing azureSSML.");
+  }
+
+  const warnings = Array.isArray(payload.warnings)
+    ? (payload.warnings as AccentIREmitWarning[])
+    : [];
+
+  const debug = isRecord(payload.debug) ? payload.debug : undefined;
+  const rawTokens = Array.isArray(debug?.rawTokens)
+    ? (debug.rawTokens.filter(isRecord) as Array<Record<string, unknown>>)
+    : null;
+
+  return {
+    accentIR,
+    azureSSML,
+    warnings,
+    rawTokens,
+  };
+};
+
 const subscriptionKey = ref(readSessionValue(SESSION_KEYS.subscriptionKey));
 const region = ref(readSessionValue(SESSION_KEYS.region));
 const voice = ref(readSessionValue(SESSION_KEYS.voice, DEFAULT_VOICE));
@@ -210,7 +234,7 @@ const audioUrl = ref<string | null>(null);
 const mode = ref<PlaygroundMode>("sample");
 const freeText = ref("");
 const latestAccentIR = ref<AccentIR | null>(null);
-const latestRawTokens = ref<UniDicRawTokenDebug[] | null>(null);
+const latestRawTokens = ref<Array<Record<string, unknown>> | null>(null);
 
 const replaceAudioUrl = (nextAudioUrl: string | null) => {
   if (audioUrl.value) {
@@ -347,12 +371,12 @@ const handleAnalyzeText = async () => {
       return;
     }
 
-    const payload = (await response.json()) as AnalyzeSuccessResponse;
+    const payload = readAnalyzeResponse(await response.json());
 
     ssml.value = payload.azureSSML;
     generationWarnings.value = payload.warnings;
     latestAccentIR.value = payload.accentIR;
-    latestRawTokens.value = payload.debug?.rawTokens ?? null;
+    latestRawTokens.value = payload.rawTokens;
     replaceAudioUrl(null);
     status.value = "success";
     statusText.value = "Analyze API から SSML を取得しました。";

@@ -1,3 +1,49 @@
+/**
+ * @typedef {import("@ssml-utilities/accent-ir").AccentIR} AccentIR
+ * @typedef {import("@ssml-utilities/accent-ir").AccentIREmitWarning} AccentIREmitWarning
+ */
+
+/**
+ * @typedef {{
+ *   surface: string
+ *   reading?: string
+ *   pronunciation?: string
+ *   partOfSpeech?: Record<string, string>
+ *   accent?: Record<string, string>
+ * }} AnalyzeDebugToken
+ */
+
+/**
+ * @typedef {{
+ *   text: string
+ *   locale?: string
+ *   voice?: string
+ *   includeDebug?: boolean
+ * }} AnalyzeRequest
+ */
+
+/**
+ * @typedef {{
+ *   text: string
+ *   locale: string
+ *   accentIR: AccentIR
+ *   azureSSML: string
+ *   warnings: AccentIREmitWarning[]
+ *   debug?: {
+ *     rawTokens?: AnalyzeDebugToken[]
+ *   }
+ * }} AnalyzeSuccessResponse
+ */
+
+/**
+ * @typedef {{
+ *   error: {
+ *     code: string
+ *     message: string
+ *   }
+ * }} AnalyzeErrorResponse
+ */
+
 export default {
   async fetch(request, env) {
     const url = new URL(request.url);
@@ -165,6 +211,13 @@ export default {
   },
 };
 
+/**
+ * Contract-aligned mock response builder for the Azure-first free-text flow.
+ * This remains a mock until the real UniDic backend is connected.
+ *
+ * @param {{ text: string; locale: string; voice: string; includeDebug: boolean }} input
+ * @returns {AnalyzeSuccessResponse}
+ */
 const createAnalyzeResponse = ({ text, locale, voice, includeDebug }) => {
   const sample = SAMPLE_RESPONSES[text];
 
