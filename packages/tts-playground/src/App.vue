@@ -1,175 +1,23 @@
 <script setup lang="ts">
 import {
-  emitAzureSSML,
   type AccentIR,
   type AccentIREmitWarning,
 } from "@ssml-utilities/accent-ir";
+import {
+  buildSampleSSML,
+  DEFAULT_OUTPUT_FORMAT,
+  DEFAULT_VOICE,
+  readAnalyzeResponse,
+  readErrorMessage,
+  readSessionValue,
+  SAMPLE_CASES,
+  SESSION_KEYS,
+  writeSessionValue,
+} from "./playground-support";
 import { ref } from "vue";
 
-const DEFAULT_VOICE = "ja-JP-NanamiNeural";
-const DEFAULT_OUTPUT_FORMAT = "audio-24khz-48kbitrate-mono-mp3";
-
-const SESSION_KEYS = {
-  subscriptionKey: "azure-subscription-key",
-  region: "azure-region",
-  voice: "azure-voice",
-  outputFormat: "azure-output-format",
-} as const;
-
 type SynthesisStatus = "idle" | "submitting" | "success" | "error";
-
-interface AccentIRSample {
-  id: string;
-  label: string;
-  accentIR: AccentIR;
-}
-
-const SAMPLE_CASES: readonly AccentIRSample[] = [
-  {
-    id: "hashi-chopsticks",
-    label: "箸 (1型)",
-    accentIR: {
-      segments: [
-        {
-          type: "text",
-          text: "箸",
-          reading: "はし",
-          accent: { downstep: 1 },
-          hints: {
-            azurePhoneme: {
-              alphabet: "sapi",
-              value: "ハ'シ",
-            },
-          },
-        },
-      ],
-    },
-  },
-  {
-    id: "hashi-bridge",
-    label: "橋 (2型)",
-    accentIR: {
-      segments: [
-        {
-          type: "text",
-          text: "橋",
-          reading: "はし",
-          accent: { downstep: 2 },
-          hints: {
-            azurePhoneme: {
-              alphabet: "sapi",
-              value: "ハシ'",
-            },
-          },
-        },
-      ],
-    },
-  },
-  {
-    id: "hashi-edge",
-    label: "端 (平板)",
-    accentIR: {
-      segments: [
-        {
-          type: "text",
-          text: "端",
-          reading: "はし",
-          accent: { downstep: null },
-          hints: {
-            azurePhoneme: {
-              alphabet: "sapi",
-              value: "ハシ+",
-            },
-          },
-        },
-      ],
-    },
-  },
-  {
-    id: "hashi-wo-motsu",
-    label: "箸を持つ",
-    accentIR: {
-      segments: [
-        {
-          type: "text",
-          text: "箸を",
-          reading: "はしを",
-          accent: { downstep: 1 },
-          hints: {
-            azurePhoneme: {
-              alphabet: "sapi",
-              value: "ハ'シオ",
-            },
-          },
-        },
-        {
-          type: "text",
-          text: "持つ",
-          reading: "もつ",
-          accent: { downstep: 1 },
-          hints: {
-            azurePhoneme: {
-              alphabet: "sapi",
-              value: "モ'ツ",
-            },
-          },
-        },
-      ],
-    },
-  },
-] as const;
-
-const readSessionValue = (key: string, fallback = ""): string => {
-  if (typeof window === "undefined") {
-    return fallback;
-  }
-
-  return window.sessionStorage.getItem(key) ?? fallback;
-};
-
-const writeSessionValue = (key: string, value: string): void => {
-  if (typeof window === "undefined") {
-    return;
-  }
-
-  if (value) {
-    window.sessionStorage.setItem(key, value);
-    return;
-  }
-
-  window.sessionStorage.removeItem(key);
-};
-
-const buildSampleSSML = (
-  sampleId: string,
-  voice: string
-): { ssml: string; warnings: AccentIREmitWarning[] } => {
-  const sample =
-    SAMPLE_CASES.find((candidate) => candidate.id === sampleId) ?? SAMPLE_CASES[0];
-
-  const result = emitAzureSSML(sample.accentIR, {
-    voice: voice || DEFAULT_VOICE,
-  });
-
-  return {
-    ssml: result.ssml,
-    warnings: result.warnings,
-  };
-};
-
-const readErrorMessage = async (response: Response): Promise<string> => {
-  const contentType = response.headers.get("content-type") ?? "";
-
-  if (contentType.includes("application/json")) {
-    const payload = (await response.json()) as { error?: string; details?: string };
-    return payload.details
-      ? `${payload.error}: ${payload.details}`
-      : payload.error ?? response.statusText;
-  }
-
-  const text = await response.text();
-  return text || response.statusText;
-};
+type PlaygroundMode = "sample" | "free-text";
 
 const subscriptionKey = ref(readSessionValue(SESSION_KEYS.subscriptionKey));
 const region = ref(readSessionValue(SESSION_KEYS.region));
@@ -187,6 +35,10 @@ const generationWarnings = ref<AccentIREmitWarning[]>(initialSample.warnings);
 const status = ref<SynthesisStatus>("idle");
 const statusText = ref("");
 const audioUrl = ref<string | null>(null);
+const mode = ref<PlaygroundMode>("sample");
+const freeText = ref("");
+const latestAccentIR = ref<AccentIR | null>(null);
+const latestRawTokens = ref<Array<Record<string, unknown>> | null>(null);
 
 const replaceAudioUrl = (nextAudioUrl: string | null) => {
   if (audioUrl.value) {
@@ -196,41 +48,33 @@ const replaceAudioUrl = (nextAudioUrl: string | null) => {
   audioUrl.value = nextAudioUrl;
 };
 
-const handleFieldChange = (
-  key: string,
-  assign: (value: string) => void,
-  value: string
-) => {
-  assign(value);
-  writeSessionValue(key, value);
+const resetAnalyzeOutputs = () => {
+  latestAccentIR.value = null;
+  latestRawTokens.value = null;
 };
 
 const handleSubscriptionKeyInput = (event: Event) => {
   const value = (event.target as HTMLInputElement).value;
-  handleFieldChange(SESSION_KEYS.subscriptionKey, (next) => {
-    subscriptionKey.value = next;
-  }, value);
+  subscriptionKey.value = value;
+  writeSessionValue(SESSION_KEYS.subscriptionKey, value);
 };
 
 const handleRegionInput = (event: Event) => {
   const value = (event.target as HTMLInputElement).value;
-  handleFieldChange(SESSION_KEYS.region, (next) => {
-    region.value = next;
-  }, value);
+  region.value = value;
+  writeSessionValue(SESSION_KEYS.region, value);
 };
 
 const handleVoiceInput = (event: Event) => {
   const value = (event.target as HTMLInputElement).value;
-  handleFieldChange(SESSION_KEYS.voice, (next) => {
-    voice.value = next;
-  }, value);
+  voice.value = value;
+  writeSessionValue(SESSION_KEYS.voice, value);
 };
 
 const handleOutputFormatChange = (event: Event) => {
   const value = (event.target as HTMLSelectElement).value;
-  handleFieldChange(SESSION_KEYS.outputFormat, (next) => {
-    outputFormat.value = next;
-  }, value);
+  outputFormat.value = value;
+  writeSessionValue(SESSION_KEYS.outputFormat, value);
 };
 
 const handleLoadSample = () => {
@@ -241,6 +85,7 @@ const handleLoadSample = () => {
   status.value = "idle";
   statusText.value = "";
   replaceAudioUrl(null);
+  resetAnalyzeOutputs();
 };
 
 const handleClearCredentials = () => {
@@ -299,6 +144,52 @@ const handleSynthesize = async () => {
     replaceAudioUrl(null);
   }
 };
+
+const handleAnalyzeText = async () => {
+  if (!freeText.value.trim()) {
+    status.value = "error";
+    statusText.value = "解析する日本語テキストを入力してください。";
+    return;
+  }
+
+  status.value = "submitting";
+  statusText.value = "Analyze API に送信しています...";
+
+  try {
+    const response = await fetch("/api/analyze", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        text: freeText.value,
+        locale: "ja-JP",
+        voice: voice.value || DEFAULT_VOICE,
+        includeDebug: true,
+      }),
+    });
+
+    if (!response.ok) {
+      status.value = "error";
+      statusText.value = await readErrorMessage(response);
+      return;
+    }
+
+    const payload = readAnalyzeResponse(await response.json());
+
+    ssml.value = payload.azureSSML;
+    generationWarnings.value = payload.warnings;
+    latestAccentIR.value = payload.accentIR;
+    latestRawTokens.value = payload.rawTokens;
+    replaceAudioUrl(null);
+    status.value = "success";
+    statusText.value = "Analyze API から SSML を取得しました。";
+  } catch (error) {
+    status.value = "error";
+    statusText.value =
+      error instanceof Error ? error.message : "解析に失敗しました。";
+  }
+};
 </script>
 
 <template>
@@ -309,6 +200,17 @@ const handleSynthesize = async () => {
         `AccentIR -&gt; Azure SSML` の最小動作確認用 UI です。credential は
         `sessionStorage` のみを使って保持し、Worker 経由で Azure に転送します。
       </p>
+
+      <section class="panel mode-panel">
+        <label class="mode-option">
+          <input v-model="mode" type="radio" value="sample" />
+          <span>Sample mode</span>
+        </label>
+        <label class="mode-option">
+          <input v-model="mode" type="radio" value="free-text" />
+          <span>Free-text mode</span>
+        </label>
+      </section>
 
       <section class="panel grid-panel">
         <label class="field">
@@ -358,7 +260,7 @@ const handleSynthesize = async () => {
         </div>
       </section>
 
-      <section class="panel sample-panel">
+      <section v-if="mode === 'sample'" class="panel sample-panel">
         <label class="field sample-field">
           <span>AccentIR sample</span>
           <select v-model="selectedSampleId">
@@ -368,15 +270,37 @@ const handleSynthesize = async () => {
           </select>
         </label>
         <button @click="handleLoadSample">Load sample into textarea</button>
-        <button :disabled="status === 'submitting'" @click="handleSynthesize">
-          {{ status === "submitting" ? "Generating..." : "Send to Azure" }}
-        </button>
       </section>
 
       <p class="helper">
-        Voice は sample から SSML を生成するときだけ反映されます。手動編集した
+        Voice は sample / free-text の両モードで生成時に反映されます。手動編集した
         SSML はそのまま送信されます。
       </p>
+
+      <section v-if="mode === 'free-text'" class="panel">
+        <label class="field">
+          <span>Analyze input text</span>
+          <textarea
+            v-model="freeText"
+            class="free-text-input"
+            placeholder="ここに自由入力テキストを入れて Analyze します"
+          />
+        </label>
+        <div class="free-text-actions">
+          <button :disabled="status === 'submitting'" @click="handleAnalyzeText">
+            {{ status === "submitting" ? "Analyzing..." : "Analyze text" }}
+          </button>
+          <button :disabled="status === 'submitting'" @click="handleSynthesize">
+            {{ status === "submitting" ? "Generating..." : "Send current SSML to Azure" }}
+          </button>
+        </div>
+      </section>
+
+      <section v-if="mode === 'sample'" class="panel action-panel">
+        <button :disabled="status === 'submitting'" @click="handleSynthesize">
+          {{ status === "submitting" ? "Generating..." : "Send current SSML to Azure" }}
+        </button>
+      </section>
 
       <section v-if="generationWarnings.length > 0" class="warning-panel">
         <strong>Generation warnings</strong>
@@ -385,6 +309,16 @@ const handleSynthesize = async () => {
             {{ warning.code }}: {{ warning.message }}
           </li>
         </ul>
+      </section>
+
+      <section v-if="latestAccentIR" class="panel">
+        <h2>AccentIR</h2>
+        <pre class="ssml-preview">{{ JSON.stringify(latestAccentIR, null, 2) }}</pre>
+      </section>
+
+      <section v-if="latestRawTokens" class="panel">
+        <h2>Raw tokens (debug)</h2>
+        <pre class="ssml-preview">{{ JSON.stringify(latestRawTokens, null, 2) }}</pre>
       </section>
 
       <section class="panel">
@@ -452,9 +386,20 @@ h2 {
   gap: 16px;
 }
 
+.mode-panel {
+  display: flex;
+  gap: 20px;
+}
+
+.mode-option {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
 .sample-panel {
   display: grid;
-  grid-template-columns: 1fr auto auto;
+  grid-template-columns: 1fr auto;
   gap: 12px;
   align-items: end;
 }
@@ -496,6 +441,28 @@ h2 {
   font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
   font-size: 14px;
   line-height: 1.6;
+}
+
+.free-text-input {
+  min-height: 140px;
+  width: 100%;
+  box-sizing: border-box;
+  padding: 16px;
+  border: 1px solid #ddd;
+  border-radius: 10px;
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+.free-text-actions {
+  margin-top: 16px;
+  display: flex;
+  gap: 12px;
+}
+
+.action-panel {
+  display: flex;
+  justify-content: flex-end;
 }
 
 .audio-player {
