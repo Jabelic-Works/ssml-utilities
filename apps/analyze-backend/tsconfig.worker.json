@@ -17,5 +17,5 @@
     "noUncheckedSideEffectImports": true,
     "types": ["./worker-configuration.d.ts"]
   },
-  "include": ["worker/**/*.ts", "worker-configuration.d.ts"]
+  "include": ["src/worker.ts", "src/container.ts", "worker-configuration.d.ts"]
 }

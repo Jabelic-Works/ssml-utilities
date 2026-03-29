@@ -6,7 +6,7 @@ import type {
 import type {
   AnalyzeErrorResponse,
   AnalyzeSuccessResponse,
-} from "../src/analyze-contract";
+} from "@ssml-utilities/analyze-contract";
 
 interface AnalyzeInput {
   text: string;

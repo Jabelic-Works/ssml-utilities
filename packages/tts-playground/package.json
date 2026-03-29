@@ -16,6 +16,7 @@
   },
   "dependencies": {
     "@ssml-utilities/accent-ir": "workspace:*",
+    "@ssml-utilities/analyze-contract": "workspace:*",
     "vue": "^3.5.31"
   },
   "devDependencies": {
