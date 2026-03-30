@@ -15,8 +15,7 @@ RUN apt-get update \
     mecab \
     mecab-utils \
     unidic-mecab \
-  && rm -rf /var/lib/apt/lists/* \
-  && rm -rf /usr/share/mecab/dic/unidic
+  && rm -rf /var/lib/apt/lists/*
 
 COPY package.json ./package.json
 COPY dist ./dist

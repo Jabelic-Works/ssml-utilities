@@ -22,8 +22,14 @@ interface SampleAnalyzeResponse {
   rawTokens: UniDicRawToken[];
 }
 
+interface PlaygroundWorkerEnv {
+  ASSETS: Fetcher;
+  ANALYZE_API_BASE_URL?: string;
+  ANALYZE_API_TOKEN?: string;
+}
+
 const worker = {
-  async fetch(request: Request, env: Env): Promise<Response> {
+  async fetch(request: Request, env: PlaygroundWorkerEnv): Promise<Response> {
     const url = new URL(request.url);
 
     if (url.pathname === "/api/analyze") {
@@ -39,6 +45,10 @@ const worker = {
             405
           )
         );
+      }
+
+      if (env.ANALYZE_API_BASE_URL?.trim()) {
+        return withCors(await proxyAnalyzeRequest(request, env));
       }
 
       const payload: unknown = await request.json();
@@ -168,7 +178,7 @@ const worker = {
 
     return env.ASSETS.fetch(request);
   },
-} satisfies ExportedHandler<Env>;
+} satisfies ExportedHandler<PlaygroundWorkerEnv>;
 
 export default worker;
 
@@ -195,6 +205,58 @@ const createAnalyzeErrorResponse = (
     },
     { status }
   );
+
+const proxyAnalyzeRequest = async (
+  request: Request,
+  env: PlaygroundWorkerEnv
+): Promise<Response> => {
+  const analyzeApiBaseUrl = env.ANALYZE_API_BASE_URL?.trim();
+  if (!analyzeApiBaseUrl) {
+    return createAnalyzeErrorResponse(
+      "ANALYZE_BACKEND_UNAVAILABLE",
+      "ANALYZE_API_BASE_URL is not configured.",
+      503
+    );
+  }
+
+  const upstreamUrl = new URL("/analyze", analyzeApiBaseUrl);
+  const headers = new Headers();
+  headers.set(
+    "Content-Type",
+    request.headers.get("content-type") ?? "application/json"
+  );
+
+  if (env.ANALYZE_API_TOKEN?.trim()) {
+    headers.set("Authorization", `Bearer ${env.ANALYZE_API_TOKEN.trim()}`);
+  }
+
+  try {
+    const upstream = await fetch(upstreamUrl, {
+      method: "POST",
+      headers,
+      body: await request.text(),
+    });
+
+    return copyResponse(upstream);
+  } catch {
+    return createAnalyzeErrorResponse(
+      "ANALYZE_BACKEND_UNAVAILABLE",
+      "Analyze backend is temporarily unavailable.",
+      503
+    );
+  }
+};
+
+const copyResponse = (response: Response): Response => {
+  const headers = new Headers(response.headers);
+  headers.set("Cache-Control", headers.get("Cache-Control") ?? "no-store");
+
+  return new Response(response.body, {
+    status: response.status,
+    statusText: response.statusText,
+    headers,
+  });
+};
 
 /**
  * Contract-aligned mock response builder for the Azure-first free-text flow.
