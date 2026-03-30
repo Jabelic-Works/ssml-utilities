@@ -12,6 +12,7 @@ import {
   MeCabExecutionError,
   UniDicConfigurationError,
 } from "./mecab.js";
+import { applyTokenOverrides } from "./token-overrides/index.js";
 
 const DEFAULT_LOCALE = "ja-JP";
 const DEFAULT_VOICE = "ja-JP-NanamiNeural";
@@ -98,9 +99,10 @@ export const analyzeRequest = async (
     const locale = request.locale ?? DEFAULT_LOCALE;
     const voice = request.voice ?? DEFAULT_VOICE;
     const rawTokens = await analyzeTextWithMeCab(request.text);
+    const analysisTokens = applyTokenOverrides(rawTokens);
     const adapted = adaptUniDicTokensToAccentIR({
       locale,
-      tokens: rawTokens,
+      tokens: analysisTokens,
     });
     const emitted = emitAzureSSML(adapted.accentIR, {
       locale,
