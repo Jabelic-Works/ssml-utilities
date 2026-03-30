@@ -30,6 +30,9 @@ importers:
       '@cloudflare/containers':
         specifier: ^0.2.0
         version: 0.2.0
+      '@ssml-utilities/accent-ir':
+        specifier: workspace:*
+        version: link:../../packages/accent-ir
       '@ssml-utilities/analyze-contract':
         specifier: workspace:*
         version: link:../../packages/analyze-contract
@@ -46,6 +49,9 @@ importers:
       globals:
         specifier: ^17.4.0
         version: 17.4.0
+      tsdown:
+        specifier: ^0.21.6
+        version: 0.21.6(typescript@5.8.3)(vue-tsc@3.2.6(typescript@5.8.3))
       typescript:
         specifier: ^5.8.3
         version: 5.8.3
@@ -195,7 +201,7 @@ importers:
         version: 18.3.7(@types/react@18.3.24)
       '@vitejs/plugin-react':
         specifier: ^4.3.4
-        version: 4.7.0(vite@8.0.0(@types/node@25.5.0)(esbuild@0.27.3))
+        version: 4.7.0(vite@8.0.0(@types/node@25.5.0)(esbuild@0.25.9))
       react:
         specifier: ^18.2.0
         version: 18.3.1
@@ -210,10 +216,10 @@ importers:
         version: 5.8.3
       vite:
         specifier: ^8.0.0
-        version: 8.0.0(@types/node@25.5.0)(esbuild@0.27.3)
+        version: 8.0.0(@types/node@25.5.0)(esbuild@0.25.9)
       vite-plugin-dts:
         specifier: ^4.5.4
-        version: 4.5.4(@types/node@25.5.0)(rollup@4.50.1)(typescript@5.8.3)(vite@8.0.0(@types/node@25.5.0)(esbuild@0.27.3))
+        version: 4.5.4(@types/node@25.5.0)(rollup@4.50.1)(typescript@5.8.3)(vite@8.0.0(@types/node@25.5.0)(esbuild@0.25.9))
 
   packages/highlighter:
     dependencies:
@@ -250,7 +256,7 @@ importers:
         version: 0.30.0(rollup@2.79.2)(typescript@5.8.3)
       ts-jest:
         specifier: ^27.1.5
-        version: 27.1.5(@babel/core@7.28.4)(@types/jest@27.5.2)(babel-jest@27.5.1(@babel/core@7.28.4))(esbuild@0.25.9)(jest@27.5.1)(typescript@5.8.3)
+        version: 27.1.5(@babel/core@7.28.4)(@types/jest@27.5.2)(babel-jest@27.5.1(@babel/core@7.28.4))(jest@27.5.1)(typescript@5.8.3)
       tslib:
         specifier: ^2.8.1
         version: 2.8.1
@@ -6554,6 +6560,18 @@ snapshots:
       '@typescript-eslint/types': 8.57.2
       eslint-visitor-keys: 5.0.1
 
+  '@vitejs/plugin-react@4.7.0(vite@8.0.0(@types/node@25.5.0)(esbuild@0.25.9))':
+    dependencies:
+      '@babel/core': 7.28.4
+      '@babel/plugin-transform-react-jsx-self': 7.27.1(@babel/core@7.28.4)
+      '@babel/plugin-transform-react-jsx-source': 7.27.1(@babel/core@7.28.4)
+      '@rolldown/pluginutils': 1.0.0-beta.27
+      '@types/babel__core': 7.20.5
+      react-refresh: 0.17.0
+      vite: 8.0.0(@types/node@25.5.0)(esbuild@0.25.9)
+    transitivePeerDependencies:
+      - supports-color
+
   '@vitejs/plugin-react@4.7.0(vite@8.0.0(@types/node@25.5.0)(esbuild@0.27.3))':
     dependencies:
       '@babel/core': 7.28.4
@@ -9026,7 +9044,7 @@ snapshots:
 
   ts-interface-checker@0.1.13: {}
 
-  ts-jest@27.1.5(@babel/core@7.28.4)(@types/jest@27.5.2)(babel-jest@27.5.1(@babel/core@7.28.4))(esbuild@0.25.9)(jest@27.5.1)(typescript@5.8.3):
+  ts-jest@27.1.5(@babel/core@7.28.4)(@types/jest@27.5.2)(babel-jest@27.5.1(@babel/core@7.28.4))(jest@27.5.1)(typescript@5.8.3):
     dependencies:
       bs-logger: 0.2.6
       fast-json-stable-stringify: 2.1.0
@@ -9042,7 +9060,6 @@ snapshots:
       '@babel/core': 7.28.4
       '@types/jest': 27.5.2
       babel-jest: 27.5.1(@babel/core@7.28.4)
-      esbuild: 0.25.9
 
   tsdown@0.21.6(typescript@5.8.3)(vue-tsc@3.2.6(typescript@5.8.3)):
     dependencies:
@@ -9239,7 +9256,7 @@ snapshots:
       - supports-color
       - terser
 
-  vite-plugin-dts@4.5.4(@types/node@25.5.0)(rollup@4.50.1)(typescript@5.8.3)(vite@8.0.0(@types/node@25.5.0)(esbuild@0.27.3)):
+  vite-plugin-dts@4.5.4(@types/node@25.5.0)(rollup@4.50.1)(typescript@5.8.3)(vite@8.0.0(@types/node@25.5.0)(esbuild@0.25.9)):
     dependencies:
       '@microsoft/api-extractor': 7.57.7(@types/node@25.5.0)
       '@rollup/pluginutils': 5.3.0(rollup@4.50.1)
@@ -9252,7 +9269,7 @@ snapshots:
       magic-string: 0.30.21
       typescript: 5.8.3
     optionalDependencies:
-      vite: 8.0.0(@types/node@25.5.0)(esbuild@0.27.3)
+      vite: 8.0.0(@types/node@25.5.0)(esbuild@0.25.9)
     transitivePeerDependencies:
       - '@types/node'
       - rollup
@@ -9267,6 +9284,19 @@ snapshots:
       '@types/node': 25.5.0
       fsevents: 2.3.3
       lightningcss: 1.32.0
+
+  vite@8.0.0(@types/node@25.5.0)(esbuild@0.25.9):
+    dependencies:
+      '@oxc-project/runtime': 0.115.0
+      lightningcss: 1.32.0
+      picomatch: 4.0.3
+      postcss: 8.5.8
+      rolldown: 1.0.0-rc.9
+      tinyglobby: 0.2.15
+    optionalDependencies:
+      '@types/node': 25.5.0
+      esbuild: 0.25.9
+      fsevents: 2.3.3
 
   vite@8.0.0(@types/node@25.5.0)(esbuild@0.27.3):
     dependencies:
