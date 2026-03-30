@@ -7,8 +7,10 @@ import {
 } from "./utils.js";
 
 const NUMERIC_UNIT_SURFACES = new Set(["度", "パーセント", "％", "%"]);
+const CURRENCY_SURFACES = new Set(["円"]);
 const PERCENT_SURFACES = new Set(["パーセント", "％", "%"]);
 const DECIMAL_POINT_SURFACES = new Set([".", "．"]);
+const GROUPING_SEPARATOR_SURFACES = new Set([",", "，"]);
 
 const SPECIAL_HOUR_READINGS = new Map<
   number,
@@ -128,6 +130,82 @@ export const matchMinuteExpression = (
   };
 };
 
+export const matchDegreeExpression = (
+  tokens: readonly UniDicRawToken[],
+  index: number
+): TokenOverrideMatch | undefined => {
+  const span = parseNumericSpan(tokens, index);
+  if (!span) {
+    return undefined;
+  }
+
+  const unitToken = tokens[span.nextIndex];
+  if (unitToken?.surface !== "度") {
+    return undefined;
+  }
+
+  const reading = span.fractionalPart
+    ? `${convertDecimalToJapaneseReading(span.integerPart, span.fractionalPart)}ド`
+    : `${convertIntegerToJapaneseReading(span.integerPart)}ド`;
+  const pronunciation = span.fractionalPart
+    ? `${convertDecimalToJapanesePronunciation(
+        span.integerPart,
+        span.fractionalPart
+      )}ド`
+    : `${convertIntegerToJapaneseReading(span.integerPart)}ド`;
+
+  return {
+    tokens: [
+      createSyntheticToken({
+        surface: `${span.originalText}${unitToken.surface}`,
+        reading,
+        pronunciation,
+        sourceTokens: tokens.slice(index, span.nextIndex + 1),
+        partOfSpeech: GENERIC_NOUN_PART_OF_SPEECH,
+      }),
+    ],
+    nextIndex: span.nextIndex + 1,
+  };
+};
+
+export const matchCurrencyExpression = (
+  tokens: readonly UniDicRawToken[],
+  index: number
+): TokenOverrideMatch | undefined => {
+  const span = parseNumericSpan(tokens, index);
+  if (!span) {
+    return undefined;
+  }
+
+  const unitToken = tokens[span.nextIndex];
+  if (!CURRENCY_SURFACES.has(unitToken?.surface ?? "")) {
+    return undefined;
+  }
+
+  const reading = span.fractionalPart
+    ? `${convertDecimalToJapaneseReading(span.integerPart, span.fractionalPart)}エン`
+    : `${convertIntegerToJapaneseReading(span.integerPart)}エン`;
+  const pronunciation = span.fractionalPart
+    ? `${convertDecimalToJapanesePronunciation(
+        span.integerPart,
+        span.fractionalPart
+      )}エン`
+    : `${convertIntegerToJapaneseReading(span.integerPart)}エン`;
+
+  return {
+    tokens: [
+      createSyntheticToken({
+        surface: `${span.originalText}${unitToken.surface}`,
+        reading,
+        pronunciation,
+        sourceTokens: tokens.slice(index, span.nextIndex + 1),
+        partOfSpeech: GENERIC_NOUN_PART_OF_SPEECH,
+      }),
+    ],
+    nextIndex: span.nextIndex + 1,
+  };
+};
+
 export const matchGenericNumber = (
   tokens: readonly UniDicRawToken[],
   index: number
@@ -140,7 +218,8 @@ export const matchGenericNumber = (
   const shouldMerge =
     span.tokenCount > 1 ||
     Boolean(span.fractionalPart) ||
-    isFollowedByNumericUnit(tokens, span.nextIndex);
+    isFollowedByNumericUnit(tokens, span.nextIndex) ||
+    hasGroupingSeparator(span.originalText);
 
   if (!shouldMerge) {
     return undefined;
@@ -235,6 +314,16 @@ const parseNumericSpan = (
       tokenCount += 1;
       originalText += token.surface;
       normalizedText += normalizedSurface;
+      index += 1;
+      continue;
+    }
+
+    if (
+      GROUPING_SEPARATOR_SURFACES.has(token.surface) &&
+      hasDigit &&
+      isNumericToken(tokens[index + 1])
+    ) {
+      originalText += token.surface;
       index += 1;
       continue;
     }
@@ -505,9 +594,12 @@ const normalizeNumericSurface = (surface: string): string | undefined => {
 
       return char;
     })
-    .join("");
+    .join("")
+    .replace(/[,\uFF0C]/gu, "");
 
   return normalized;
 };
 
 const isAsciiDigits = (value: string): boolean => /^\d+$/u.test(value);
+
+const hasGroupingSeparator = (value: string): boolean => /[,\uFF0C]/u.test(value);

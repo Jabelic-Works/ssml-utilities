@@ -9,6 +9,7 @@
     "build:container": "tsdown",
     "build": "pnpm --filter @ssml-utilities/accent-ir build && pnpm run type-check && pnpm run build:container",
     "lint": "eslint .",
+    "test": "vitest run",
     "preview": "pnpm run build && wrangler dev",
     "deploy": "pnpm run build && wrangler deploy"
   },
@@ -25,6 +26,7 @@
     "tsdown": "^0.21.6",
     "typescript": "^5.8.3",
     "typescript-eslint": "^8.57.2",
+    "vitest": "^4.1.2",
     "wrangler": "^4.73.0"
   }
 }
