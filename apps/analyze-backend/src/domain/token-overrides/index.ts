@@ -6,14 +6,12 @@ import {
   matchMinuteExpression,
   matchPercentExpression,
 } from "./numeric-rules.js";
-import { matchStandaloneParticle } from "./particle-rules.js";
 import { matchSahenVerbExpression } from "./phrase-rules.js";
 import type { TokenOverrideMatch } from "./types.js";
 
 const TOKEN_OVERRIDE_RULES = [
   matchPhraseOverride,
   matchSurfaceOverride,
-  matchStandaloneParticle,
   matchSahenVerbExpression,
   matchHourExpression,
   matchMinuteExpression,

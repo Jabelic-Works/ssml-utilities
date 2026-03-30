@@ -146,6 +146,85 @@ describe("UniDic adapter", () => {
     ]);
   });
 
+  it("主格の「が」は前の text segment に連結しない", () => {
+    const tokens: UniDicRawToken[] = [
+      {
+        surface: "印象",
+        reading: "インショウ",
+        pronunciation: "インショー",
+        partOfSpeech: {
+          level1: "名詞",
+          level2: "普通名詞",
+          level3: "一般",
+        },
+        accent: {
+          accentType: "0",
+        },
+      },
+      {
+        surface: "が",
+        reading: "ガ",
+        pronunciation: "ガ",
+        partOfSpeech: {
+          level1: "助詞",
+          level2: "格助詞",
+        },
+      },
+      {
+        surface: "変わる",
+        reading: "カワル",
+        pronunciation: "カワル",
+        partOfSpeech: {
+          level1: "動詞",
+          level2: "一般",
+        },
+        accent: {
+          accentType: "0",
+        },
+      },
+    ];
+
+    const result = adaptUniDicTokensToAccentIR({ tokens });
+
+    expect(result.accentIR.segments).toEqual([
+      {
+        type: "text",
+        text: "印象",
+        reading: "いんしょう",
+        accent: { downstep: null },
+        hints: {
+          azurePhoneme: {
+            alphabet: "sapi",
+            value: "インショー+",
+          },
+        },
+      },
+      {
+        type: "text",
+        text: "が",
+        reading: "が",
+        hints: {
+          azurePhoneme: {
+            alphabet: "sapi",
+            value: "ガ",
+          },
+        },
+      },
+      {
+        type: "text",
+        text: "変わる",
+        reading: "かわる",
+        accent: { downstep: null },
+        hints: {
+          azurePhoneme: {
+            alphabet: "sapi",
+            value: "カワル+",
+          },
+        },
+      },
+    ]);
+  });
+
   it("文末の句点を break segment に変換する", () => {
     const tokens: UniDicRawToken[] = [
       {

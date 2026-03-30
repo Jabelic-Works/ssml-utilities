@@ -19,6 +19,35 @@ import { appendAzureHintToSegment } from "./unidic-azure-hints";
 // It converts already-normalized UniDicRawToken arrays into AccentIR.
 
 const SENTENCE_ENDING_PUNCTUATION = new Set(["。", "！", "!", "？", "?"]);
+const ATTACHABLE_PARTICLE_SURFACES = new Set([
+  "を",
+  "に",
+  "へ",
+  "で",
+  "と",
+  "の",
+  "は",
+  "も",
+  "や",
+  "か",
+  "な",
+  "ね",
+  "よ",
+  "まで",
+  "より",
+  "から",
+  "だけ",
+  "しか",
+  "ほど",
+  "くらい",
+  "など",
+  "って",
+  "たり",
+  "ば",
+  "し",
+  "ながら",
+  "けれど",
+]);
 
 export const adaptUniDicTokensToAccentIR = (
   input: UniDicAccentIRAdapterInput
@@ -121,7 +150,8 @@ const parseAccent = (
 };
 
 const isAttachableParticle = (token: UniDicRawToken): boolean =>
-  token.partOfSpeech.level1 === "助詞";
+  token.partOfSpeech.level1 === "助詞" &&
+  ATTACHABLE_PARTICLE_SURFACES.has(token.surface);
 
 const isSentenceEndingPauseToken = (
   token: UniDicRawToken,
