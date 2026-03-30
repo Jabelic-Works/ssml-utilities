@@ -311,6 +311,16 @@ const handleAnalyzeText = async () => {
           </li>
         </ul>
       </section>
+      <section class="panel">
+        <h2>Result</h2>
+        <p :class="status === 'error' ? 'status error' : 'status'">
+          {{ statusText || "まだ送信していません。" }}
+        </p>
+        <audio v-if="audioUrl" :src="audioUrl" controls class="audio-player">
+          Your browser does not support the audio element.
+        </audio>
+        <textarea class="ssml-input" v-model="ssml">{{ ssml }}</textarea>
+      </section>
 
       <section v-if="latestAccentIR" class="panel">
         <h2>AccentIR</h2>
@@ -329,16 +339,6 @@ const handleAnalyzeText = async () => {
         </label>
       </section>
 
-      <section class="panel">
-        <h2>Result</h2>
-        <p :class="status === 'error' ? 'status error' : 'status'">
-          {{ statusText || "まだ送信していません。" }}
-        </p>
-        <audio v-if="audioUrl" :src="audioUrl" controls class="audio-player">
-          Your browser does not support the audio element.
-        </audio>
-        <pre class="ssml-preview">{{ ssml }}</pre>
-      </section>
     </div>
   </div>
 </template>
