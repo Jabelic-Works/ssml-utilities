@@ -163,6 +163,31 @@ describe("AccentIR emitters", () => {
       );
     });
 
+    it("azureTrailingSubAlias hint があれば phoneme の後ろに空 sub alias を出力する", () => {
+      const accentIR: AccentIR = {
+        segments: [
+          {
+            type: "text",
+            text: "要件",
+            hints: {
+              azurePhoneme: {
+                alphabet: "sapi",
+                value: "ヨ+++ウケ'",
+              },
+              azureTrailingSubAlias: "ん",
+            },
+          },
+        ],
+      };
+
+      const result = emitAzureSSML(accentIR);
+
+      expect(result.warnings).toEqual([]);
+      expect(result.ssml).toBe(
+        '<speak version="1.0" xmlns="http://www.w3.org/2001/10/synthesis" xml:lang="ja-JP"><phoneme alphabet="sapi" ph="ヨ+++ウケ\'">要件</phoneme><sub alias="ん"></sub></speak>'
+      );
+    });
+
     it("reading があるが hint が無い場合は sub alias warning を返す", () => {
       const accentIR: AccentIR = {
         segments: [

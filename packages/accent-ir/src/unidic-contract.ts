@@ -32,6 +32,7 @@ export interface UniDicTextToSpeechHints {
     value: string;
   };
   azureSubAlias?: string;
+  azureTrailingSubAlias?: string;
 }
 
 export interface UniDicRawToken {

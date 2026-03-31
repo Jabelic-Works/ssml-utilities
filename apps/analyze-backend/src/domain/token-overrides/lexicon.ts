@@ -5,6 +5,8 @@ import { createSyntheticToken } from "./utils.js";
 interface SurfaceOverride {
   reading: string;
   pronunciation: string;
+  azurePhoneme?: string;
+  azureTrailingSubAlias?: string;
 }
 
 interface PhraseOverride {
@@ -27,6 +29,24 @@ const SURFACE_OVERRIDES = new Map<string, SurfaceOverride>([
     {
       reading: "モシ",
       pronunciation: "モシ+",
+    },
+  ],
+  [
+    "要件",
+    {
+      reading: "ヨウケン",
+      pronunciation: "ヨ+ウケ'ン",
+      azurePhoneme: "ヨ+++ウケ'",
+      azureTrailingSubAlias: "ん",
+    },
+  ],
+  [
+    "用件",
+    {
+      reading: "ヨウケン",
+      pronunciation: "ヨ+ウケ'ン",
+      azurePhoneme: "ヨ+++ウケ'",
+      azureTrailingSubAlias: "ん",
     },
   ],
   [
@@ -111,7 +131,8 @@ export const matchSurfaceOverride = (
         pronunciation: override.pronunciation,
         sourceTokens: [token],
         partOfSpeech: token.partOfSpeech,
-        azurePhoneme: override.pronunciation,
+        azurePhoneme: override.azurePhoneme ?? override.pronunciation,
+        azureTrailingSubAlias: override.azureTrailingSubAlias,
       }),
     ],
     nextIndex: index + 1,
