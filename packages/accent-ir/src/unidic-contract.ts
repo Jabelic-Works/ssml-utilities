@@ -32,6 +32,8 @@ export interface UniDicTextToSpeechHints {
     value: string;
   };
   azureSubAlias?: string;
+  azureTrailingSubAlias?: string;
+  preventParticleMerge?: boolean;
 }
 
 export interface UniDicRawToken {

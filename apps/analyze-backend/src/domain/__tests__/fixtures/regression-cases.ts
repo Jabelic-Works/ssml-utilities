@@ -9,6 +9,7 @@ export interface ComparableToken {
   accentType?: string;
   azurePhoneme?: string;
   azureSubAlias?: string;
+  azureTrailingSubAlias?: string;
 }
 
 export interface AnalyzeRegressionCase {
@@ -56,6 +57,10 @@ const AUXILIARY = {
   level1: "助動詞",
 } as const satisfies UniDicPartOfSpeech;
 
+const PREFIX = {
+  level1: "接頭辞",
+} as const satisfies UniDicPartOfSpeech;
+
 const PARTICLE_CASE = {
   level1: "助詞",
   level2: "格助詞",
@@ -68,6 +73,15 @@ const SYMBOL_GENERAL = {
 
 const phoneme = (text: string, value: string): string =>
   `<phoneme alphabet="sapi" ph="${value}">${text}</phoneme>`;
+
+const trailingSubAlias = (alias: string): string =>
+  `<sub alias="${alias}"></sub>`;
+
+const phonemeWithTrailingAlias = (
+  text: string,
+  value: string,
+  alias: string
+): string => `${phoneme(text, value)}${trailingSubAlias(alias)}`;
 
 const rawToken = (input: {
   surface: string;
@@ -97,6 +111,9 @@ export const toComparableToken = (token: UniDicRawToken): ComparableToken => ({
     : {}),
   ...(token.ttsHints?.azureSubAlias
     ? { azureSubAlias: token.ttsHints.azureSubAlias }
+    : {}),
+  ...(token.ttsHints?.azureTrailingSubAlias
+    ? { azureTrailingSubAlias: token.ttsHints.azureTrailingSubAlias }
     : {}),
 });
 
@@ -144,6 +161,137 @@ export const regressionCases: readonly AnalyzeRegressionCase[] = [
       },
     ],
     expectedAzureSSMLBody: phoneme("模試", "モシ+"),
+  },
+  {
+    id: "lexicon-go-yoken-wo",
+    description: "lexicon: ご要件を の要件 pronunciation を補正する",
+    rawTokens: [
+      rawToken({
+        surface: "ご",
+        reading: "ゴ",
+        pronunciation: "ゴ",
+        partOfSpeech: PREFIX,
+      }),
+      rawToken({
+        surface: "要件",
+        reading: "ヨウケン",
+        pronunciation: "ヨーケン",
+        partOfSpeech: NOUN_GENERAL,
+        accentType: "3,0",
+      }),
+      rawToken({
+        surface: "を",
+        reading: "ヲ",
+        pronunciation: "オ",
+        partOfSpeech: PARTICLE_CASE,
+      }),
+    ],
+    expectedOverrideTokens: [
+      {
+        surface: "ご",
+        reading: "ゴ",
+        pronunciation: "ゴ",
+        partOfSpeech: PREFIX,
+      },
+      {
+        surface: "要件",
+        reading: "ヨウケン",
+        pronunciation: "ヨ+ウケ'ン",
+        partOfSpeech: NOUN_GENERAL,
+        azurePhoneme: "ヨ+++ウケ'",
+        azureTrailingSubAlias: "ん",
+      },
+      {
+        surface: "を",
+        reading: "ヲ",
+        pronunciation: "オ",
+        partOfSpeech: PARTICLE_CASE,
+      },
+    ],
+    expectedAzureSSMLBody: `ご${phonemeWithTrailingAlias("要件", "ヨ+++ウケ'", "ん")}を`,
+  },
+  {
+    id: "lexicon-go-youken-wo",
+    description: "lexicon: ご用件を の用件 pronunciation を補正する",
+    rawTokens: [
+      rawToken({
+        surface: "ご",
+        reading: "ゴ",
+        pronunciation: "ゴ",
+        partOfSpeech: PREFIX,
+      }),
+      rawToken({
+        surface: "用件",
+        reading: "ヨウケン",
+        pronunciation: "ヨーケン",
+        partOfSpeech: NOUN_GENERAL,
+        accentType: "3,0",
+      }),
+      rawToken({
+        surface: "を",
+        reading: "ヲ",
+        pronunciation: "オ",
+        partOfSpeech: PARTICLE_CASE,
+      }),
+    ],
+    expectedOverrideTokens: [
+      {
+        surface: "ご",
+        reading: "ゴ",
+        pronunciation: "ゴ",
+        partOfSpeech: PREFIX,
+      },
+      {
+        surface: "用件",
+        reading: "ヨウケン",
+        pronunciation: "ヨ+ウケ'ン",
+        partOfSpeech: NOUN_GENERAL,
+        azurePhoneme: "ヨ+++ウケ'",
+        azureTrailingSubAlias: "ん",
+      },
+      {
+        surface: "を",
+        reading: "ヲ",
+        pronunciation: "オ",
+        partOfSpeech: PARTICLE_CASE,
+      },
+    ],
+    expectedAzureSSMLBody: `ご${phonemeWithTrailingAlias("用件", "ヨ+++ウケ'", "ん")}を`,
+  },
+  {
+    id: "lexicon-yoko-wo",
+    description: "lexicon: 要項を の要項 Azure phoneme を補正する",
+    rawTokens: [
+      rawToken({
+        surface: "要項",
+        reading: "ヨウコウ",
+        pronunciation: "ヨーコー",
+        partOfSpeech: NOUN_GENERAL,
+        accentType: "0",
+      }),
+      rawToken({
+        surface: "を",
+        reading: "ヲ",
+        pronunciation: "オ",
+        partOfSpeech: PARTICLE_CASE,
+      }),
+    ],
+    expectedOverrideTokens: [
+      {
+        surface: "要項",
+        reading: "ヨウコウ",
+        pronunciation: "ヨーコー",
+        partOfSpeech: NOUN_GENERAL,
+        azurePhoneme: "ヨゥコ++ウ",
+      },
+      {
+        surface: "を",
+        reading: "ヲ",
+        pronunciation: "オ",
+        partOfSpeech: PARTICLE_CASE,
+      },
+    ],
+    expectedAzureSSMLBody: `${phoneme("要項", "ヨゥコ++ウ")}を`,
   },
   {
     id: "lexicon-yokuyo",

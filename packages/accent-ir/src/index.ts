@@ -30,6 +30,8 @@ export interface AccentIRTextSegment {
       value: string;
     };
     azureSubAlias?: string;
+    azureTrailingSubAlias?: string;
+    preventParticleMerge?: boolean;
   };
 }
 
@@ -213,6 +215,10 @@ const serializeSegmentForAzure = (
         "Azure SSML は azurePhoneme hint と reading の両方が無いため、plain text にフォールバックしました。",
       segmentIndex,
     });
+  }
+
+  if (segment.hints?.azureTrailingSubAlias) {
+    content += `<sub alias="${escapeXmlAttribute(segment.hints.azureTrailingSubAlias)}"></sub>`;
   }
 
   return applyEmphasis(content, segment.emphasis);

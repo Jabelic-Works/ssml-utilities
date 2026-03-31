@@ -66,7 +66,13 @@ export const adaptUniDicTokensToAccentIR = (
       continue;
     }
 
-    if (isAttachableParticle(token) && isLastSegmentText(segments)) {
+    if (
+      isAttachableParticle(token) &&
+      isLastSegmentText(segments) &&
+      canMergeAttachableParticleIntoSegment(
+        segments[segments.length - 1] as AccentIRTextSegment
+      )
+    ) {
       const lastSegment = segments[segments.length - 1] as AccentIRTextSegment;
       mergeParticleIntoSegment(lastSegment, token, azureHintMode);
       continue;
@@ -148,20 +154,33 @@ const applyAzureHintsToSegment = (
   token: UniDicRawToken,
   azureHintMode: UniDicAzureHintMode
 ): void => {
-  if (token.ttsHints?.azurePhoneme) {
-    segment.hints = {
-      ...segment.hints,
-      azurePhoneme: token.ttsHints.azurePhoneme,
-    };
-    return;
-  }
+  const explicitAzurePhoneme = token.ttsHints?.azurePhoneme;
+  const explicitAzureSubAlias = token.ttsHints?.azureSubAlias;
+  const explicitAzureTrailingSubAlias = token.ttsHints?.azureTrailingSubAlias;
+  const preventParticleMerge = token.ttsHints?.preventParticleMerge;
 
-  if (token.ttsHints?.azureSubAlias) {
+  if (
+    explicitAzurePhoneme ||
+    explicitAzureSubAlias ||
+    explicitAzureTrailingSubAlias ||
+    preventParticleMerge
+  ) {
     const normalizedAlias =
-      normalizeReading(token.ttsHints.azureSubAlias) ?? token.ttsHints.azureSubAlias;
+      normalizeReading(explicitAzureSubAlias) ?? explicitAzureSubAlias;
+    const normalizedTrailingAlias =
+      normalizeReading(explicitAzureTrailingSubAlias) ??
+      explicitAzureTrailingSubAlias;
+
     segment.hints = {
       ...segment.hints,
-      azureSubAlias: normalizedAlias,
+      ...(explicitAzurePhoneme
+        ? { azurePhoneme: explicitAzurePhoneme }
+        : {}),
+      ...(normalizedAlias ? { azureSubAlias: normalizedAlias } : {}),
+      ...(normalizedTrailingAlias
+        ? { azureTrailingSubAlias: normalizedTrailingAlias }
+        : {}),
+      ...(preventParticleMerge ? { preventParticleMerge: true } : {}),
     };
     return;
   }
@@ -221,6 +240,13 @@ const isLastSegmentText = (
   segments: readonly AccentIRSegment[]
 ): segments is readonly [...AccentIRSegment[], AccentIRTextSegment] =>
   segments.length > 0 && segments[segments.length - 1]?.type === "text";
+
+const canMergeAttachableParticleIntoSegment = (
+  segment: AccentIRTextSegment
+): boolean =>
+  segment.text.length > 0 &&
+  !segment.hints?.azureTrailingSubAlias &&
+  !segment.hints?.preventParticleMerge;
 
 const normalizeReading = (reading?: string | null): string | undefined => {
   if (!reading || reading === "*") {

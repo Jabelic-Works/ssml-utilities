@@ -146,6 +146,126 @@ describe("UniDic adapter", () => {
     ]);
   });
 
+  it("azureTrailingSubAlias hint がある token には助詞を連結しない", () => {
+    const tokens: UniDicRawToken[] = [
+      {
+        surface: "要件",
+        reading: "ヨウケン",
+        pronunciation: "ヨ+ウケ'ン",
+        partOfSpeech: {
+          level1: "名詞",
+          level2: "普通名詞",
+          level3: "一般",
+        },
+        accent: {
+          accentType: "3,0",
+        },
+        ttsHints: {
+          azurePhoneme: {
+            alphabet: "sapi",
+            value: "ヨ+++ウケ'",
+          },
+          azureTrailingSubAlias: "ン",
+        },
+      },
+      {
+        surface: "を",
+        reading: "ヲ",
+        pronunciation: "オ",
+        partOfSpeech: {
+          level1: "助詞",
+          level2: "格助詞",
+        },
+      },
+    ];
+
+    const result = adaptUniDicTokensToAccentIR({
+      tokens,
+      azureHintMode: "explicit-only",
+    });
+
+    expect(result.accentIR.segments).toEqual([
+      {
+        type: "text",
+        text: "要件",
+        reading: "ようけん",
+        accent: { downstep: 3 },
+        hints: {
+          azurePhoneme: {
+            alphabet: "sapi",
+            value: "ヨ+++ウケ'",
+          },
+          azureTrailingSubAlias: "ん",
+        },
+      },
+      {
+        type: "text",
+        text: "を",
+        reading: "を",
+      },
+    ]);
+  });
+
+  it("preventParticleMerge hint がある token には助詞を連結しない", () => {
+    const tokens: UniDicRawToken[] = [
+      {
+        surface: "要項",
+        reading: "ヨウコウ",
+        pronunciation: "ヨーコー",
+        partOfSpeech: {
+          level1: "名詞",
+          level2: "普通名詞",
+          level3: "一般",
+        },
+        accent: {
+          accentType: "0",
+        },
+        ttsHints: {
+          azurePhoneme: {
+            alphabet: "sapi",
+            value: "ヨゥコ++ウ",
+          },
+          preventParticleMerge: true,
+        },
+      },
+      {
+        surface: "を",
+        reading: "ヲ",
+        pronunciation: "オ",
+        partOfSpeech: {
+          level1: "助詞",
+          level2: "格助詞",
+        },
+      },
+    ];
+
+    const result = adaptUniDicTokensToAccentIR({
+      tokens,
+      azureHintMode: "explicit-only",
+    });
+
+    expect(result.accentIR.segments).toEqual([
+      {
+        type: "text",
+        text: "要項",
+        reading: "ようこう",
+        accent: { downstep: null },
+        hints: {
+          azurePhoneme: {
+            alphabet: "sapi",
+            value: "ヨゥコ++ウ",
+          },
+          preventParticleMerge: true,
+        },
+      },
+      {
+        type: "text",
+        text: "を",
+        reading: "を",
+      },
+    ]);
+  });
+
   it("主格の「が」は前の text segment に連結しない", () => {
     const tokens: UniDicRawToken[] = [
       {
