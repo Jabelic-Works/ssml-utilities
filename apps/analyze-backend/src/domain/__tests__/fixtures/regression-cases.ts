@@ -124,6 +124,28 @@ export const regressionCases: readonly AnalyzeRegressionCase[] = [
     expectedAzureSSMLBody: phoneme("発音", "ハツ+オン+"),
   },
   {
+    id: "lexicon-moshi",
+    description: "lexicon: 模試の pronunciation を補正する",
+    rawTokens: [
+      rawToken({
+        surface: "模試",
+        reading: "モシ",
+        pronunciation: "モシ",
+        partOfSpeech: NOUN_GENERAL,
+      }),
+    ],
+    expectedOverrideTokens: [
+      {
+        surface: "模試",
+        reading: "モシ",
+        pronunciation: "モシ+",
+        partOfSpeech: NOUN_GENERAL,
+        azurePhoneme: "モシ+",
+      },
+    ],
+    expectedAzureSSMLBody: phoneme("模試", "モシ+"),
+  },
+  {
     id: "lexicon-yokuyo",
     description: "lexicon: 抑揚の pronunciation を補正する",
     rawTokens: [

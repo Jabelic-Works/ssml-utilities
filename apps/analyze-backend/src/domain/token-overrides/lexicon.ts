@@ -23,6 +23,13 @@ const SURFACE_OVERRIDES = new Map<string, SurfaceOverride>([
     },
   ],
   [
+    "模試",
+    {
+      reading: "モシ",
+      pronunciation: "モシ+",
+    },
+  ],
+  [
     "抑揚",
     {
       reading: "ヨクヨウ",
