@@ -259,6 +259,41 @@ export const regressionCases: readonly AnalyzeRegressionCase[] = [
     expectedAzureSSMLBody: `ご${phonemeWithTrailingAlias("用件", "ヨ+++ウケ'", "ん")}を`,
   },
   {
+    id: "lexicon-yoko-wo",
+    description: "lexicon: 要項を の要項 Azure phoneme を補正する",
+    rawTokens: [
+      rawToken({
+        surface: "要項",
+        reading: "ヨウコウ",
+        pronunciation: "ヨーコー",
+        partOfSpeech: NOUN_GENERAL,
+        accentType: "0",
+      }),
+      rawToken({
+        surface: "を",
+        reading: "ヲ",
+        pronunciation: "オ",
+        partOfSpeech: PARTICLE_CASE,
+      }),
+    ],
+    expectedOverrideTokens: [
+      {
+        surface: "要項",
+        reading: "ヨウコウ",
+        pronunciation: "ヨーコー",
+        partOfSpeech: NOUN_GENERAL,
+        azurePhoneme: "ヨゥコ++ウ",
+      },
+      {
+        surface: "を",
+        reading: "ヲ",
+        pronunciation: "オ",
+        partOfSpeech: PARTICLE_CASE,
+      },
+    ],
+    expectedAzureSSMLBody: `${phoneme("要項", "ヨゥコ++ウ")}を`,
+  },
+  {
     id: "lexicon-yokuyo",
     description: "lexicon: 抑揚の pronunciation を補正する",
     rawTokens: [

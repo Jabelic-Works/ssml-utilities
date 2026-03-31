@@ -7,6 +7,7 @@ interface SurfaceOverride {
   pronunciation: string;
   azurePhoneme?: string;
   azureTrailingSubAlias?: string;
+  preventParticleMerge?: boolean;
 }
 
 interface PhraseOverride {
@@ -47,6 +48,15 @@ const SURFACE_OVERRIDES = new Map<string, SurfaceOverride>([
       pronunciation: "ヨ+ウケ'ン",
       azurePhoneme: "ヨ+++ウケ'",
       azureTrailingSubAlias: "ん",
+    },
+  ],
+  [
+    "要項",
+    {
+      reading: "ヨウコウ",
+      pronunciation: "ヨーコー",
+      azurePhoneme: "ヨゥコ++ウ",
+      preventParticleMerge: true,
     },
   ],
   [
@@ -133,6 +143,7 @@ export const matchSurfaceOverride = (
         partOfSpeech: token.partOfSpeech,
         azurePhoneme: override.azurePhoneme ?? override.pronunciation,
         azureTrailingSubAlias: override.azureTrailingSubAlias,
+        preventParticleMerge: override.preventParticleMerge,
       }),
     ],
     nextIndex: index + 1,

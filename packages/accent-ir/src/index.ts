@@ -31,6 +31,7 @@ export interface AccentIRTextSegment {
     };
     azureSubAlias?: string;
     azureTrailingSubAlias?: string;
+    preventParticleMerge?: boolean;
   };
 }
 

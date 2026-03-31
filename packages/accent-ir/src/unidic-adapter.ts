@@ -157,11 +157,13 @@ const applyAzureHintsToSegment = (
   const explicitAzurePhoneme = token.ttsHints?.azurePhoneme;
   const explicitAzureSubAlias = token.ttsHints?.azureSubAlias;
   const explicitAzureTrailingSubAlias = token.ttsHints?.azureTrailingSubAlias;
+  const preventParticleMerge = token.ttsHints?.preventParticleMerge;
 
   if (
     explicitAzurePhoneme ||
     explicitAzureSubAlias ||
-    explicitAzureTrailingSubAlias
+    explicitAzureTrailingSubAlias ||
+    preventParticleMerge
   ) {
     const normalizedAlias =
       normalizeReading(explicitAzureSubAlias) ?? explicitAzureSubAlias;
@@ -178,6 +180,7 @@ const applyAzureHintsToSegment = (
       ...(normalizedTrailingAlias
         ? { azureTrailingSubAlias: normalizedTrailingAlias }
         : {}),
+      ...(preventParticleMerge ? { preventParticleMerge: true } : {}),
     };
     return;
   }
@@ -240,7 +243,10 @@ const isLastSegmentText = (
 
 const canMergeAttachableParticleIntoSegment = (
   segment: AccentIRTextSegment
-): boolean => segment.text.length > 0 && !segment.hints?.azureTrailingSubAlias;
+): boolean =>
+  segment.text.length > 0 &&
+  !segment.hints?.azureTrailingSubAlias &&
+  !segment.hints?.preventParticleMerge;
 
 const normalizeReading = (reading?: string | null): string | undefined => {
   if (!reading || reading === "*") {
