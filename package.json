@@ -13,8 +13,7 @@
     "release": "changeset publish"
   },
   "workspaces": [
-    "packages/*",
-    "apps/*"
+    "packages/*"
   ],
   "dependencies": {
     "typescript": "^5.8.3"
