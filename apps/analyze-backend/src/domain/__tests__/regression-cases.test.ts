@@ -24,10 +24,12 @@ describe("analyze-backend regression cases", () => {
       const adapted = adaptUniDicTokensToAccentIR({
         locale: "ja-JP",
         tokens: overriddenTokens,
+        azureHintMode: "explicit-only",
       });
       const emitted = emitAzureSSML(adapted.accentIR, {
         locale: "ja-JP",
         voice: "ja-JP-NanamiNeural",
+        azureReadingFallback: "plainText",
       });
 
       expect(adapted.warnings).toEqual([]);

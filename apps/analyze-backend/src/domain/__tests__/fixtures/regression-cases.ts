@@ -7,6 +7,8 @@ export interface ComparableToken {
   lemma?: string;
   partOfSpeech: UniDicPartOfSpeech;
   accentType?: string;
+  azurePhoneme?: string;
+  azureSubAlias?: string;
 }
 
 export interface AnalyzeRegressionCase {
@@ -90,6 +92,12 @@ export const toComparableToken = (token: UniDicRawToken): ComparableToken => ({
   ...(token.lemma ? { lemma: token.lemma } : {}),
   partOfSpeech: token.partOfSpeech,
   ...(token.accent?.accentType ? { accentType: token.accent.accentType } : {}),
+  ...(token.ttsHints?.azurePhoneme?.value
+    ? { azurePhoneme: token.ttsHints.azurePhoneme.value }
+    : {}),
+  ...(token.ttsHints?.azureSubAlias
+    ? { azureSubAlias: token.ttsHints.azureSubAlias }
+    : {}),
 });
 
 export const regressionCases: readonly AnalyzeRegressionCase[] = [
@@ -110,6 +118,7 @@ export const regressionCases: readonly AnalyzeRegressionCase[] = [
         reading: "ハツオン",
         pronunciation: "ハツ+オン+",
         partOfSpeech: NOUN_GENERAL,
+        azurePhoneme: "ハツ+オン+",
       },
     ],
     expectedAzureSSMLBody: phoneme("発音", "ハツ+オン+"),
@@ -131,6 +140,7 @@ export const regressionCases: readonly AnalyzeRegressionCase[] = [
         reading: "ヨクヨウ",
         pronunciation: "ヨク+ヨー",
         partOfSpeech: NOUN_GENERAL,
+        azurePhoneme: "ヨク+ヨー",
       },
     ],
     expectedAzureSSMLBody: phoneme("抑揚", "ヨク+ヨー"),
@@ -166,7 +176,7 @@ export const regressionCases: readonly AnalyzeRegressionCase[] = [
         partOfSpeech: INTERJECTION,
       },
     ],
-    expectedAzureSSMLBody: phoneme("おはようございます", "オハヨーゴザイマス"),
+    expectedAzureSSMLBody: "おはようございます",
   },
   {
     id: "phrase-sahen-shuryo-shimasu",
@@ -200,7 +210,7 @@ export const regressionCases: readonly AnalyzeRegressionCase[] = [
         partOfSpeech: VERB_GENERAL,
       },
     ],
-    expectedAzureSSMLBody: phoneme("終了します", "シューリョーシマス"),
+    expectedAzureSSMLBody: "終了します",
   },
   {
     id: "numeric-current-time-930",
@@ -257,10 +267,7 @@ export const regressionCases: readonly AnalyzeRegressionCase[] = [
         partOfSpeech: NOUN_COUNTER,
       },
     ],
-    expectedAzureSSMLBody:
-      phoneme("9時", "クジ'") +
-      phoneme("30", "サン+ジュッ") +
-      phoneme("分", "プ'ン"),
+    expectedAzureSSMLBody: "9時30分",
   },
   {
     id: "numeric-temperature-22-5",
@@ -292,16 +299,25 @@ export const regressionCases: readonly AnalyzeRegressionCase[] = [
     ],
     expectedOverrideTokens: [
       {
-        surface: "22.5度",
-        reading: "ニジュウニテンゴド",
-        pronunciation: "ニジュウニーテンゴド",
+        surface: "2",
+        reading: "ニジュウ",
+        pronunciation: "ニ'ジュウ",
+        partOfSpeech: {
+          level1: "名詞",
+          level2: "数詞",
+        },
+      },
+      {
+        surface: "2.5度",
+        reading: "ニテンゴド",
+        pronunciation: "ニー'テンゴド",
         partOfSpeech: {
           level1: "名詞",
           level2: "普通名詞",
         },
       },
     ],
-    expectedAzureSSMLBody: phoneme("22.5度", "ニジュウニーテンゴド"),
+    expectedAzureSSMLBody: "22.5度",
   },
   {
     id: "numeric-percent-30",
@@ -339,8 +355,7 @@ export const regressionCases: readonly AnalyzeRegressionCase[] = [
         partOfSpeech: NOUN_GENERAL,
       },
     ],
-    expectedAzureSSMLBody:
-      phoneme("30", "サンジュッ") + phoneme("パーセント", "パーセン'ト"),
+    expectedAzureSSMLBody: "30パーセント",
   },
   {
     id: "numeric-currency-yen-1280",
@@ -372,7 +387,7 @@ export const regressionCases: readonly AnalyzeRegressionCase[] = [
         },
       },
     ],
-    expectedAzureSSMLBody: phoneme("1,280円", "センニヒャクハチジュウエン"),
+    expectedAzureSSMLBody: "1,280円",
   },
   {
     id: "numeric-currency-yen-1280-separated-comma",
@@ -408,7 +423,7 @@ export const regressionCases: readonly AnalyzeRegressionCase[] = [
         },
       },
     ],
-    expectedAzureSSMLBody: phoneme("1,280円", "センニヒャクハチジュウエン"),
+    expectedAzureSSMLBody: "1,280円",
   },
   {
     id: "particle-insho-ga-kawaru",
@@ -458,8 +473,6 @@ export const regressionCases: readonly AnalyzeRegressionCase[] = [
       },
     ],
     expectedAzureSSMLBody:
-      phoneme("印象", "インショー+") +
-      phoneme("が", "ガ") +
-      phoneme("変わる", "カワル+"),
+      "印象" + "が" + "変わる",
   },
 ] as const;

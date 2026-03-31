@@ -142,6 +142,27 @@ describe("AccentIR emitters", () => {
       );
     });
 
+    it("azureSubAlias hint があれば sub alias で出力する", () => {
+      const accentIR: AccentIR = {
+        segments: [
+          {
+            type: "text",
+            text: "9時",
+            hints: {
+              azureSubAlias: "くじ",
+            },
+          },
+        ],
+      };
+
+      const result = emitAzureSSML(accentIR);
+
+      expect(result.warnings).toEqual([]);
+      expect(result.ssml).toBe(
+        '<speak version="1.0" xmlns="http://www.w3.org/2001/10/synthesis" xml:lang="ja-JP"><sub alias="くじ">9時</sub></speak>'
+      );
+    });
+
     it("reading があるが hint が無い場合は sub alias warning を返す", () => {
       const accentIR: AccentIR = {
         segments: [
@@ -192,6 +213,27 @@ describe("AccentIR emitters", () => {
           segmentIndex: 0,
         },
       ]);
+    });
+
+    it("plainText fallback を指定した場合は reading があっても plain text を優先する", () => {
+      const accentIR: AccentIR = {
+        segments: [
+          {
+            type: "text",
+            text: "東京",
+            reading: "とうきょう",
+          },
+        ],
+      };
+
+      const result = emitAzureSSML(accentIR, {
+        azureReadingFallback: "plainText",
+      });
+
+      expect(result.ssml).toBe(
+        '<speak version="1.0" xmlns="http://www.w3.org/2001/10/synthesis" xml:lang="ja-JP">東京</speak>'
+      );
+      expect(result.warnings).toEqual([]);
     });
   });
 });

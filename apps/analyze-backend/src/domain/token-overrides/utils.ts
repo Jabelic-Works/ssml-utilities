@@ -16,11 +16,32 @@ export const createSyntheticToken = (input: {
   pronunciation: string;
   sourceTokens: readonly UniDicRawToken[];
   partOfSpeech: UniDicRawToken["partOfSpeech"];
+  azurePhoneme?: string;
+  azureSubAlias?: string;
 }): UniDicRawToken => ({
   surface: input.surface,
   reading: input.reading,
   pronunciation: input.pronunciation,
   partOfSpeech: input.partOfSpeech,
+  ...(input.azurePhoneme || input.azureSubAlias
+    ? {
+        ttsHints: {
+          ...(input.azurePhoneme
+            ? {
+                azurePhoneme: {
+                  alphabet: "sapi",
+                  value: input.azurePhoneme,
+                },
+              }
+            : {}),
+          ...(input.azureSubAlias
+            ? {
+                azureSubAlias: input.azureSubAlias,
+              }
+            : {}),
+        },
+      }
+    : {}),
   source: {
     dictionary: "unidic",
     rawFeatures: input.sourceTokens.flatMap(

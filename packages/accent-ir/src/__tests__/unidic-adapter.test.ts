@@ -269,4 +269,69 @@ describe("UniDic adapter", () => {
       },
     ]);
   });
+
+  it("explicit-only モードでは Azure hint を自動付与しない", () => {
+    const tokens: UniDicRawToken[] = [
+      {
+        surface: "東京",
+        reading: "トウキョウ",
+        pronunciation: "トーキョー",
+        partOfSpeech: {
+          level1: "名詞",
+          level2: "固有名詞",
+          level3: "地名",
+        },
+        accent: {
+          accentType: "0",
+        },
+      },
+    ];
+
+    const result = adaptUniDicTokensToAccentIR({
+      tokens,
+      azureHintMode: "explicit-only",
+    });
+
+    expect(result.accentIR.segments).toEqual([
+      {
+        type: "text",
+        text: "東京",
+        reading: "とうきょう",
+        accent: { downstep: null },
+      },
+    ]);
+  });
+
+  it("explicit hint があれば explicit-only モードでも Azure sub alias を保持する", () => {
+    const tokens: UniDicRawToken[] = [
+      {
+        surface: "9時",
+        reading: "クジ",
+        pronunciation: "クジ'",
+        partOfSpeech: {
+          level1: "名詞",
+          level2: "普通名詞",
+        },
+        ttsHints: {
+          azureSubAlias: "クジ",
+        },
+      },
+    ];
+
+    const result = adaptUniDicTokensToAccentIR({
+      tokens,
+      azureHintMode: "explicit-only",
+    });
+
+    expect(result.accentIR.segments).toEqual([
+      {
+        type: "text",
+        text: "9時",
+        reading: "くじ",
+        hints: {
+          azureSubAlias: "くじ",
+        },
+      },
+    ]);
+  });
 });

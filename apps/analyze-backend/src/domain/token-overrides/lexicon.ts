@@ -104,6 +104,7 @@ export const matchSurfaceOverride = (
         pronunciation: override.pronunciation,
         sourceTokens: [token],
         partOfSpeech: token.partOfSpeech,
+        azurePhoneme: override.pronunciation,
       }),
     ],
     nextIndex: index + 1,

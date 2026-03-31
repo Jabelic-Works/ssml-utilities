@@ -1,4 +1,4 @@
-import type { UniDicRawToken } from "@ssml-utilities/accent-ir";
+import { splitKanaIntoMoras, type UniDicRawToken } from "@ssml-utilities/accent-ir";
 import type { ParsedNumericSpan, TokenOverrideMatch } from "./types.js";
 import {
   createSyntheticToken,
@@ -144,15 +144,17 @@ export const matchDegreeExpression = (
     return undefined;
   }
 
+  const splitDegreeExpression = buildSplitDegreeExpression(tokens, index, span);
+  if (splitDegreeExpression) {
+    return splitDegreeExpression;
+  }
+
   const reading = span.fractionalPart
     ? `${convertDecimalToJapaneseReading(span.integerPart, span.fractionalPart)}ド`
     : `${convertIntegerToJapaneseReading(span.integerPart)}ド`;
   const pronunciation = span.fractionalPart
-    ? `${convertDecimalToJapanesePronunciation(
-        span.integerPart,
-        span.fractionalPart
-      )}ド`
-    : `${convertIntegerToJapaneseReading(span.integerPart)}ド`;
+    ? buildDecimalDegreePronunciation(span.integerPart, span.fractionalPart)
+    : `${convertIntegerToJapaneseReading(span.integerPart)}ド+`;
 
   return {
     tokens: [
@@ -228,18 +230,16 @@ export const matchGenericNumber = (
   const reading = span.fractionalPart
     ? convertDecimalToJapaneseReading(span.integerPart, span.fractionalPart)
     : convertIntegerToJapaneseReading(span.integerPart);
+  const pronunciation = span.fractionalPart
+    ? convertDecimalToJapanesePronunciation(span.integerPart, span.fractionalPart)
+    : reading;
 
   return {
     tokens: [
       createSyntheticToken({
         surface: span.originalText,
         reading,
-        pronunciation: span.fractionalPart
-          ? convertDecimalToJapanesePronunciation(
-              span.integerPart,
-              span.fractionalPart
-            )
-          : reading,
+        pronunciation,
         sourceTokens: tokens.slice(index, span.nextIndex),
         partOfSpeech: NUMERIC_PART_OF_SPEECH,
       }),
@@ -265,6 +265,9 @@ export const matchPercentExpression = (
   const reading = span.fractionalPart
     ? convertDecimalToJapaneseReading(span.integerPart, span.fractionalPart)
     : convertCounterStyleIntegerReading(span.integerPart);
+  const pronunciation = span.fractionalPart
+    ? convertDecimalToJapanesePronunciation(span.integerPart, span.fractionalPart)
+    : reading;
 
   const unitSurface = unitToken?.surface === "パーセント" ? "パーセント" : "%";
 
@@ -273,12 +276,7 @@ export const matchPercentExpression = (
       createSyntheticToken({
         surface: span.originalText,
         reading,
-        pronunciation: span.fractionalPart
-          ? convertDecimalToJapanesePronunciation(
-              span.integerPart,
-              span.fractionalPart
-            )
-          : reading,
+        pronunciation,
         sourceTokens: tokens.slice(index, span.nextIndex),
         partOfSpeech: NUMERIC_PART_OF_SPEECH,
       }),
@@ -449,11 +447,88 @@ const convertDecimalToJapanesePronunciation = (
   integerPart: string,
   fractionalPart: string
 ): string =>
-  `${convertDecimalIntegerPronunciation(integerPart)}テン${Array.from(
+  `${convertDecimalIntegerPronunciation(integerPart)}テン${convertFractionalPartToJapanesePronunciation(
     fractionalPart
-  )
+  )}`;
+
+const buildSplitDegreeExpression = (
+  tokens: readonly UniDicRawToken[],
+  index: number,
+  span: ParsedNumericSpan
+): TokenOverrideMatch | undefined => {
+  if (!span.fractionalPart || span.integerPart.length !== 2) {
+    return undefined;
+  }
+
+  const tens = Number.parseInt(span.integerPart[0] ?? "", 10);
+  const ones = Number.parseInt(span.integerPart[1] ?? "", 10);
+  if (!Number.isInteger(tens) || !Number.isInteger(ones) || ones === 0) {
+    return undefined;
+  }
+
+  const unitToken = tokens[span.nextIndex];
+  if (unitToken?.surface !== "度") {
+    return undefined;
+  }
+
+  const sourceTokens = tokens.slice(index, span.nextIndex + 1);
+  const characters = Array.from(span.originalText);
+  const prefixSurface = characters.slice(0, 1).join("");
+  const suffixSurface = `${characters.slice(1).join("")}${unitToken.surface}`;
+  if (!prefixSurface || !suffixSurface) {
+    return undefined;
+  }
+
+  return {
+    tokens: [
+      createSyntheticToken({
+        surface: prefixSurface,
+        reading: convertIntegerToJapaneseReading(`${tens}0`),
+        pronunciation: buildTwoDigitTensPronunciation(tens),
+        sourceTokens,
+        partOfSpeech: NUMERIC_PART_OF_SPEECH,
+      }),
+      createSyntheticToken({
+        surface: suffixSurface,
+        reading: `${convertDecimalToJapaneseReading(
+          String(ones),
+          span.fractionalPart
+        )}ド`,
+        pronunciation: `${buildSingleDigitDecimalIntegerPronunciation(
+          String(ones)
+        )}テン${convertFractionalPartToJapanesePronunciation(
+          span.fractionalPart
+        )}ド`,
+        sourceTokens,
+        partOfSpeech: GENERIC_NOUN_PART_OF_SPEECH,
+      }),
+    ],
+    nextIndex: span.nextIndex + 1,
+  };
+};
+
+const buildDecimalDegreePronunciation = (
+  integerPart: string,
+  fractionalPart: string
+): string => {
+  const compoundIntegerPronunciation =
+    buildSplitDecimalIntegerPronunciation(integerPart);
+  const singleDigitIntegerPronunciation =
+    buildSingleDigitDecimalIntegerPronunciation(integerPart);
+  const fractionalPronunciation = Array.from(fractionalPart)
     .map((digit) => DIGIT_READINGS[Number.parseInt(digit, 10)] ?? digit)
-    .join("")}`;
+    .join("");
+
+  if (compoundIntegerPronunciation) {
+    return `${compoundIntegerPronunciation}テン${fractionalPronunciation}ド`;
+  }
+
+  if (singleDigitIntegerPronunciation) {
+    return `${singleDigitIntegerPronunciation}テン${fractionalPronunciation}ド`;
+  }
+
+  return `${convertDecimalToJapanesePronunciation(integerPart, fractionalPart)}ド'`;
+};
 
 const convertDecimalIntegerPronunciation = (integerPart: string): string => {
   const reading = convertIntegerToJapaneseReading(integerPart);
@@ -469,6 +544,66 @@ const convertDecimalIntegerPronunciation = (integerPart: string): string => {
     default:
       return reading;
   }
+};
+
+const buildSplitDecimalIntegerPronunciation = (
+  integerPart: string
+): string | undefined => {
+  if (integerPart.length !== 2) {
+    return undefined;
+  }
+
+  const tens = Number.parseInt(integerPart[0] ?? "", 10);
+  const ones = Number.parseInt(integerPart[1] ?? "", 10);
+  if (!Number.isInteger(tens) || !Number.isInteger(ones) || ones === 0) {
+    return undefined;
+  }
+
+  const tensPronunciation = buildTwoDigitTensPronunciation(tens);
+  const onesPronunciation = accentAtFirstMora(
+    convertDecimalIntegerPronunciation(String(ones))
+  );
+  return `${tensPronunciation}+${onesPronunciation}`;
+};
+
+const buildSingleDigitDecimalIntegerPronunciation = (
+  integerPart: string
+): string | undefined => {
+  if (integerPart.length !== 1) {
+    return undefined;
+  }
+
+  return accentAtFirstMora(convertDecimalIntegerPronunciation(integerPart));
+};
+
+const convertFractionalPartToJapanesePronunciation = (
+  fractionalPart: string
+): string =>
+  Array.from(fractionalPart)
+    .map((digit) => DIGIT_READINGS[Number.parseInt(digit, 10)] ?? digit)
+    .join("");
+
+const buildTwoDigitTensPronunciation = (tens: number): string => {
+  if (tens === 1) {
+    return "ジュ'ウ";
+  }
+
+  if (tens === 2) {
+    return "ニ'ジュウ";
+  }
+
+  return convertIntegerToJapaneseReading(String(tens * 10));
+};
+
+const accentAtFirstMora = (value: string): string => {
+  const moras = splitKanaIntoMoras(value);
+  const [firstMora, ...remainingMoras] = moras;
+
+  if (!firstMora) {
+    return value;
+  }
+
+  return `${firstMora}'${remainingMoras.join("")}`;
 };
 
 const convertCounterStyleIntegerReading = (value: string): string => {
