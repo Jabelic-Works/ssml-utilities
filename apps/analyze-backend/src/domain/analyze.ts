@@ -103,10 +103,12 @@ export const analyzeRequest = async (
     const adapted = adaptUniDicTokensToAccentIR({
       locale,
       tokens: analysisTokens,
+      azureHintMode: "explicit-only",
     });
     const emitted = emitAzureSSML(adapted.accentIR, {
       locale,
       voice,
+      azureReadingFallback: "plainText",
     });
 
     if (adapted.warnings.length > 0) {

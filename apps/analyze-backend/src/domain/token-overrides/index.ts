@@ -1,6 +1,8 @@
 import type { UniDicRawToken } from "@ssml-utilities/accent-ir";
 import { matchPhraseOverride, matchSurfaceOverride } from "./lexicon.js";
 import {
+  matchCurrencyExpression,
+  matchDegreeExpression,
   matchGenericNumber,
   matchHourExpression,
   matchMinuteExpression,
@@ -15,6 +17,8 @@ const TOKEN_OVERRIDE_RULES = [
   matchSahenVerbExpression,
   matchHourExpression,
   matchMinuteExpression,
+  matchDegreeExpression,
+  matchCurrencyExpression,
   matchPercentExpression,
   matchGenericNumber,
 ] as const;

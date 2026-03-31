@@ -26,6 +26,14 @@ export interface UniDicTokenSource {
   rawFeatures?: readonly string[];
 }
 
+export interface UniDicTextToSpeechHints {
+  azurePhoneme?: {
+    alphabet: "sapi" | "ipa";
+    value: string;
+  };
+  azureSubAlias?: string;
+}
+
 export interface UniDicRawToken {
   surface: string;
   lemma?: string | null;
@@ -36,11 +44,15 @@ export interface UniDicRawToken {
   inflection?: UniDicInflection;
   accent?: UniDicAccentMetadata;
   source?: UniDicTokenSource;
+  ttsHints?: UniDicTextToSpeechHints;
 }
+
+export type UniDicAzureHintMode = "auto" | "explicit-only";
 
 export interface UniDicAccentIRAdapterInput {
   locale?: string;
   tokens: readonly UniDicRawToken[];
+  azureHintMode?: UniDicAzureHintMode;
 }
 
 export interface UniDicAccentIRAdapterWarning {

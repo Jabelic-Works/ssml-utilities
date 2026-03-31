@@ -23,6 +23,13 @@ const SURFACE_OVERRIDES = new Map<string, SurfaceOverride>([
     },
   ],
   [
+    "模試",
+    {
+      reading: "モシ",
+      pronunciation: "モシ+",
+    },
+  ],
+  [
     "抑揚",
     {
       reading: "ヨクヨウ",
@@ -104,6 +111,7 @@ export const matchSurfaceOverride = (
         pronunciation: override.pronunciation,
         sourceTokens: [token],
         partOfSpeech: token.partOfSpeech,
+        azurePhoneme: override.pronunciation,
       }),
     ],
     nextIndex: index + 1,

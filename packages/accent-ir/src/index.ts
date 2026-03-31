@@ -29,6 +29,7 @@ export interface AccentIRTextSegment {
       alphabet: "sapi" | "ipa";
       value: string;
     };
+    azureSubAlias?: string;
   };
 }
 
@@ -63,6 +64,7 @@ export interface AccentIREmitResult {
 export interface AccentIREmitOptions {
   locale?: string;
   voice?: string;
+  azureReadingFallback?: "subAlias" | "plainText";
 }
 
 const DEFAULT_LOCALE = "ja-JP";
@@ -125,7 +127,7 @@ export const emitAzureSSML = (
   const warnings: AccentIREmitWarning[] = [];
   const content = accentIR.segments
     .map((segment, segmentIndex) =>
-      serializeSegmentForAzure(segment, segmentIndex, warnings)
+      serializeSegmentForAzure(segment, segmentIndex, warnings, options)
     )
     .join("");
 
@@ -180,7 +182,8 @@ const serializeSegmentForGoogle = (
 const serializeSegmentForAzure = (
   segment: AccentIRSegment,
   segmentIndex: number,
-  warnings: AccentIREmitWarning[]
+  warnings: AccentIREmitWarning[],
+  options: AccentIREmitOptions
 ): string => {
   if (segment.type === "break") {
     return serializeBreak(segment);
@@ -188,11 +191,14 @@ const serializeSegmentForAzure = (
 
   const text = escapeXmlText(segment.text);
   let content = text;
+  const azureReadingFallback = options.azureReadingFallback ?? "subAlias";
 
   if (segment.hints?.azurePhoneme) {
     const { alphabet, value } = segment.hints.azurePhoneme;
     content = `<phoneme alphabet="${alphabet}" ph="${escapeXmlAttribute(value)}">${text}</phoneme>`;
-  } else if (segment.reading) {
+  } else if (segment.hints?.azureSubAlias) {
+    content = `<sub alias="${escapeXmlAttribute(segment.hints.azureSubAlias)}">${text}</sub>`;
+  } else if (segment.reading && azureReadingFallback === "subAlias") {
     content = `<sub alias="${escapeXmlAttribute(segment.reading)}">${text}</sub>`;
     warnings.push({
       code: "AZURE_FALLBACK_TO_SUB_ALIAS",
@@ -200,7 +206,7 @@ const serializeSegmentForAzure = (
         "Azure SSML は azurePhoneme hint が無いため、sub alias にフォールバックしました。",
       segmentIndex,
     });
-  } else if (segment.accent) {
+  } else if (segment.accent && !segment.reading) {
     warnings.push({
       code: "AZURE_FALLBACK_TO_PLAIN_TEXT",
       message:
@@ -285,9 +291,11 @@ export type {
   UniDicAccentIRAdapterResult,
   UniDicAccentIRAdapterWarning,
   UniDicAccentMetadata,
+  UniDicAzureHintMode,
   UniDicInflection,
   UniDicPartOfSpeech,
   UniDicRawToken,
+  UniDicTextToSpeechHints,
   UniDicTokenSource,
 } from "./unidic-contract";
 export { mockUniDicRawTokens } from "./unidic-contract.mock";
