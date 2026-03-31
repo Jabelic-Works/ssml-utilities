@@ -33,7 +33,7 @@ const SURFACE_OVERRIDES = new Map<string, SurfaceOverride>([
     "抑揚",
     {
       reading: "ヨクヨウ",
-      pronunciation: "ヨク+ヨー",
+      pronunciation: "ヨクヨ+ウ",
     },
   ],
 ]);
