@@ -160,12 +160,12 @@ export const regressionCases: readonly AnalyzeRegressionCase[] = [
       {
         surface: "抑揚",
         reading: "ヨクヨウ",
-        pronunciation: "ヨク+ヨー",
+        pronunciation: "ヨクヨ+ウ",
         partOfSpeech: NOUN_GENERAL,
-        azurePhoneme: "ヨク+ヨー",
+        azurePhoneme: "ヨクヨ+ウ",
       },
     ],
-    expectedAzureSSMLBody: phoneme("抑揚", "ヨク+ヨー"),
+    expectedAzureSSMLBody: phoneme("抑揚", "ヨクヨ+ウ"),
   },
   {
     id: "phrase-ohayo-gozaimasu",
