@@ -1,2 +1,6 @@
 export { ssmlHighlighter } from "./highlighter";
-export type { HighlightOptions } from "./interfaces";
+export type {
+  HighlightClasses,
+  HighlightOptions,
+  HighlightedSSML,
+} from "./interfaces";

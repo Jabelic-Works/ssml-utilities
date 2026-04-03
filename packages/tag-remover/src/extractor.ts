@@ -4,6 +4,7 @@ import {
   DAGNode,
   STANDARD_SSML_TAGS,
   isValidTagName,
+  extractTagName as extractParsedTagName,
   ValidationOptions,
   DEFAULT_VALIDATION_OPTIONS,
 } from "@ssml-utilities/core";
@@ -327,8 +328,7 @@ export class SSMLTextExtractor {
    * タグ名を抽出
    */
   private extractTagName(elementValue: string): string {
-    const match = elementValue.match(/<\/?([a-zA-Z][a-zA-Z0-9:-]*)/);
-    return match ? match[1].toLowerCase() : "";
+    return extractParsedTagName(elementValue)?.toLowerCase() ?? "";
   }
 
   /**
