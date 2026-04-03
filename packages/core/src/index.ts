@@ -22,6 +22,8 @@ export {
   parseAttributesFromString,
   extractTagName,
   parseTagStructure,
+  SYNTAX_TAG_NAME_PATTERN,
+  ATTRIBUTE_TOKEN_PATTERN,
 } from "./implementations/tag/tag-parser";
 export {
   VALID_TAG_NAME_PATTERN,
