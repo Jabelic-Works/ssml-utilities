@@ -2,9 +2,19 @@
  * SSMLタグ解析のための共通ユーティリティ
  */
 
+export interface TextRange {
+  start: number;
+  end: number;
+}
+
 export interface ParsedAttribute {
   name: string;
   value: string;
+  raw: string;
+  hasExplicitValue: boolean;
+  sourceRange: TextRange;
+  nameRange: TextRange;
+  valueRange?: TextRange;
 }
 
 export interface TagStructure {
@@ -12,8 +22,18 @@ export interface TagStructure {
   attributes: ParsedAttribute[];
   isSelfClosing: boolean;
   isClosingTag: boolean;
-  rawContent: string; // < と > を除いた内容
+  rawContent: string;
+  rawAttributes: string;
+  tagNameRange: TextRange;
+  attributeSourceRange: TextRange;
+  invalidFragments: TextRange[];
 }
+
+const SYNTAX_TAG_NAME_PATTERN =
+  /^(?:[A-Za-z_]|[\p{L}])(?:[\w.-]|:|[\p{L}\p{N}])*$/u;
+
+const ATTRIBUTE_TOKEN_PATTERN =
+  /(?:^|\s+)([a-zA-Z_][\w-]*(?::[a-zA-Z_][\w-]*)?)(?:\s*=\s*(?:"([^"]*)"|'([^']*)'|([^\s"'=<>`]+)))?/g;
 
 /**
  * タグからタグ名を抽出する
@@ -21,28 +41,8 @@ export interface TagStructure {
  * @returns タグ名、または無効な場合はnull
  */
 export function extractTagName(tag: string): string | null {
-  if (!tag || !tag.startsWith("<") || !tag.endsWith(">")) {
-    return null;
-  }
-
-  const content = tag.slice(1, -1);
-  if (content.length === 0) {
-    return null;
-  }
-
-  // 終了タグの場合
-  if (content.startsWith("/")) {
-    const tagName = content.slice(1).split(/\s/)[0];
-    return tagName || null;
-  }
-
-  // セルフクロージングタグまたは開始タグの場合
-  const isSelfClosing = content.endsWith("/");
-  const tagContent = isSelfClosing ? content.slice(0, -1).trim() : content;
-
-  // タグ名を抽出（最初のスペースまで）
-  const tagName = tagContent.split(/\s/)[0];
-  return tagName || null;
+  const structure = parseTagStructure(tag);
+  return structure?.tagName ?? null;
 }
 
 /**
@@ -65,11 +65,28 @@ export function parseTagStructure(tag: string): TagStructure | null {
   }
 
   const isClosingTag = content.startsWith("/");
+  const tagNameOffsetInContent = isClosingTag ? 1 : 0;
+  const nameMatch = content
+    .slice(tagNameOffsetInContent)
+    .match(/^([^\s/>]+)/u);
+
+  if (!nameMatch) {
+    return null;
+  }
+
+  const tagName = nameMatch[1];
+  if (!SYNTAX_TAG_NAME_PATTERN.test(tagName)) {
+    return null;
+  }
+
+  const tagNameStart = 1 + tagNameOffsetInContent;
+  const tagNameEnd = tagNameStart + tagName.length;
 
   if (isClosingTag) {
-    // 終了タグの場合は属性なし
-    const tagName = extractTagName(tag);
-    if (!tagName) return null;
+    const trailing = content.slice(tagNameOffsetInContent + tagName.length).trim();
+    if (trailing.length > 0) {
+      return null;
+    }
 
     return {
       tagName,
@@ -77,16 +94,29 @@ export function parseTagStructure(tag: string): TagStructure | null {
       isSelfClosing: false,
       isClosingTag: true,
       rawContent: content,
+      rawAttributes: "",
+      tagNameRange: { start: tagNameStart, end: tagNameEnd },
+      attributeSourceRange: { start: tag.length - 1, end: tag.length - 1 },
+      invalidFragments: [],
     };
   }
 
-  const isSelfClosing = content.endsWith("/");
-  const tagContent = isSelfClosing ? content.slice(0, -1).trim() : content;
-
-  const tagName = extractTagName(tag);
-  if (!tagName) return null;
-
-  const attributes = parseAttributesFromString(tagContent);
+  const trimmedContent = content.trimEnd();
+  const isSelfClosing = trimmedContent.endsWith("/");
+  const contentWithoutSlash = isSelfClosing
+    ? trimmedContent.slice(0, -1)
+    : content;
+  const rawAttributes = contentWithoutSlash.slice(tagName.length);
+  const attributeSourceStart = 1 + tagName.length;
+  const attributes = parseAttributesFromString(
+    rawAttributes,
+    attributeSourceStart
+  );
+  const invalidFragments = collectInvalidFragments(
+    rawAttributes,
+    attributes,
+    attributeSourceStart
+  );
 
   return {
     tagName,
@@ -94,28 +124,95 @@ export function parseTagStructure(tag: string): TagStructure | null {
     isSelfClosing,
     isClosingTag: false,
     rawContent: content,
+    rawAttributes,
+    tagNameRange: { start: tagNameStart, end: tagNameEnd },
+    attributeSourceRange: {
+      start: attributeSourceStart,
+      end: attributeSourceStart + rawAttributes.length,
+    },
+    invalidFragments,
   };
 }
 
 /**
  * タグの内容から属性を解析する
- * @param tagContent - タグの内容（< > を除いた部分）
+ * @param tagContent - タグ全体、または属性文字列
  * @returns 解析された属性の配列
  */
 export function parseAttributesFromString(
-  tagContent: string
+  tagContent: string,
+  baseOffset = 0
 ): ParsedAttribute[] {
-  // コロンを含む属性名をサポートしつつ、正しい形式の属性のみマッチする正規表現
-  // XMLの名前空間（ns:name）形式をサポートし、属性名の検証を強化
-  // 属性名は英字またはアンダースコアで始まり、数字や不正な形式で始まる属性名を除外
-  const attrRegex =
-    /(?:^|\s)([a-zA-Z_][\w-]*(?::[\w][\w-]*)?)=["']([^"']*)["']/g;
+  const { attributeSource, attributeOffset } = normalizeAttributeSource(
+    tagContent,
+    baseOffset
+  );
   const attributes: ParsedAttribute[] = [];
-  let match;
+  let match: RegExpExecArray | null;
 
-  while ((match = attrRegex.exec(tagContent)) !== null) {
-    const [, name, value] = match;
-    attributes.push({ name, value });
+  ATTRIBUTE_TOKEN_PATTERN.lastIndex = 0;
+  while ((match = ATTRIBUTE_TOKEN_PATTERN.exec(attributeSource)) !== null) {
+    const [fullMatch, name, doubleQuotedValue, singleQuotedValue, unquotedValue] =
+      match;
+    const nameStartInMatch = fullMatch.indexOf(name);
+    const attributeStart = attributeOffset + match.index + nameStartInMatch;
+    const attributeEnd = attributeOffset + match.index + fullMatch.length;
+    const nameRange = {
+      start: attributeStart,
+      end: attributeStart + name.length,
+    };
+
+    const hasExplicitValue =
+      doubleQuotedValue !== undefined ||
+      singleQuotedValue !== undefined ||
+      unquotedValue !== undefined;
+    const nextCharAfterMatch = attributeSource[match.index + fullMatch.length];
+    if (!hasExplicitValue && nextCharAfterMatch === "=") {
+      continue;
+    }
+
+    const value = doubleQuotedValue ?? singleQuotedValue ?? unquotedValue ?? "";
+    const rawValueToken =
+      doubleQuotedValue !== undefined
+        ? `"${doubleQuotedValue}"`
+        : singleQuotedValue !== undefined
+          ? `'${singleQuotedValue}'`
+          : unquotedValue;
+    const rawValueIndex =
+      rawValueToken !== undefined ? fullMatch.lastIndexOf(rawValueToken) : -1;
+    const valueRange =
+      rawValueToken !== undefined && rawValueIndex >= 0
+        ? {
+            start:
+              attributeOffset +
+              match.index +
+              rawValueIndex +
+              (rawValueToken.startsWith('"') || rawValueToken.startsWith("'")
+                ? 1
+                : 0),
+            end:
+              attributeOffset +
+              match.index +
+              rawValueIndex +
+              rawValueToken.length -
+              (rawValueToken.startsWith('"') || rawValueToken.startsWith("'")
+                ? 1
+                : 0),
+          }
+        : undefined;
+
+    attributes.push({
+      name,
+      value,
+      raw: attributeSource.slice(
+        attributeStart - attributeOffset,
+        attributeEnd - attributeOffset
+      ),
+      hasExplicitValue,
+      sourceRange: { start: attributeStart, end: attributeEnd },
+      nameRange,
+      valueRange,
+    });
   }
 
   return attributes;
@@ -147,4 +244,107 @@ export function areMatchingTagPair(openTag: string, closeTag: string): boolean {
   if (!openTagName || !closeTagName) return false;
 
   return isMatchingTagPair(openTagName, closeTagName);
+}
+
+function normalizeAttributeSource(
+  source: string,
+  baseOffset: number
+): { attributeSource: string; attributeOffset: number } {
+  if (baseOffset !== 0) {
+    return { attributeSource: source, attributeOffset: baseOffset };
+  }
+
+  if (!source.startsWith("<") || !source.endsWith(">")) {
+    const leadingTagLikeMatch = source.match(/^([^\s=/>]+)(\s+[\s\S]*)$/u);
+    if (
+      leadingTagLikeMatch &&
+      leadingTagLikeMatch[2].trim().length > 0 &&
+      SYNTAX_TAG_NAME_PATTERN.test(leadingTagLikeMatch[1])
+    ) {
+      return {
+        attributeSource: leadingTagLikeMatch[2],
+        attributeOffset: leadingTagLikeMatch[1].length,
+      };
+    }
+
+    return { attributeSource: source, attributeOffset: baseOffset };
+  }
+
+  const structure = parseTagStructure(source);
+  if (!structure || structure.isClosingTag) {
+    return { attributeSource: "", attributeOffset: baseOffset };
+  }
+
+  return {
+    attributeSource: structure.rawAttributes,
+    attributeOffset: structure.attributeSourceRange.start,
+  };
+}
+
+function collectInvalidFragments(
+  attributeSource: string,
+  attributes: ParsedAttribute[],
+  attributeOffset: number
+): TextRange[] {
+  const invalidFragments: TextRange[] = [];
+  let cursor = 0;
+
+  for (const attribute of attributes) {
+    const start = attribute.sourceRange.start - attributeOffset;
+    if (start > cursor) {
+      collectNonWhitespaceRanges(
+        attributeSource.slice(cursor, start),
+        cursor,
+        attributeOffset,
+        invalidFragments
+      );
+    }
+
+    cursor = attribute.sourceRange.end - attributeOffset;
+  }
+
+  if (cursor < attributeSource.length) {
+    collectNonWhitespaceRanges(
+      attributeSource.slice(cursor),
+      cursor,
+      attributeOffset,
+      invalidFragments
+    );
+  }
+
+  return invalidFragments;
+}
+
+function collectNonWhitespaceRanges(
+  source: string,
+  localOffset: number,
+  attributeOffset: number,
+  ranges: TextRange[]
+): void {
+  let fragmentStart = -1;
+
+  for (let index = 0; index < source.length; index++) {
+    const char = source[index];
+    const isWhitespace = /\s/.test(char);
+
+    if (!isWhitespace && fragmentStart === -1) {
+      fragmentStart = index;
+      continue;
+    }
+
+    if (isWhitespace && fragmentStart !== -1) {
+      ranges.push({
+        start: attributeOffset + localOffset + fragmentStart,
+        end: attributeOffset + localOffset + index,
+      });
+      fragmentStart = -1;
+    }
+  }
+
+  if (fragmentStart !== -1) {
+    ranges.push({
+      start: attributeOffset + localOffset + fragmentStart,
+      end: attributeOffset + localOffset + source.length,
+    });
+  }
 }
