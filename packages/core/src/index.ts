@@ -31,3 +31,21 @@ export {
   ATTRIBUTE_NAME_PATTERN,
   ATTRIBUTE_VALUE_PATTERN,
 } from "./implementations/tag/regex";
+export { validateSSML } from "./implementations/validation";
+export {
+  GENERIC_SSML_PROFILE,
+  AZURE_SSML_PROFILE,
+  GOOGLE_SSML_PROFILE,
+  getValidationProfile,
+} from "./implementations/validation/profiles";
+export type {
+  SSMLProvider,
+  ValidationAttributeRule,
+  ValidationAttributePatternRule,
+  ValidationTagRule,
+  SSMLValidationProfile,
+  SSMLValidationOptions,
+  SSMLDiagnosticCode,
+  SSMLDiagnosticSeverity,
+  SSMLDiagnostic,
+} from "./implementations/validation/types";
