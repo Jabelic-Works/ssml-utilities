@@ -29,10 +29,10 @@ export interface TagStructure {
   invalidFragments: TextRange[];
 }
 
-const SYNTAX_TAG_NAME_PATTERN =
+export const SYNTAX_TAG_NAME_PATTERN =
   /^(?:[A-Za-z_]|[\p{L}])(?:[\w.-]|:|[\p{L}\p{N}])*$/u;
 
-const ATTRIBUTE_TOKEN_PATTERN =
+export const ATTRIBUTE_TOKEN_PATTERN =
   /(?:^|\s+)([a-zA-Z_][\w-]*(?::[a-zA-Z_][\w-]*)?)(?:\s*=\s*(?:"([^"]*)"|'([^']*)'|([^\s"'=<>`]+)))?/g;
 
 /**
