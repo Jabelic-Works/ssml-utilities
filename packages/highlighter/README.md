@@ -1,6 +1,6 @@
 # SSML Highlighter
 
-SSML Highlighter は、Speech Synthesis Markup Language (SSML)のシンタックスハイライトを提供するパッケージです。
+SSML Highlighter は、Speech Synthesis Markup Language (SSML) のシンタックスハイライトを提供するパッケージです。`Azure` / `Google` などの provider profile に応じて unsupported tag や invalid attribute を CSS class で描き分けられます。
 
 ## インストール
 
@@ -19,7 +19,13 @@ const options = {
     attribute: "ssml-attribute",
     attributeValue: "ssml-attribute-value",
     text: "ssml-text",
+    unsupportedTag: "ssml-unsupported-tag",
+    invalidAttribute: "ssml-invalid-attribute",
+    invalidAttributeValue: "ssml-invalid-attribute-value",
+    invalidNesting: "ssml-invalid-nesting",
+    invalidText: "ssml-invalid-text",
   },
+  profile: "azure",
 };
 const result = ssmlHighlighter.highlight(ssml, options);
 
@@ -39,7 +45,13 @@ interface HighlightOptions {
     attribute: string; // 属性名の CSS クラス名
     attributeValue: string; // 属性値の CSS クラス名
     text: string; // テキストコンテンツの CSS クラス名
+    unsupportedTag?: string; // provider 非対応タグの CSS クラス名
+    invalidAttribute?: string; // 不正な属性名の CSS クラス名
+    invalidAttributeValue?: string; // 不正な属性値の CSS クラス名
+    invalidNesting?: string; // ネスト違反の CSS クラス名
+    invalidText?: string; // text-not-allowed の CSS クラス名
   };
+  profile?: "generic" | "azure" | "google";
 }
 ```
 
@@ -66,6 +78,7 @@ interface HighlightOptions {
 
 - SSML タグのシンタックスハイライト
 - 属性と属性値の区別
+- provider-aware diagnostics の反映
 - HTML エスケープ処理
 - エラーハンドリング
 
@@ -78,6 +91,17 @@ type Result<T, E> = { ok: true; value: T } | { ok: false; error: E };
 ```
 
 エラーが発生した場合は、`ok: false`と`error`メッセージが返されます。
+
+詳細な diagnostics も使いたい場合は `highlightDetailed()` を使えます。
+
+```typescript
+const detailed = ssmlHighlighter.highlightDetailed(ssml, options);
+
+if (detailed.ok) {
+  console.log(detailed.value.html);
+  console.log(detailed.value.diagnostics);
+}
+```
 
 ## 使用例
 

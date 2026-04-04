@@ -1,6 +1,6 @@
 # @ssml-utilities/core
 
-SSMLユーティリティの中核機能を提供するパッケージです。SSML（Speech Synthesis Markup Language）の解析、DAG（有向非巡回グラフ）の構築、および基本的なユーティリティ機能を提供します。
+SSML ユーティリティの構文解析と provider-aware validation の土台を提供するパッケージです。SSML の tolerant parser、DAG（有向非巡回グラフ）、source span、Azure / Google 向け validation profile を提供します。
 
 ## インストール
 
@@ -17,7 +17,10 @@ pnpm add @ssml-utilities/core
 ## 主な機能
 
 - SSMLの解析
+- token / node の source span 追跡
 - DAG（有向非巡回グラフ）の構築と操作
+- Azure / Google 向け validation profile
+- provider ごとの diagnostics 生成
 - Result型を使用したエラーハンドリング
 
 ## 使用方法
@@ -34,6 +37,18 @@ if (result.ok) {
   const dag = result.value;
   // DAGを使用した処理
 }
+```
+
+### Provider-aware validation
+
+```typescript
+import { validateSSML } from "@ssml-utilities/core";
+
+const diagnostics = validateSSML("<speak>Hello</speak>", {
+  profile: "azure",
+});
+
+console.log(diagnostics);
 ```
 
 ### DAGの操作
@@ -62,6 +77,10 @@ interface DAGNode {
   type: "root" | "element" | "text" | "attribute";
   name?: string;
   value?: string;
+  sourceSpan?: {
+    start: { offset: number; line: number; column: number };
+    end: { offset: number; line: number; column: number };
+  };
   children: Set<string>;
   parents: Set<string>;
 }
