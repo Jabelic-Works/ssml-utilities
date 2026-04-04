@@ -27,6 +27,17 @@ const DEFAULT_HIGHLIGHT_CLASSES: HighlightOptions["classes"] = {
   warning: "ssml-warning",
 };
 
+const EMPTY_DIAGNOSTICS: HighlightedSSML["diagnostics"] = [];
+
+export interface SSMLEditorDiagnosticsSnapshot {
+  /** このスナップショット計算時点の SSML 全文 */
+  ssml: string;
+  diagnostics: HighlightedSSML["diagnostics"];
+  /** `highlightDetailed` が成功したか（失敗時は `highlightError` を参照） */
+  highlightOk: boolean;
+  highlightError?: string;
+}
+
 export interface SSMLEditorProps {
   initialValue?: string;
   onChange?: (value: string) => void;
@@ -60,7 +71,8 @@ export interface SSMLEditorProps {
   minHeight?: string;
   maxHeight?: string;
   validationProfile?: HighlightOptions["profile"];
-  showDiagnostics?: boolean;
+  /** ハイライト計算と同じタイミングの validation 結果を親へ渡す（エディタ内では一覧表示しない） */
+  onDiagnosticsChange?: (snapshot: SSMLEditorDiagnosticsSnapshot) => void;
 }
 
 interface TagAttributes {
@@ -81,7 +93,7 @@ export const SSMLEditor: React.FC<SSMLEditorProps> = ({
   minHeight,
   maxHeight,
   validationProfile = "generic",
-  showDiagnostics = false,
+  onDiagnosticsChange,
 }) => {
   const isWindows = useIsWindows();
   const [ssml, setSSML] = useState(initialValue);
@@ -115,7 +127,8 @@ export const SSMLEditor: React.FC<SSMLEditorProps> = ({
     if (!highlightResult.ok) {
       return {
         html: `<span class="ssml-error">Error: ${highlightResult.error}</span>`,
-        diagnostics: [] as HighlightedSSML["diagnostics"],
+        diagnostics: EMPTY_DIAGNOSTICS,
+        highlightError: highlightResult.error,
       };
     }
 
@@ -126,8 +139,29 @@ export const SSMLEditor: React.FC<SSMLEditorProps> = ({
     return {
       html: processedHtml,
       diagnostics: highlightResult.value.diagnostics,
+      highlightError: null as string | null,
     };
   }, [ssml, validationProfile]);
+
+  const onDiagnosticsChangeRef = useRef(onDiagnosticsChange);
+  onDiagnosticsChangeRef.current = onDiagnosticsChange;
+
+  // 親へ highlight と同じタイミングの validation スナップショットを渡す（外部コンシューマ同期）
+  useEffect(() => {
+    const notify = onDiagnosticsChangeRef.current;
+    if (!notify) return;
+    notify({
+      ssml,
+      diagnostics: highlightedState.diagnostics,
+      highlightOk: highlightedState.highlightError == null,
+      highlightError:
+        highlightedState.highlightError ?? undefined,
+    });
+  }, [
+    ssml,
+    highlightedState.diagnostics,
+    highlightedState.highlightError,
+  ]);
 
   const lineNumbers = useMemo(
     () => ssml.split("\n").map((_, index) => (index + 1).toString()),
@@ -489,7 +523,6 @@ export const SSMLEditor: React.FC<SSMLEditorProps> = ({
         width,
         display: "flex",
         flexDirection: "column",
-        gap: showDiagnostics ? "12px" : "0px",
       }}
     >
       <div
@@ -608,43 +641,6 @@ export const SSMLEditor: React.FC<SSMLEditorProps> = ({
           />
         </div>
       </div>
-      {showDiagnostics && (
-        <div
-          style={{
-            border: "1px solid #ddd",
-            borderRadius: "10px",
-            backgroundColor: "#fff",
-            padding: "12px 16px",
-            fontFamily: "monospace",
-            fontSize: "12px",
-            lineHeight: "1.5",
-          }}
-        >
-          <div style={{ fontWeight: 700, marginBottom: "8px" }}>
-            Validation Diagnostics ({highlightedState.diagnostics.length})
-          </div>
-          {highlightedState.diagnostics.length === 0 ? (
-            <div style={{ color: "#475467" }}>No validation issues.</div>
-          ) : (
-            <ul style={{ margin: 0, paddingLeft: "18px" }}>
-              {highlightedState.diagnostics.map((diagnostic, index) => (
-                <li
-                  key={`${diagnostic.code}-${diagnostic.span.start.offset}-${index}`}
-                  style={{
-                    color:
-                      diagnostic.severity === "error" ? "#b42318" : "#b54708",
-                    marginBottom: index + 1 === highlightedState.diagnostics.length ? 0 : "6px",
-                  }}
-                >
-                  <strong>{diagnostic.severity.toUpperCase()}</strong>:{" "}
-                  {diagnostic.message} (L{diagnostic.span.start.line}:C
-                  {diagnostic.span.start.column})
-                </li>
-              ))}
-            </ul>
-          )}
-        </div>
-      )}
       {suggestions.length > 0 && suggestionPosition && (
         <div
           style={{

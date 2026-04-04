@@ -51,9 +51,11 @@ interface HighlightOptions {
     invalidNesting?: string; // ネスト違反の CSS クラス名
     invalidText?: string; // text-not-allowed の CSS クラス名
   };
-  profile?: "generic" | "azure" | "google";
+  profile?: "generic" | "azure" | "google" | "off" | false;
 }
 ```
+
+`profile` に `"off"` または `false` を渡すと provider 検証を行わず、diagnostics 用の追加 CSS クラスも付きません。
 
 ## デフォルトのスタイル
 

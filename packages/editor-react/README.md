@@ -34,7 +34,7 @@ function App() {
 
 `initialValue` はマウント時の初期値としてのみ使われます。編集中の最新値を受け取りたい場合は `onChange` を利用してください。
 
-`validationProfile` を指定すると、`Azure` / `Google` など provider ごとの validation diagnostics を highlight と同じ surface に反映できます。`showDiagnostics` を有効にすると、エディタの下に diagnostics 一覧も表示されます。
+`validationProfile` で `Azure` / `Google` / `generic` の検証をハイライトに反映できます。`"off"` または `false` だと検証を行わず、構文ハイライトのみになります。一覧 UI を出す場合は `onDiagnosticsChange` で親が受け取り、エディタ外で描画してください。
 
 ## プロパティ
 
@@ -52,8 +52,8 @@ function App() {
 | autoExpand | boolean | いいえ | - | 内容に応じて高さを自動調整するかどうか |
 | minHeight | string | いいえ | - | `autoExpand` 時の最小高さ |
 | maxHeight | string | いいえ | - | `autoExpand` 時の最大高さ |
-| validationProfile | `"generic"` \| `"azure"` \| `"google"` \| `SSMLValidationProfile` | いいえ | `"generic"` | highlight と diagnostics に使う validation profile |
-| showDiagnostics | boolean | いいえ | `false` | diagnostics 一覧をエディタ下部に表示するかどうか |
+| validationProfile | `"generic"` \| `"azure"` \| `"google"` \| `SSMLValidationProfile` \| `"off"` \| `false` | いいえ | `"generic"` | highlight / diagnostics に使う profile。`"off"` / `false` で検証なし |
+| onDiagnosticsChange | `(snapshot: SSMLEditorDiagnosticsSnapshot) => void` | いいえ | - | ハイライト計算と同じタイミングの validation 結果を親へ渡す |
 
 ## 機能
 
@@ -69,21 +69,34 @@ function App() {
 ## 例
 
 ```tsx
-import { SSMLEditor } from "@ssml-utilities/editor-react";
+import { useState } from "react";
+import {
+  SSMLEditor,
+  type SSMLEditorDiagnosticsSnapshot,
+} from "@ssml-utilities/editor-react";
 
 function App() {
+  const [diag, setDiag] = useState<SSMLEditorDiagnosticsSnapshot | null>(null);
+
   return (
-    <SSMLEditor
-      initialValue={`<speak>
+    <>
+      <SSMLEditor
+        initialValue={`<speak>
         <prosody rate="slow" pitch="+2st">
           こんにちは、世界！
         </prosody>
       </speak>`}
-      width="100%"
-      height="500px"
-      validationProfile="azure"
-      showDiagnostics
-    />
+        width="100%"
+        height="500px"
+        validationProfile="azure"
+        onDiagnosticsChange={setDiag}
+      />
+      {diag && (
+        <pre>
+          {diag.diagnostics.length} issues, highlightOk={String(diag.highlightOk)}
+        </pre>
+      )}
+    </>
   );
 }
 ```
@@ -94,9 +107,17 @@ function App() {
 <SSMLEditor
   initialValue={`<speak><mark name="timepoint" /></speak>`}
   validationProfile="azure"
-  showDiagnostics
+  onDiagnosticsChange={(snapshot) => {
+    console.log(snapshot.diagnostics);
+  }}
 />
 ```
+
+`SSMLEditorDiagnosticsSnapshot` には次が含まれます。
+
+- `ssml`: スナップショット時点の全文
+- `diagnostics`: `@ssml-utilities/core` と同型の診断配列
+- `highlightOk` / `highlightError`: `highlightDetailed` が失敗した場合のエラーメッセージ
 
 ## キーボードショートカットの例
 ```tsx
