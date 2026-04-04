@@ -74,7 +74,7 @@ function App() {
           initialValue={initialSSML}
           width="100%"
           height="320px"
-          validationProfile="off"
+          validationProfile="azure"
           onDiagnosticsChange={setDiagnosticsSnapshot}
           onWrapTag={(wrapFn) => {
             wrapWithTagRef.current = wrapFn;
@@ -161,7 +161,7 @@ function App() {
             }}
           >
             <div style={{ fontWeight: 700, marginBottom: "8px" }}>
-              Validation（親が onDiagnosticsChange で受信）:{" "}
+              Validation Errors:{" "}
               {diagnosticsSnapshot.diagnostics.length} 件
               {!diagnosticsSnapshot.highlightOk && (
                 <span style={{ color: "#b42318", marginLeft: "8px" }}>

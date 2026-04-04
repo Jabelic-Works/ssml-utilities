@@ -92,7 +92,7 @@ export const SSMLEditor: React.FC<SSMLEditorProps> = ({
   autoExpand,
   minHeight,
   maxHeight,
-  validationProfile = "generic",
+  validationProfile = "off",
   onDiagnosticsChange,
 }) => {
   const isWindows = useIsWindows();

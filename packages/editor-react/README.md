@@ -34,7 +34,7 @@ function App() {
 
 `initialValue` はマウント時の初期値としてのみ使われます。編集中の最新値を受け取りたい場合は `onChange` を利用してください。
 
-`validationProfile` で `Azure` / `Google` / `generic` の検証をハイライトに反映できます。`"off"` または `false` だと検証を行わず、構文ハイライトのみになります。一覧 UI を出す場合は `onDiagnosticsChange` で親が受け取り、エディタ外で描画してください。
+`validationProfile` で `Azure` / `Google` / `generic` の検証をハイライトに反映できます。**既定値は `"off"`** で検証なし（構文ハイライトのみ）です。アップグレード後も従来どおりの見た目になる後方互換のための既定です。provider 検証を有効にする場合は `"azure"` などを明示してください。`false` も `"off"` と同様に検証オフです。diagnostics を一覧表示する場合は `onDiagnosticsChange` で親が受け取り、エディタ外で描画してください。
 
 ## プロパティ
 
@@ -52,7 +52,7 @@ function App() {
 | autoExpand | boolean | いいえ | - | 内容に応じて高さを自動調整するかどうか |
 | minHeight | string | いいえ | - | `autoExpand` 時の最小高さ |
 | maxHeight | string | いいえ | - | `autoExpand` 時の最大高さ |
-| validationProfile | `"generic"` \| `"azure"` \| `"google"` \| `SSMLValidationProfile` \| `"off"` \| `false` | いいえ | `"generic"` | highlight / diagnostics に使う profile。`"off"` / `false` で検証なし |
+| validationProfile | `"generic"` \| `"azure"` \| `"google"` \| `SSMLValidationProfile` \| `"off"` \| `false` | いいえ | `"off"` | highlight / diagnostics に使う profile。既定は検証なし（後方互換） |
 | onDiagnosticsChange | `(snapshot: SSMLEditorDiagnosticsSnapshot) => void` | いいえ | - | ハイライト計算と同じタイミングの validation 結果を親へ渡す |
 
 ## 機能
