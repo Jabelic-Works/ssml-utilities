@@ -1,4 +1,5 @@
 import { Result, success, failure } from "../result";
+import { SourceSpan } from "../parser/types";
 
 export const NodeType = {
   root: "root",
@@ -24,7 +25,8 @@ export class SSMLDAG {
   createNode(
     type: NodeType,
     name?: string,
-    value?: string
+    value?: string,
+    sourceSpan?: SourceSpan
   ): Result<DAGNode, string> {
     if (!["root", "element", "attribute", "text"].includes(type)) {
       return failure(`Invalid node type: ${type}`);
@@ -35,6 +37,7 @@ export class SSMLDAG {
       type,
       name,
       value,
+      sourceSpan,
       children: new Set(),
       parents: new Set(),
     };
@@ -101,6 +104,7 @@ export interface DAGNode {
   type: NodeType;
   name?: string;
   value?: string;
+  sourceSpan?: SourceSpan;
   children: Set<string>;
   parents: Set<string>;
 }

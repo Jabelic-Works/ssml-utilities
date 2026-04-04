@@ -1,10 +1,11 @@
 import { SSMLDAG, DAGNode } from ".";
-import { Token } from "../parser/types";
+import { SourcePosition, SourceSpan, Token } from "../parser/types";
 import { failure, Result, success } from "../result"; // Result型の定義をimport
 import {
   ParsedAttribute,
-  parseAttributesFromString,
   areMatchingTagPair,
+  parseTagStructure,
+  TextRange,
 } from "../tag/tag-parser";
 
 export function buildDAGFromTokens(tokens: Token[]): Result<SSMLDAG, string> {
@@ -19,7 +20,7 @@ export function buildDAGFromTokens(tokens: Token[]): Result<SSMLDAG, string> {
   for (const token of tokens) {
     switch (token.type) {
       case "openTag":
-        const [tagNodeResult, attributes] = createElementNode(dag, token.value);
+        const [tagNodeResult, attributes] = createElementNode(dag, token);
         if (!tagNodeResult.ok) {
           return failure(
             `Failed to create element node: ${tagNodeResult.error}`
@@ -31,7 +32,7 @@ export function buildDAGFromTokens(tokens: Token[]): Result<SSMLDAG, string> {
           return failure(`Failed to add edge: ${addEdgeResult.error}`);
         }
         for (const attr of attributes) {
-          const attrNodeResult = createAttributeNode(dag, attr);
+          const attrNodeResult = createAttributeNode(dag, attr, token);
           if (!attrNodeResult.ok) {
             return failure(
               `Failed to create attribute node: ${attrNodeResult.error}`
@@ -60,7 +61,12 @@ export function buildDAGFromTokens(tokens: Token[]): Result<SSMLDAG, string> {
         });
         if (!openTagNode) {
           // 対応するopenTagが見つからない場合は、テキストとして扱う
-          const textNodeResult = dag.createNode("text", undefined, token.value);
+          const textNodeResult = dag.createNode(
+            "text",
+            undefined,
+            token.value,
+            token.sourceSpan
+          );
           if (!textNodeResult.ok) {
             return failure(
               `Failed to create text node: ${textNodeResult.error}`
@@ -80,7 +86,8 @@ export function buildDAGFromTokens(tokens: Token[]): Result<SSMLDAG, string> {
         const closeTagNodeResult = dag.createNode(
           "element",
           undefined,
-          token.value
+          token.value,
+          token.sourceSpan
         );
         if (!closeTagNodeResult.ok) {
           return failure(
@@ -102,7 +109,12 @@ export function buildDAGFromTokens(tokens: Token[]): Result<SSMLDAG, string> {
         }
         break;
       case "text":
-        const textNodeResult = dag.createNode("text", undefined, token.value);
+        const textNodeResult = dag.createNode(
+          "text",
+          undefined,
+          token.value,
+          token.sourceSpan
+        );
         if (!textNodeResult.ok) {
           return failure(`Failed to create text node: ${textNodeResult.error}`);
         }
@@ -116,7 +128,7 @@ export function buildDAGFromTokens(tokens: Token[]): Result<SSMLDAG, string> {
         break;
       case "selfClosingTag":
         const [selfClosingNodeResult, selfClosingAttributes] =
-          createElementNode(dag, token.value);
+          createElementNode(dag, token);
         if (!selfClosingNodeResult.ok) {
           return failure(
             `Failed to create self-closing node: ${selfClosingNodeResult.error}`
@@ -133,7 +145,7 @@ export function buildDAGFromTokens(tokens: Token[]): Result<SSMLDAG, string> {
           );
         }
         for (const attr of selfClosingAttributes) {
-          const attrNodeResult = createAttributeNode(dag, attr);
+          const attrNodeResult = createAttributeNode(dag, attr, token);
           if (!attrNodeResult.ok) {
             return failure(
               `Failed to create attribute node for self-closing tag: ${attrNodeResult.error}`
@@ -161,18 +173,79 @@ export function buildDAGFromTokens(tokens: Token[]): Result<SSMLDAG, string> {
 
 function createElementNode(
   dag: SSMLDAG,
-  tagContent: string
+  token: Token
 ): [Result<DAGNode, string>, ParsedAttribute[]] {
-  const tagNodeResult = dag.createNode("element", undefined, tagContent);
-  const attributes = parseAttributesFromString(tagContent);
+  const structure = parseTagStructure(token.value);
+  const tagNodeResult = dag.createNode(
+    "element",
+    structure?.tagName,
+    token.value,
+    token.sourceSpan
+  );
+  const attributes = structure?.attributes ?? [];
   return [tagNodeResult, attributes];
 }
 
 function createAttributeNode(
   dag: SSMLDAG,
-  attr: ParsedAttribute
+  attr: ParsedAttribute,
+  token: Token
 ): Result<DAGNode, string> {
-  return dag.createNode("attribute", attr.name, attr.value);
+  return dag.createNode(
+    "attribute",
+    attr.name,
+    attr.value,
+    resolveNestedSourceSpan(token.value, token.sourceSpan, attr.sourceRange)
+  );
+}
+
+function resolveNestedSourceSpan(
+  source: string,
+  baseSpan: SourceSpan | undefined,
+  range: TextRange
+): SourceSpan | undefined {
+  if (!baseSpan) {
+    return undefined;
+  }
+
+  const start = advancePosition(baseSpan.start, source.slice(0, range.start));
+  const end = advancePosition(baseSpan.start, source.slice(0, range.end));
+
+  return { start, end };
+}
+
+function advancePosition(
+  start: SourcePosition,
+  source: string
+): SourcePosition {
+  let current: SourcePosition = {
+    offset: start.offset,
+    line: start.line,
+    column: start.column,
+  };
+
+  for (const char of source) {
+    current = stepPosition(current, char);
+  }
+
+  return current;
+}
+
+function stepPosition(position: SourcePosition, char: string): SourcePosition {
+  const next: SourcePosition = {
+    offset: position.offset + 1,
+    line: position.line,
+    column: position.column,
+  };
+
+  if (char === "\n") {
+    next.line += 1;
+    next.column = 1;
+  } else {
+    next.column += 1;
+  }
+
+  return next;
 }
 
 // export function parseAttributes(tagContent: string): ParsedAttribute[] {

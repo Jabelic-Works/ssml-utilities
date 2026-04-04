@@ -11,7 +11,12 @@ export {
   ValidationOptions,
   DEFAULT_VALIDATION_OPTIONS,
 } from "./implementations/tag/validate";
-export { Token, TokenType } from "./implementations/parser/types";
+export {
+  Token,
+  TokenType,
+  SourcePosition,
+  SourceSpan,
+} from "./implementations/parser/types";
 export { tokenize } from "./implementations/lexer";
 export {
   parseAttributesFromString,

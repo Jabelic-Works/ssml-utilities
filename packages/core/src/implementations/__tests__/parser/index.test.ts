@@ -214,5 +214,32 @@ describe("SSML Parser", () => {
         expect(closeTagNode!.value).toBe("</say-as>");
       }
     });
+
+    it("should preserve source spans on parsed nodes", () => {
+      const input = "<speak>\n  Hello\n</speak>";
+      const result = parseSSML(input);
+
+      expect(result.ok).toBe(true);
+      if (result.ok) {
+        const dag = result.value;
+        const nodes = Array.from(dag.nodes.values());
+        const speakNode = nodes.find((node) => node.value === "<speak>");
+        const textNode = nodes.find((node) => node.type === "text");
+        const closeTagNode = nodes.find((node) => node.value === "</speak>");
+
+        expect(speakNode?.sourceSpan).toEqual({
+          start: { offset: 0, line: 1, column: 1 },
+          end: { offset: 7, line: 1, column: 8 },
+        });
+        expect(textNode?.sourceSpan).toEqual({
+          start: { offset: 7, line: 1, column: 8 },
+          end: { offset: 16, line: 3, column: 1 },
+        });
+        expect(closeTagNode?.sourceSpan).toEqual({
+          start: { offset: 16, line: 3, column: 1 },
+          end: { offset: 24, line: 3, column: 9 },
+        });
+      }
+    });
   });
 });
