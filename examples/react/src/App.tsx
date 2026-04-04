@@ -69,6 +69,8 @@ function App() {
           initialValue={initialSSML}
           width="100%"
           height="320px"
+          validationProfile="azure"
+          showDiagnostics
           onWrapTag={(wrapFn) => {
             wrapWithTagRef.current = wrapFn;
           }}

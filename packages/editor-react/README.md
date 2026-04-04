@@ -34,6 +34,8 @@ function App() {
 
 `initialValue` はマウント時の初期値としてのみ使われます。編集中の最新値を受け取りたい場合は `onChange` を利用してください。
 
+`validationProfile` を指定すると、`Azure` / `Google` など provider ごとの validation diagnostics を highlight と同じ surface に反映できます。`showDiagnostics` を有効にすると、エディタの下に diagnostics 一覧も表示されます。
+
 ## プロパティ
 
 | プロパティ名 | 型 | 必須 | デフォルト値 | 説明 |
@@ -50,10 +52,13 @@ function App() {
 | autoExpand | boolean | いいえ | - | 内容に応じて高さを自動調整するかどうか |
 | minHeight | string | いいえ | - | `autoExpand` 時の最小高さ |
 | maxHeight | string | いいえ | - | `autoExpand` 時の最大高さ |
+| validationProfile | `"generic"` \| `"azure"` \| `"google"` \| `SSMLValidationProfile` | いいえ | `"generic"` | highlight と diagnostics に使う validation profile |
+| showDiagnostics | boolean | いいえ | `false` | diagnostics 一覧をエディタ下部に表示するかどうか |
 
 ## 機能
 
 - リアルタイムのシンタックスハイライト
+- provider-aware diagnostics のハイライト
 - SSML タグの自動補完
 - エラー表示
 - カスタマイズ可能なスタイリング
@@ -76,9 +81,21 @@ function App() {
       </speak>`}
       width="100%"
       height="500px"
+      validationProfile="azure"
+      showDiagnostics
     />
   );
 }
+```
+
+## Validation diagnostics の例
+
+```tsx
+<SSMLEditor
+  initialValue={`<speak><mark name="timepoint" /></speak>`}
+  validationProfile="azure"
+  showDiagnostics
+/>
 ```
 
 ## キーボードショートカットの例

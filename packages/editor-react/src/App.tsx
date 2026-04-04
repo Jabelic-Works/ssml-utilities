@@ -53,6 +53,8 @@ function App() {
         <SSMLEditor
           initialValue="<speak>Hello, world!</speak>"
           height="200px"
+          validationProfile="azure"
+          showDiagnostics
           onWrapTag={(wrapFn) => {
             wrapWithTagRef.current = wrapFn;
           }}
