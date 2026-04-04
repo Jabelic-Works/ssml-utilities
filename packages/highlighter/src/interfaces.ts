@@ -1,56 +1,39 @@
-// src/interfaces/ssml-highlighter.ts
+import {
+  Result,
+  SSMLDAG,
+  SSMLDiagnostic,
+  SSMLProvider,
+  SSMLValidationProfile,
+} from "@ssml-utilities/core";
 
-import { Result } from "@ssml-utilities/core";
-import { SSMLDAG } from "@ssml-utilities/core";
-
-export interface SSMLTag {
-  name: string;
-  attributes?: Record<string, string>;
-  content?: string;
-  isClosing?: boolean;
+export interface HighlightClasses {
+  tag: string;
+  attribute: string;
+  attributeValue: string;
+  text: string;
+  unsupportedTag?: string;
+  invalidAttribute?: string;
+  invalidAttributeValue?: string;
+  invalidNesting?: string;
+  invalidText?: string;
+  error?: string;
+  warning?: string;
 }
+
 export interface HighlightOptions {
-  classes: {
-    tag: string;
-    attribute: string;
-    attributeValue: string;
-    text: string;
-  };
-  indentation: number;
+  classes: HighlightClasses;
+  indentation?: number;
+  profile?: SSMLProvider | SSMLValidationProfile;
+  diagnostics?: SSMLDiagnostic[];
 }
 
-// export interface SSMLValidator {
-//   validate(ssml: string): ValidationResult;
-// }
-
-// export interface ValidationResult {
-//   isValid: boolean;
-//   errors: ValidationError[];
-// }
-
-// export interface ValidationError {
-//   message: string;
-//   line: number;
-//   column: number;
-// }
-
-// export interface SSMLFormatter {
-//   format(ssml: string, indentation?: number): string;
-// }
+export interface HighlightedSSML {
+  html: string;
+  diagnostics: SSMLDiagnostic[];
+}
 
 export interface SSMLProcessor {
   highlighter: SSMLHighlighter;
-  // validator: SSMLValidator;
-  // formatter: SSMLFormatter;
-}
-
-export interface HighlightOptions {
-  classes: {
-    tag: string;
-    attribute: string;
-    attributeValue: string;
-    text: string;
-  };
 }
 
 export interface SSMLHighlighter {
@@ -58,4 +41,8 @@ export interface SSMLHighlighter {
     ssmlOrDag: string | Result<SSMLDAG, string>,
     options: HighlightOptions
   ) => Result<string, string>;
+  highlightDetailed: (
+    ssmlOrDag: string | Result<SSMLDAG, string>,
+    options: HighlightOptions
+  ) => Result<HighlightedSSML, string>;
 }

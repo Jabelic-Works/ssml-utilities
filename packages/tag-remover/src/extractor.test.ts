@@ -122,6 +122,16 @@ describe("SSMLTextExtractor", () => {
       expect(tags).toContain("test1");
       expect(tags).toContain("test2");
     });
+
+    it("日本語タグ名の未知タグを保持する", () => {
+      const extractor = new SSMLTextExtractor();
+      const result = extractor.extract("<speak>前</speak><ああ>保持</ああ>");
+
+      expect(result.text).toBe("前<ああ>保持</ああ>");
+      expect(result.removedTags).toContain("speak");
+      expect(result.removedTags).not.toContain("ああ");
+      expect(result.parseSuccess).toBe(true);
+    });
   });
 
   describe("オプション設定", () => {
@@ -198,6 +208,19 @@ describe("SSMLTextExtractor", () => {
       expect(result.removedTags).toContain("emphasis");
       expect(result.removedTags).not.toContain("div");
       expect(result.removedTags).not.toContain("custom-tag");
+    });
+
+    it("構文的に読める未知タグは保持したまま抽出できる", () => {
+      const extractor = new SSMLTextExtractor();
+      const result = extractor.extract(
+        '<speak><voice name="test">SSML</voice></speak><custom-tag attr="value">保持</custom-tag>'
+      );
+
+      expect(result.text).toBe('SSML<custom-tag attr="value">保持</custom-tag>');
+      expect(result.removedTags).toContain("speak");
+      expect(result.removedTags).toContain("voice");
+      expect(result.removedTags).not.toContain("custom-tag");
+      expect(result.parseSuccess).toBe(true);
     });
   });
 
