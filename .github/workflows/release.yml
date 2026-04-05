@@ -27,6 +27,10 @@ on:
         type: boolean
         default: false
 
+concurrency:
+  group: release-${{ github.repository }}
+  cancel-in-progress: false
+
 jobs:
   release:
     runs-on: ubuntu-latest
@@ -56,7 +60,7 @@ jobs:
 
       - uses: pnpm/action-setup@v4
         with:
-          version: latest
+          version: 10.12.4
 
       - name: Install dependencies
         run: pnpm install --prefer-frozen-lockfile
@@ -84,8 +88,8 @@ jobs:
           cd packages/${{ steps.get-directory.outputs.directory }}
           CURRENT_VERSION=$(node -p "require('./package.json').version")
 
-          # semver をインストール
-          npm install -g semver
+          # semver をインストール（固定バージョン）
+          npm install -g semver@7.6.3
 
           if [[ "${{ github.event.inputs.version }}" = "major" ]]; then
             NEW_VERSION=$(semver -i major $CURRENT_VERSION)
@@ -151,6 +155,26 @@ jobs:
             pnpm --filter "@ssml-utilities/editor-react" run build
           elif [ "${{ github.event.inputs.package }}" = "@ssml-utilities/highlighter" ]; then
             pnpm --filter "@ssml-utilities/editor-react" run build
+          fi
+
+      - name: Generate Release Notes
+        id: release-notes
+        run: |
+          PACKAGE_NAME="${{ github.event.inputs.package }}"
+          PACKAGE_NAME_ESC=$(echo $PACKAGE_NAME | sed 's/\//\\\//g' | sed 's/\@/\\\@/g')
+          PACKAGE_TAG_PATTERN="^${PACKAGE_NAME_ESC}@[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z.-]+)?$"
+          PREVIOUS_TAG=$(git tag --sort=-version:refname | grep -E "$PACKAGE_TAG_PATTERN" | head -n 1)
+
+          if [ -z "$PREVIOUS_TAG" ]; then
+            # 最初のリリースの場合
+            git log --pretty=format:"- %s (%h)" -n 10 -- packages/${{ steps.get-directory.outputs.directory }} > changelog.txt
+          else
+            git log --pretty=format:"- %s (%h)" $PREVIOUS_TAG..HEAD -- packages/${{ steps.get-directory.outputs.directory }} > changelog.txt
+          fi
+
+          # 空の場合のデフォルトメッセージ
+          if [ ! -s changelog.txt ]; then
+            echo "- リリース" > changelog.txt
           fi
 
       - name: Setup Node.js with NPM auth
@@ -247,25 +271,6 @@ jobs:
           for TAG_NAME in $TAGS_TO_PUSH; do
             git push origin "refs/tags/$TAG_NAME:refs/tags/$TAG_NAME"
           done
-
-      - name: Generate Release Notes
-        id: release-notes
-        run: |
-          PACKAGE_NAME="${{ github.event.inputs.package }}"
-          PACKAGE_NAME_ESC=$(echo $PACKAGE_NAME | sed 's/\//\\\//g' | sed 's/\@/\\\@/g')
-          PREVIOUS_TAG=$(git tag --sort=-version:refname | grep "$PACKAGE_NAME_ESC@" | sed -n 2p)
-
-          if [ -z "$PREVIOUS_TAG" ]; then
-            # 最初のリリースの場合
-            git log --pretty=format:"- %s (%h)" -n 10 -- packages/${{ steps.get-directory.outputs.directory }} > changelog.txt
-          else
-            git log --pretty=format:"- %s (%h)" $PREVIOUS_TAG..HEAD -- packages/${{ steps.get-directory.outputs.directory }} > changelog.txt
-          fi
-
-          # 空の場合のデフォルトメッセージ
-          if [ ! -s changelog.txt ]; then
-            echo "- リリース" > changelog.txt
-          fi
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v1
