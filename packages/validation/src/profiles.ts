@@ -1,4 +1,9 @@
 import {
+  KNOWN_SSML_TAGS,
+  SELF_CONTAINED_SSML_TAGS,
+  TEXT_ONLY_SSML_TAGS,
+} from "@ssml-utilities/core";
+import {
   SSMLProvider,
   SSMLValidationProfile,
   ValidationAttributeRule,
@@ -15,10 +20,7 @@ const BREAK_STRENGTH_VALUES = [
   "x-strong",
 ] as const;
 
-const GOOGLE_BREAK_STRENGTH_VALUES = [
-  ...BREAK_STRENGTH_VALUES,
-  "none",
-] as const;
+const GOOGLE_BREAK_STRENGTH_VALUES = [...BREAK_STRENGTH_VALUES, "none"] as const;
 
 const EMPHASIS_LEVEL_VALUES = [
   "strong",
@@ -64,65 +66,16 @@ function createSelfContainedTag(
   };
 }
 
-const GENERIC_TAG_NAMES = [
-  "speak",
-  "voice",
-  "prosody",
-  "emphasis",
-  "break",
-  "sub",
-  "phoneme",
-  "say-as",
-  "audio",
-  "p",
-  "s",
-  "lang",
-  "mark",
-  "bookmark",
-  "lexicon",
-  "math",
-  "mstts:audioduration",
-  "mstts:backgroundaudio",
-  "mstts:voiceconversion",
-  "mstts:ttsembedding",
-  "mstts:embedding",
-  "mstts:express-as",
-  "mstts:silence",
-  "mstts:viseme",
-  "par",
-  "seq",
-  "media",
-  "desc",
-  "amazon:domain",
-  "amazon:effect",
-  "amazon:emotion",
-  "amazon:auto-breaths",
-  "sentence",
-  "lookup",
-  "token",
-  "w",
-] as const;
-
-const GENERIC_TEXT_ONLY_TAGS = new Set(["phoneme", "say-as", "sub"]);
-const GENERIC_SELF_CONTAINED_TAGS = new Set([
-  "bookmark",
-  "break",
-  "lexicon",
-  "mark",
-  "mstts:audioduration",
-  "mstts:backgroundaudio",
-  "mstts:voiceconversion",
-  "mstts:silence",
-  "mstts:viseme",
-]);
+const GENERIC_TEXT_ONLY_TAG_SET = new Set(TEXT_ONLY_SSML_TAGS);
+const GENERIC_SELF_CONTAINED_TAG_SET = new Set(SELF_CONTAINED_SSML_TAGS);
 
 export const GENERIC_SSML_PROFILE: SSMLValidationProfile = {
   provider: "generic",
-  supportedTags: GENERIC_TAG_NAMES.reduce<Record<string, ValidationTagRule>>(
+  supportedTags: KNOWN_SSML_TAGS.reduce<Record<string, ValidationTagRule>>(
     (supportedTags, tagName) => {
-      supportedTags[tagName] = GENERIC_TEXT_ONLY_TAGS.has(tagName)
+      supportedTags[tagName] = GENERIC_TEXT_ONLY_TAG_SET.has(tagName)
         ? createTextOnlyTag()
-        : GENERIC_SELF_CONTAINED_TAGS.has(tagName)
+        : GENERIC_SELF_CONTAINED_TAG_SET.has(tagName)
           ? createSelfContainedTag()
           : {
               allowText: true,

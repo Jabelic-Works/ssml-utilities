@@ -1,9 +1,11 @@
 import {
   Result,
   SSMLDAG,
+} from "@ssml-utilities/core";
+import {
   SSMLDiagnostic,
   SSMLValidationOptions,
-} from "@ssml-utilities/core";
+} from "@ssml-utilities/validation";
 
 export interface HighlightClasses {
   tag: string;

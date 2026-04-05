@@ -8,24 +8,16 @@ import {
   ATTRIBUTE_NAME_PATTERN,
   ATTRIBUTE_VALUE_PATTERN,
 } from "./regex";
-import { GENERIC_SSML_PROFILE } from "../validation/profiles";
+import {
+  KNOWN_SSML_TAGS,
+  SELF_CONTAINED_SSML_TAGS,
+  TEXT_ONLY_SSML_TAGS,
+} from "./metadata";
 
-const TEXT_ONLY_ELEMENTS = new Set(["phoneme", "say-as", "sub"]);
-const SELF_CONTAINED_ELEMENTS = new Set([
-  "bookmark",
-  "break",
-  "lexicon",
-  "mark",
-  "mstts:audioduration",
-  "mstts:backgroundaudio",
-  "mstts:voiceconversion",
-  "mstts:silence",
-  "mstts:viseme",
-]);
+const TEXT_ONLY_ELEMENT_SET = new Set(TEXT_ONLY_SSML_TAGS);
+const SELF_CONTAINED_ELEMENT_SET = new Set(SELF_CONTAINED_SSML_TAGS);
 
-export const STANDARD_SSML_TAGS = Object.freeze(
-  Object.keys(GENERIC_SSML_PROFILE.supportedTags)
-);
+export const STANDARD_SSML_TAGS = KNOWN_SSML_TAGS;
 
 export interface ValidationOptions {
   /**
@@ -116,12 +108,12 @@ export function isValidTag(
  * 要素がテキストのみを含むことができるかをチェック
  */
 export function isTextOnlyElement(element: string): boolean {
-  return TEXT_ONLY_ELEMENTS.has(element);
+  return TEXT_ONLY_ELEMENT_SET.has(element);
 }
 
 /**
  * 要素が子要素を持つことができないかをチェック
  */
 export function isSelfContainedElement(element: string): boolean {
-  return SELF_CONTAINED_ELEMENTS.has(element);
+  return SELF_CONTAINED_ELEMENT_SET.has(element);
 }

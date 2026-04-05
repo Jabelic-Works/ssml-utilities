@@ -1,4 +1,4 @@
-import { SSMLDiagnostic } from "@ssml-utilities/core";
+import { SSMLDiagnostic } from "@ssml-utilities/validation";
 
 export function escapeHtml(text: string): string {
   return text

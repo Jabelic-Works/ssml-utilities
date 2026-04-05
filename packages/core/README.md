@@ -1,6 +1,6 @@
 # @ssml-utilities/core
 
-SSML ユーティリティの構文解析と provider-aware validation の土台を提供するパッケージです。SSML の tolerant parser、DAG（有向非巡回グラフ）、source span、Azure / Google 向け validation profile を提供します。
+SSML ユーティリティの構文解析基盤を提供するパッケージです。SSML の tolerant parser、DAG（有向非巡回グラフ）、source span、タグ構文ユーティリティを提供します。
 
 ## インストール
 
@@ -19,8 +19,7 @@ pnpm add @ssml-utilities/core
 - SSMLの解析
 - token / node の source span 追跡
 - DAG（有向非巡回グラフ）の構築と操作
-- Azure / Google 向け validation profile
-- provider ごとの diagnostics 生成
+- タグ構文ユーティリティ
 - Result型を使用したエラーハンドリング
 
 ## 使用方法
@@ -39,19 +38,7 @@ if (result.ok) {
 }
 ```
 
-### Provider-aware validation
-
-```typescript
-import { validateSSML } from "@ssml-utilities/core";
-
-const diagnostics = validateSSML("<speak>Hello</speak>", {
-  profile: "azure",
-});
-
-console.log(diagnostics);
-```
-
-検証だけ無効にしたい場合は `profile: "off"` または `profile: false` を指定すると diagnostics は常に空になります（構文ハイライト用途向け）。
+Provider-aware validation は `@ssml-utilities/validation` を利用してください。
 
 ### DAGの操作
 
@@ -116,3 +103,4 @@ MITライセンスの下で公開されています。詳細は[LICENSE](https:/
 
 - [@ssml-utilities/editor-react](https://github.com/Jabelic-Works/ssml-utilities/tree/master/packages/editor-react)
 - [@ssml-utilities/highlighter](https://github.com/Jabelic-Works/ssml-utilities/tree/master/packages/highlighter)
+- [@ssml-utilities/validation](https://github.com/Jabelic-Works/ssml-utilities/tree/master/packages/validation)

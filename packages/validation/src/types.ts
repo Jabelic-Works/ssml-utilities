@@ -1,4 +1,4 @@
-import { SourceSpan } from "../parser/types";
+import { SourceSpan } from "@ssml-utilities/core";
 
 export type SSMLProvider = "generic" | "azure" | "google";
 
@@ -31,7 +31,7 @@ export interface SSMLValidationProfile {
 export interface SSMLValidationOptions {
   /**
    * `false` または `"off"` のときは検証を行わず diagnostics は常に空。
-   * 省略時は従来どおり `"generic"` 相当の profile が使われる。
+   * 省略時は `"generic"` 相当の profile が使われる。
    */
   profile?: SSMLProvider | SSMLValidationProfile | false | "off";
 }

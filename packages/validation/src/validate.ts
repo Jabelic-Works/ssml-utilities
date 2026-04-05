@@ -1,6 +1,10 @@
-import { tokenize } from "../lexer";
-import { SourcePosition, SourceSpan, Token } from "../parser/types";
-import { parseTagStructure, TagStructure, TextRange } from "../tag/tag-parser";
+import {
+  parseTagStructure,
+  SourcePosition,
+  SourceSpan,
+  tokenize,
+  Token,
+} from "@ssml-utilities/core";
 import { getValidationProfile } from "./profiles";
 import {
   SSMLDiagnostic,
@@ -9,6 +13,9 @@ import {
   ValidationAttributeRule,
   ValidationTagRule,
 } from "./types";
+
+type TagStructure = NonNullable<ReturnType<typeof parseTagStructure>>;
+type TextRange = { start: number; end: number };
 
 interface OpenTagContext {
   tagName: string;
@@ -220,7 +227,10 @@ function validateNesting(
   }
 
   const parentRule = parent.rule;
-  if (parentRule.allowedChildren === "any" || parentRule.allowedChildren === undefined) {
+  if (
+    parentRule.allowedChildren === "any" ||
+    parentRule.allowedChildren === undefined
+  ) {
     return;
   }
 
@@ -342,16 +352,19 @@ function toNestedSpan(token: Token, range: TextRange): SourceSpan {
     return fallbackSpan();
   }
 
-  const start = advancePosition(token.sourceSpan.start, token.value.slice(0, range.start));
-  const end = advancePosition(token.sourceSpan.start, token.value.slice(0, range.end));
+  const start = advancePosition(
+    token.sourceSpan.start,
+    token.value.slice(0, range.start)
+  );
+  const end = advancePosition(
+    token.sourceSpan.start,
+    token.value.slice(0, range.end)
+  );
 
   return { start, end };
 }
 
-function advancePosition(
-  start: SourcePosition,
-  source: string
-): SourcePosition {
+function advancePosition(start: SourcePosition, source: string): SourcePosition {
   let current: SourcePosition = {
     offset: start.offset,
     line: start.line,
