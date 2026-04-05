@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from "vitest";
-import { highlightNode } from "../node";
+import { highlightNode, highlightTreeRuntime } from "../node";
 import {
   DAGNode,
   SSMLDAG,
@@ -9,7 +9,6 @@ import {
 } from "@ssml-utilities/core";
 import { HighlightOptions } from "../../interfaces";
 import * as attributesModule from "../attributes";
-import * as childrenModule from "../children";
 
 // NodeTypeの定義
 type NodeType = "root" | "element" | "attribute" | "text";
@@ -81,7 +80,7 @@ describe("highlightNode", () => {
       vi.spyOn(attributesModule, "highlightAttributes").mockReturnValue(
         success("")
       );
-      vi.spyOn(childrenModule, "highlightChildren").mockReturnValue(
+      vi.spyOn(highlightTreeRuntime, "highlightChildren").mockReturnValue(
         success("")
       );
 
@@ -95,7 +94,7 @@ describe("highlightNode", () => {
       expect(attributesModule.extractAttributesFromNode).toHaveBeenCalledWith(
         elementNode
       );
-      expect(childrenModule.highlightChildren).toHaveBeenCalledWith(
+      expect(highlightTreeRuntime.highlightChildren).toHaveBeenCalledWith(
         elementNode,
         dag,
         defaultOptions
@@ -112,7 +111,7 @@ describe("highlightNode", () => {
       vi.spyOn(attributesModule, "highlightAttributes").mockReturnValue(
         success("")
       );
-      vi.spyOn(childrenModule, "highlightChildren").mockReturnValue(
+      vi.spyOn(highlightTreeRuntime, "highlightChildren").mockReturnValue(
         success("")
       );
 
@@ -137,7 +136,7 @@ describe("highlightNode", () => {
           ' <span class="attr">time</span>="<span class="attr-value">2s</span>"'
         )
       );
-      vi.spyOn(childrenModule, "highlightChildren").mockReturnValue(
+      vi.spyOn(highlightTreeRuntime, "highlightChildren").mockReturnValue(
         success("")
       );
 
@@ -168,7 +167,7 @@ describe("highlightNode", () => {
           ' <span class="attr">class</span>="<span class="attr-value">main</span>"'
         )
       );
-      vi.spyOn(childrenModule, "highlightChildren").mockReturnValue(
+      vi.spyOn(highlightTreeRuntime, "highlightChildren").mockReturnValue(
         success("")
       );
 
@@ -197,7 +196,7 @@ describe("highlightNode", () => {
       vi.spyOn(attributesModule, "highlightAttributes").mockReturnValue(
         success("")
       );
-      vi.spyOn(childrenModule, "highlightChildren").mockReturnValue(
+      vi.spyOn(highlightTreeRuntime, "highlightChildren").mockReturnValue(
         success('<span class="text">Hello</span>')
       );
 
@@ -222,7 +221,7 @@ describe("highlightNode", () => {
       vi.spyOn(attributesModule, "highlightAttributes").mockReturnValue(
         success("")
       );
-      vi.spyOn(childrenModule, "highlightChildren").mockReturnValue(
+      vi.spyOn(highlightTreeRuntime, "highlightChildren").mockReturnValue(
         success("")
       );
 
@@ -269,7 +268,7 @@ describe("highlightNode", () => {
       vi.spyOn(attributesModule, "highlightAttributes").mockReturnValue(
         success("")
       );
-      vi.spyOn(childrenModule, "highlightChildren").mockReturnValue(
+      vi.spyOn(highlightTreeRuntime, "highlightChildren").mockReturnValue(
         failure("Children error")
       );
 
@@ -294,7 +293,7 @@ describe("highlightNode", () => {
           ' <span class="attr">style</span>="<span class="attr-value">customerservice</span>"'
         )
       );
-      vi.spyOn(childrenModule, "highlightChildren").mockReturnValue(
+      vi.spyOn(highlightTreeRuntime, "highlightChildren").mockReturnValue(
         success("")
       );
 
@@ -325,7 +324,7 @@ describe("highlightNode", () => {
           ' <span class="attr">time</span>="<span class="attr-value">500ms</span>"'
         )
       );
-      vi.spyOn(childrenModule, "highlightChildren").mockReturnValue(
+      vi.spyOn(highlightTreeRuntime, "highlightChildren").mockReturnValue(
         success("")
       );
 
