@@ -52,7 +52,7 @@ function App() {
 | autoExpand | boolean | いいえ | - | 内容に応じて高さを自動調整するかどうか |
 | minHeight | string | いいえ | - | `autoExpand` 時の最小高さ |
 | maxHeight | string | いいえ | - | `autoExpand` 時の最大高さ |
-| validationProfile | `"generic"` \| `"azure"` \| `"google"` \| `SSMLValidationProfile` \| `"off"` \| `false` | いいえ | `"off"` | highlight / diagnostics に使う profile。既定は検証なし（後方互換） |
+| validationProfile | `"generic"` \| `"azure"` \| `"google"` \| `SSMLValidationProfile` \| `"off"` \| `false` | いいえ | `"off"` | highlight / diagnostics に使う profile。`SSMLValidationProfile` は `@ssml-utilities/validation` の型 |
 | onDiagnosticsChange | `(snapshot: SSMLEditorDiagnosticsSnapshot) => void` | いいえ | - | ハイライト計算と同じタイミングの validation 結果を親へ渡す |
 
 ## 機能
@@ -116,7 +116,7 @@ function App() {
 `SSMLEditorDiagnosticsSnapshot` には次が含まれます。
 
 - `ssml`: スナップショット時点の全文
-- `diagnostics`: `@ssml-utilities/core` と同型の診断配列
+- `diagnostics`: `@ssml-utilities/validation` と同型の診断配列
 - `highlightOk` / `highlightError`: `highlightDetailed` が失敗した場合のエラーメッセージ
 
 ## キーボードショートカットの例

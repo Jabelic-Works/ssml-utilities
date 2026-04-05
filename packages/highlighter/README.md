@@ -56,6 +56,7 @@ interface HighlightOptions {
 ```
 
 `profile` に `"off"` または `false` を渡すと provider 検証を行わず、diagnostics 用の追加 CSS クラスも付きません。
+カスタム profile を型付きで扱いたい場合は `@ssml-utilities/validation` の `SSMLValidationProfile` を使ってください。
 
 ## デフォルトのスタイル
 

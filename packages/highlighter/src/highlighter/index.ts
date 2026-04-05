@@ -8,10 +8,12 @@ import {
   parseSSML,
   Result,
   SSMLDAG,
-  SSMLDiagnostic,
   success,
-  validateSSML,
 } from "@ssml-utilities/core";
+import {
+  SSMLDiagnostic,
+  validateSSML,
+} from "@ssml-utilities/validation";
 import { highlightChildren } from "./children";
 
 export const ssmlHighlighter: SSMLHighlighter = {

@@ -390,4 +390,5 @@ Developed with contributions from @Jabelic
 
 ## 関連パッケージ
 
-- [@ssml-utilities/core](../core) - SSML 解析とバリデーション
+- [@ssml-utilities/core](../core) - SSML 解析基盤
+- [@ssml-utilities/validation](../validation) - provider-aware validation

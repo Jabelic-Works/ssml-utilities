@@ -8,7 +8,6 @@ import {
   ATTRIBUTE_NAME_PATTERN,
   ATTRIBUTE_VALUE_PATTERN,
 } from "./regex";
-import { GENERIC_SSML_PROFILE } from "../validation/profiles";
 
 const TEXT_ONLY_ELEMENTS = new Set(["phoneme", "say-as", "sub"]);
 const SELF_CONTAINED_ELEMENTS = new Set([
@@ -23,9 +22,44 @@ const SELF_CONTAINED_ELEMENTS = new Set([
   "mstts:viseme",
 ]);
 
-export const STANDARD_SSML_TAGS = Object.freeze(
-  Object.keys(GENERIC_SSML_PROFILE.supportedTags)
-);
+export const STANDARD_SSML_TAGS = Object.freeze([
+  "speak",
+  "voice",
+  "prosody",
+  "emphasis",
+  "break",
+  "sub",
+  "phoneme",
+  "say-as",
+  "audio",
+  "p",
+  "s",
+  "lang",
+  "mark",
+  "bookmark",
+  "lexicon",
+  "math",
+  "mstts:audioduration",
+  "mstts:backgroundaudio",
+  "mstts:voiceconversion",
+  "mstts:ttsembedding",
+  "mstts:embedding",
+  "mstts:express-as",
+  "mstts:silence",
+  "mstts:viseme",
+  "par",
+  "seq",
+  "media",
+  "desc",
+  "amazon:domain",
+  "amazon:effect",
+  "amazon:emotion",
+  "amazon:auto-breaths",
+  "sentence",
+  "lookup",
+  "token",
+  "w",
+]);
 
 export interface ValidationOptions {
   /**

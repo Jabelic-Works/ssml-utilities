@@ -8,11 +8,14 @@
   "types": "./dist/index.d.ts",
   "author": "Jabelic",
   "license": "MIT",
+  "files": [
+    "dist"
+  ],
   "publishConfig": {
     "access": "public"
   },
   "scripts": {
-    "build": "rollup -c rollup.config.mjs --bundleConfigAsCjs",
+    "build": "pnpm run clean && rollup -c rollup.config.mjs --bundleConfigAsCjs",
     "test": "vitest",
     "test:watch": "vitest watch",
     "lint": "eslint src --ext .ts,.tsx",

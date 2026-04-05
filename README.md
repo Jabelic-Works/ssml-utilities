@@ -15,6 +15,7 @@ SSML Utilities は以下のパッケージを提供しています：
 - [@ssml-utilities/editor-react](#ssml-utilitieseditor-react)
 - [@ssml-utilities/highlighter](#ssml-utilitieshighlighter)
 - [@ssml-utilities/core](#ssml-utilitiescore)
+- [@ssml-utilities/validation](#ssml-utilitiesvalidation)
 
 ## Moved Projects
 
@@ -30,6 +31,7 @@ SSML Utilities は以下のパッケージを提供しています：
 npm install @ssml-utilities/editor-react
 npm install @ssml-utilities/highlighter
 npm install @ssml-utilities/core
+npm install @ssml-utilities/validation
 ```
 
 ## 使用方法
@@ -77,6 +79,20 @@ function App() {
 
 `initialValue` はマウント時の初期値で、編集中の最新値は `onChange` で受け取ります。
 
+### @ssml-utilities/validation
+
+Provider-aware validation は `@ssml-utilities/validation` が担当します。Azure / Google / generic profile に基づく diagnostics を取得できます。
+
+```javascript
+import { validateSSML } from "@ssml-utilities/validation";
+
+const diagnostics = validateSSML("<speak>Hello</speak>", {
+  profile: "azure",
+});
+
+console.log(diagnostics);
+```
+
 ### API ドキュメント
 
 各パッケージの README を参照してください：
@@ -84,6 +100,7 @@ function App() {
 - [@ssml-utilities/editor-react API](https://github.com/Jabelic-Works/ssml-utilities/tree/master/packages/editor-react)
 - [@ssml-utilities/highlighter API](https://github.com/Jabelic-Works/ssml-utilities/tree/master/packages/highlighter)
 - [@ssml-utilities/core API](https://github.com/Jabelic-Works/ssml-utilities/tree/master/packages/core)
+- [@ssml-utilities/validation API](https://github.com/Jabelic-Works/ssml-utilities/tree/master/packages/validation)
 
 <!--
 

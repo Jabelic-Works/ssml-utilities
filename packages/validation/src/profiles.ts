@@ -15,10 +15,7 @@ const BREAK_STRENGTH_VALUES = [
   "x-strong",
 ] as const;
 
-const GOOGLE_BREAK_STRENGTH_VALUES = [
-  ...BREAK_STRENGTH_VALUES,
-  "none",
-] as const;
+const GOOGLE_BREAK_STRENGTH_VALUES = [...BREAK_STRENGTH_VALUES, "none"] as const;
 
 const EMPHASIS_LEVEL_VALUES = [
   "strong",

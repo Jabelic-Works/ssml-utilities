@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { validateSSML } from "../../validation";
+import { validateSSML } from "../index";
 
 describe("validateSSML", () => {
   it("Azure profile で許可される構造はエラーにしない", () => {

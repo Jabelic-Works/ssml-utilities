@@ -14,7 +14,7 @@
   },
   "scripts": {
     "build": "rollup -c rollup.config.mjs",
-    "test": "pnpm --filter @ssml-utilities/core build && vitest",
+    "test": "pnpm --filter @ssml-utilities/core build && pnpm --filter @ssml-utilities/validation build && vitest",
     "test:watch": "vitest watch",
     "lint": "eslint src --ext .ts,.tsx",
     "type-check": "tsc --noEmit",
@@ -40,7 +40,8 @@
   },
   "homepage": "https://github.com/jabelic-works/ssml-utilities/tree/main/packages/highlighter#readme",
   "dependencies": {
-    "@ssml-utilities/core": "workspace:*"
+    "@ssml-utilities/core": "workspace:*",
+    "@ssml-utilities/validation": "workspace:*"
   },
   "devDependencies": {
     "@eslint/js": "^9.13.0",
