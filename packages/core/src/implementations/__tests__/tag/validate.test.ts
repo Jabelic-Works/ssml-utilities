@@ -10,6 +10,11 @@ import {
   DEFAULT_VALIDATION_OPTIONS,
   isValidTag,
 } from "../../tag/validate";
+import {
+  KNOWN_SSML_TAGS,
+  TEXT_ONLY_SSML_TAGS,
+  SELF_CONTAINED_SSML_TAGS,
+} from "../../tag/metadata";
 
 describe("SSML Validation", () => {
   describe("isValidTagName", () => {
@@ -149,6 +154,13 @@ describe("SSML Validation", () => {
       expect(STANDARD_SSML_TAGS).toContain("mstts:express-as");
       expect(STANDARD_SSML_TAGS).toContain("mstts:backgroundaudio");
       expect(STANDARD_SSML_TAGS).toContain("mstts:viseme");
+    });
+
+    it("shared metadata の alias になっている", () => {
+      expect(STANDARD_SSML_TAGS).toBe(KNOWN_SSML_TAGS);
+      expect(TEXT_ONLY_SSML_TAGS).toEqual(["phoneme", "say-as", "sub"]);
+      expect(SELF_CONTAINED_SSML_TAGS).toContain("break");
+      expect(SELF_CONTAINED_SSML_TAGS).toContain("bookmark");
     });
   });
 });

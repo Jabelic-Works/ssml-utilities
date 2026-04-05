@@ -31,3 +31,8 @@ export {
   ATTRIBUTE_NAME_PATTERN,
   ATTRIBUTE_VALUE_PATTERN,
 } from "./implementations/tag/regex";
+export {
+  KNOWN_SSML_TAGS,
+  TEXT_ONLY_SSML_TAGS,
+  SELF_CONTAINED_SSML_TAGS,
+} from "./implementations/tag/metadata";
