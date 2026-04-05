@@ -11,6 +11,17 @@ type WrapTagFn = (
   selfClosing?: boolean
 ) => void;
 type InsertPhraseFn = (text: string) => void;
+type DemoValidationProfile = "off" | "generic" | "azure" | "google";
+
+const VALIDATION_PROFILE_OPTIONS: Array<{
+  value: DemoValidationProfile;
+  label: string;
+}> = [
+  { value: "off", label: "off (syntax highlight only)" },
+  { value: "generic", label: "generic" },
+  { value: "azure", label: "azure" },
+  { value: "google", label: "google" },
+];
 
 const initialSSML = `<speak>
   こんにちは、<emphasis level="moderate">世界</emphasis>。
@@ -21,6 +32,8 @@ function App() {
   const insertPhraseRef = useRef<InsertPhraseFn>();
   const [diagnosticsSnapshot, setDiagnosticsSnapshot] =
     useState<SSMLEditorDiagnosticsSnapshot | null>(null);
+  const [validationProfile, setValidationProfile] =
+    useState<DemoValidationProfile>("azure");
 
   const handleWrapButtonClick = () => {
     wrapWithTagRef.current?.("prosody", { rate: "120%", pitch: "+2st" });
@@ -68,13 +81,45 @@ function App() {
           <button onClick={handleWrapButtonClick}>Wrap with prosody</button>
           <button onClick={handleInsertNamePrompt}>名前確認</button>
           <button onClick={handleInsertThanks}>お礼</button>
+          <label
+            style={{
+              display: "inline-flex",
+              alignItems: "center",
+              gap: "8px",
+              marginLeft: "auto",
+              color: "#344054",
+              fontSize: "14px",
+            }}
+          >
+            Validation profile
+            <select
+              value={validationProfile}
+              onChange={(event) =>
+                setValidationProfile(
+                  event.target.value as DemoValidationProfile
+                )
+              }
+              style={{
+                padding: "6px 10px",
+                border: "1px solid #d0d5dd",
+                borderRadius: "8px",
+                backgroundColor: "#fff",
+              }}
+            >
+              {VALIDATION_PROFILE_OPTIONS.map((option) => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
+            </select>
+          </label>
         </div>
 
         <SSMLEditor
           initialValue={initialSSML}
           width="100%"
           height="320px"
-          validationProfile="azure"
+          validationProfile={validationProfile}
           onDiagnosticsChange={setDiagnosticsSnapshot}
           onWrapTag={(wrapFn) => {
             wrapWithTagRef.current = wrapFn;
@@ -161,15 +206,21 @@ function App() {
             }}
           >
             <div style={{ fontWeight: 700, marginBottom: "8px" }}>
-              Validation Errors:{" "}
-              {diagnosticsSnapshot.diagnostics.length} 件
+              Validation profile: {validationProfile}
+              {validationProfile === "off"
+                ? " (disabled)"
+                : ` / ${diagnosticsSnapshot.diagnostics.length} 件`}
               {!diagnosticsSnapshot.highlightOk && (
                 <span style={{ color: "#b42318", marginLeft: "8px" }}>
                   highlight エラー: {diagnosticsSnapshot.highlightError}
                 </span>
               )}
             </div>
-            {diagnosticsSnapshot.diagnostics.length === 0 ? (
+            {validationProfile === "off" ? (
+              <div style={{ color: "#475467" }}>
+                Validation disabled. 構文ハイライトのみ表示しています。
+              </div>
+            ) : diagnosticsSnapshot.diagnostics.length === 0 ? (
               <div style={{ color: "#475467" }}>問題なし</div>
             ) : (
               <ul style={{ margin: 0, paddingLeft: "18px" }}>
