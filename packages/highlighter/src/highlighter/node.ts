@@ -8,75 +8,118 @@ import {
 } from "@ssml-utilities/core";
 import { HighlightOptions } from "../interfaces";
 import { extractAttributesFromNode, highlightAttributes } from "./attributes";
-import { highlightChildren } from "./children";
 import { escapeHtml, getIntersectingDiagnostics, mergeClasses } from "../utils";
+
+export const highlightTreeRuntime = {
+  highlightNode(
+    nodeId: string,
+    dag: SSMLDAG,
+    options: HighlightOptions
+  ): Result<string, string> {
+    const node = dag.nodes.get(nodeId);
+    if (!node) {
+      return failure(`Node with id ${nodeId} not found`);
+    }
+
+    switch (node.type) {
+      case "element": {
+        return highlightElementNode(node, dag, options);
+      }
+      case "attribute": {
+        const attributeClasses = mergeClasses(
+          options.classes.attribute,
+          ...getSpanClasses(
+            options,
+            node.sourceSpan,
+            ["invalid-attribute", "invalid-attribute-value"],
+            "attribute"
+          )
+        );
+        const attributeValueClasses = mergeClasses(
+          options.classes.attributeValue,
+          ...getSpanClasses(
+            options,
+            node.sourceSpan,
+            ["invalid-attribute-value"],
+            "attributeValue"
+          )
+        );
+
+        if (node.value) {
+          return success(
+            ` <span class="${attributeClasses}">${escapeHtml(
+              node.name!
+            )}</span>=<span class="${attributeValueClasses}">"${escapeHtml(
+              node.value
+            )}"</span>`
+          );
+        }
+
+        return success(
+          ` <span class="${attributeClasses}">${escapeHtml(node.name!)}</span>`
+        );
+      }
+      case "text": {
+        const textClasses = mergeClasses(
+          options.classes.text,
+          ...getSpanClasses(options, node.sourceSpan, ["text-not-allowed"], "text")
+        );
+
+        return success(
+          `<span class="${textClasses}">${escapeHtml(node.value!)}</span>`
+        );
+      }
+      default: {
+        return failure(`Unknown node type: ${node.type}`);
+      }
+    }
+  },
+
+  highlightChildren(
+    rootNode: DAGNode,
+    dag: SSMLDAG,
+    options: HighlightOptions
+  ): Result<string, string> {
+    const results = Array.from(rootNode.children)
+      .map((childId) => dag.nodes.get(childId))
+      .filter(
+        (child): child is DAGNode =>
+          child !== undefined && child.type !== "attribute"
+      )
+      .map((child) => highlightTreeRuntime.highlightNode(child.id, dag, options));
+
+    const errors = results.filter(
+      (result): result is Result<string, string> & { ok: false } => !result.ok
+    );
+    if (errors.length > 0) {
+      return failure(errors.map((err) => err.error).join(", "));
+    }
+
+    return success(
+      results
+        .filter(
+          (result): result is Result<string, string> & { ok: true } => result.ok
+        )
+        .map((result) => result.value)
+        .join("")
+    );
+  },
+};
 
 export function highlightNode(
   nodeId: string,
   dag: SSMLDAG,
   options: HighlightOptions
 ): Result<string, string> {
-  const node = dag.nodes.get(nodeId);
-  if (!node) {
-    return failure(`Node with id ${nodeId} not found`);
-  }
+  return highlightTreeRuntime.highlightNode(nodeId, dag, options);
+}
 
-  switch (node.type) {
-    case "element": {
-      return highlightElementNode(node, dag, options);
-    }
-    case "attribute": {
-      const attributeClasses = mergeClasses(
-        options.classes.attribute,
-        ...getSpanClasses(
-          options,
-          node.sourceSpan,
-          ["invalid-attribute", "invalid-attribute-value"],
-          "attribute"
-        )
-      );
-      const attributeValueClasses = mergeClasses(
-        options.classes.attributeValue,
-        ...getSpanClasses(
-          options,
-          node.sourceSpan,
-          ["invalid-attribute-value"],
-          "attributeValue"
-        )
-      );
-
-      if (node.value) {
-        return success(
-          ` <span class="${attributeClasses}">${escapeHtml(
-            node.name!
-          )}</span>=<span class="${attributeValueClasses}">"${escapeHtml(
-            node.value
-          )}"</span>`
-        );
-      } else {
-        return success(
-          ` <span class="${attributeClasses}">${escapeHtml(
-            node.name!
-          )}</span>`
-        );
-      }
-    }
-    case "text": {
-      const textClasses = mergeClasses(
-        options.classes.text,
-        ...getSpanClasses(options, node.sourceSpan, ["text-not-allowed"], "text")
-      );
-
-      return success(
-        `<span class="${textClasses}">${escapeHtml(
-          node.value!
-        )}</span>`
-      );
-    }
-    default: {
-      return failure(`Unknown node type: ${node.type}`);
-    }
-  }
+export function highlightChildren(
+  rootNode: DAGNode,
+  dag: SSMLDAG,
+  options: HighlightOptions
+): Result<string, string> {
+  return highlightTreeRuntime.highlightChildren(rootNode, dag, options);
 }
 
 function highlightElementNode(
@@ -131,7 +174,7 @@ function highlightElementNode(
     );
   }
 
-  const contentResult = highlightChildren(node, dag, options);
+  const contentResult = highlightTreeRuntime.highlightChildren(node, dag, options);
   if (!contentResult.ok) {
     return failure(contentResult.error);
   }

@@ -72,7 +72,7 @@ describe("highlightChildren", () => {
     }
 
     // highlightNodeのモック
-    vi.spyOn(nodeModule, "highlightNode").mockImplementation(
+    vi.spyOn(nodeModule.highlightTreeRuntime, "highlightNode").mockImplementation(
       (nodeId: string, _dag: SSMLDAG, _options: HighlightOptions) => {
         expect(nodeId).toBe(textNode.id);
         return success('<span class="text">Hello</span>');
@@ -116,7 +116,7 @@ describe("highlightChildren", () => {
     dag.addEdge(rootNode.id, child3.id);
 
     // highlightNodeのモック
-    vi.spyOn(nodeModule, "highlightNode").mockImplementation(
+    vi.spyOn(nodeModule.highlightTreeRuntime, "highlightNode").mockImplementation(
       (nodeId: string, _dag: SSMLDAG, _options: HighlightOptions) => {
         if (nodeId === child1.id) {
           return success('<span class="tag">&lt;p&gt;</span>');
@@ -168,7 +168,7 @@ describe("highlightChildren", () => {
     dag.addEdge(rootNode.id, attrNode.id);
 
     // highlightNodeのモック
-    vi.spyOn(nodeModule, "highlightNode").mockImplementation(
+    vi.spyOn(nodeModule.highlightTreeRuntime, "highlightNode").mockImplementation(
       (nodeId: string, _dag: SSMLDAG, _options: HighlightOptions) => {
         if (nodeId === textNode.id) {
           return success('<span class="text">Hello</span>');
@@ -213,7 +213,7 @@ describe("highlightChildren", () => {
     dag.addEdge(rootNode.id, child2.id);
 
     // highlightNodeのモック - 2番目の子ノードでエラーを発生させる
-    vi.spyOn(nodeModule, "highlightNode").mockImplementation(
+    vi.spyOn(nodeModule.highlightTreeRuntime, "highlightNode").mockImplementation(
       (nodeId: string, _dag: SSMLDAG, _options: HighlightOptions) => {
         if (nodeId === child1.id) {
           return success('<span class="tag">&lt;p&gt;</span>');
@@ -263,7 +263,7 @@ describe("highlightChildren", () => {
     dag.addEdge(rootNode.id, child3.id);
 
     // highlightNodeのモック - 複数のノードでエラーを発生させる
-    vi.spyOn(nodeModule, "highlightNode").mockImplementation(
+    vi.spyOn(nodeModule.highlightTreeRuntime, "highlightNode").mockImplementation(
       (nodeId: string, _dag: SSMLDAG, _options: HighlightOptions) => {
         if (nodeId === child1.id) {
           return success('<span class="tag">&lt;p&gt;</span>');
@@ -308,7 +308,7 @@ describe("highlightChildren", () => {
     dag.addEdge(rootNode.id, textNode.id);
 
     // highlightNodeのモック
-    vi.spyOn(nodeModule, "highlightNode").mockImplementation(
+    vi.spyOn(nodeModule.highlightTreeRuntime, "highlightNode").mockImplementation(
       (nodeId: string, _dag: SSMLDAG, _options: HighlightOptions) => {
         if (nodeId === textNode.id) {
           return success('<span class="text">Hello</span>');
