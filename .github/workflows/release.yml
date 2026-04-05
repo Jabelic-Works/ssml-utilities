@@ -38,7 +38,15 @@ jobs:
         with:
           fetch-depth: 0
           token: ${{ secrets.PNPM_PUBLISH }}
-          ref: ${{ github.head_ref }}
+          ref: ${{ github.ref_name }}
+
+      - name: Validate release branch
+        run: |
+          if [ "${{ github.ref_name }}" != "${{ github.event.repository.default_branch }}" ]; then
+            echo "この workflow は default branch (${{ github.event.repository.default_branch }}) からのみ実行できます。"
+            echo "selected ref: ${{ github.ref_name }}"
+            exit 1
+          fi
 
       - name: Setup Node.js
         uses: actions/setup-node@v3
@@ -145,6 +153,52 @@ jobs:
             pnpm --filter "@ssml-utilities/editor-react" run build
           fi
 
+      - name: Setup Node.js with NPM auth
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22.x"
+          registry-url: "https://registry.npmjs.org/"
+          # スコープを指定
+          scope: "@ssml-utilities"
+
+      - name: Publish to npm
+        run: |
+          # NPMの認証設定
+          echo "//registry.npmjs.org/:_authToken=${NODE_AUTH_TOKEN}" > ~/.npmrc
+
+          publish_package() {
+            TARGET_PACKAGE="$1"
+
+            if [ "$TARGET_PACKAGE" = "@ssml-utilities/editor-react" ]; then
+              TARGET_DIRECTORY="editor-react"
+            else
+              TARGET_DIRECTORY=${TARGET_PACKAGE#@ssml-utilities/}
+            fi
+
+            cd "$GITHUB_WORKSPACE/packages/$TARGET_DIRECTORY"
+            pnpm publish --access public --tag ${{ github.event.inputs.tag }} --no-git-checks
+          }
+
+          # メインのパッケージを公開
+          publish_package "${{ github.event.inputs.package }}"
+
+          # 依存パッケージも公開
+          if [[ "${{ github.event.inputs.update_dependent_packages }}" == "true" ]]; then
+            if [ "${{ github.event.inputs.package }}" = "@ssml-utilities/core" ]; then
+              publish_package "@ssml-utilities/validation"
+              publish_package "@ssml-utilities/highlighter"
+              publish_package "@ssml-utilities/tag-remover"
+              publish_package "@ssml-utilities/editor-react"
+            elif [ "${{ github.event.inputs.package }}" = "@ssml-utilities/validation" ]; then
+              publish_package "@ssml-utilities/highlighter"
+              publish_package "@ssml-utilities/editor-react"
+            elif [ "${{ github.event.inputs.package }}" = "@ssml-utilities/highlighter" ]; then
+              publish_package "@ssml-utilities/editor-react"
+            fi
+          fi
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
       - name: Commit changes and create tags
         run: |
           git config --local user.email "action@github.com"
@@ -156,36 +210,43 @@ jobs:
           # メインパッケージのコミットとタグ
           MAIN_PACKAGE="${{ github.event.inputs.package }}"
           MAIN_VERSION="${{ steps.calc-versions.outputs.new_version }}"
-          git commit -m "Release $MAIN_PACKAGE@$MAIN_VERSION"
+          MAIN_TAG="$MAIN_PACKAGE@$MAIN_VERSION"
+          TAGS_TO_PUSH="$MAIN_TAG"
+          git commit -m "Release $MAIN_TAG"
 
           # タグが存在するかチェックし、存在しない場合のみ作成
-          if ! git tag -l "$MAIN_PACKAGE@$MAIN_VERSION" | grep -q "$MAIN_PACKAGE@$MAIN_VERSION"; then
-            git tag "$MAIN_PACKAGE@$MAIN_VERSION"
+          if ! git tag -l "$MAIN_TAG" | grep -q "$MAIN_TAG"; then
+            git tag "$MAIN_TAG"
           else
-            echo "タグ $MAIN_PACKAGE@$MAIN_VERSION はすでに存在します。スキップします。"
+            echo "タグ $MAIN_TAG はすでに存在します。スキップします。"
           fi
 
           # 依存パッケージが更新された場合、追加のタグを作成
           if [[ "${{ github.event.inputs.update_dependent_packages }}" == "true" ]]; then
             for PACKAGE_INFO in ${{ steps.calc-versions.outputs.updated_packages }}; do
               # 最初のパッケージ（メイン）はスキップ
-              if [ "$PACKAGE_INFO" != "$MAIN_PACKAGE@$MAIN_VERSION" ]; then
+              if [ "$PACKAGE_INFO" != "$MAIN_TAG" ]; then
                 PACKAGE_NAME=${PACKAGE_INFO%@*}
-                PACKAGE_VERSION=${PACKAGE_INFO#*@}
-                
+                PACKAGE_VERSION=${PACKAGE_INFO##*@}
+                TAG_NAME="$PACKAGE_NAME@$PACKAGE_VERSION"
+
                 # タグが存在するかチェックし、存在しない場合のみ作成
-                if ! git tag -l "$PACKAGE_NAME@$PACKAGE_VERSION" | grep -q "$PACKAGE_NAME@$PACKAGE_VERSION"; then
-                  git tag "$PACKAGE_NAME@$PACKAGE_VERSION"
+                if ! git tag -l "$TAG_NAME" | grep -q "$TAG_NAME"; then
+                  git tag "$TAG_NAME"
                 else
-                  echo "タグ $PACKAGE_NAME@$PACKAGE_VERSION はすでに存在します。スキップします。"
+                  echo "タグ $TAG_NAME はすでに存在します。スキップします。"
                 fi
+
+                TAGS_TO_PUSH="$TAGS_TO_PUSH $TAG_NAME"
               fi
             done
           fi
 
-          # 変更をプッシュ（--force オプションを追加して強制プッシュ）
-          git push --force
-          git push --tags --force
+          # publish 成功後にのみ release metadata を確定する
+          git push origin "HEAD:${{ github.ref_name }}"
+          for TAG_NAME in $TAGS_TO_PUSH; do
+            git push origin "refs/tags/$TAG_NAME:refs/tags/$TAG_NAME"
+          done
 
       - name: Generate Release Notes
         id: release-notes
@@ -214,57 +275,3 @@ jobs:
           body_path: changelog.txt
           draft: false
           prerelease: ${{ github.event.inputs.tag != 'latest' }}
-
-      - name: Setup Node.js with NPM auth
-        uses: actions/setup-node@v4
-        with:
-          node-version: "22.x"
-          registry-url: "https://registry.npmjs.org/"
-          # スコープを指定
-          scope: "@ssml-utilities"
-
-      - name: Publish to npm
-        run: |
-          # NPMの認証設定
-          echo "//registry.npmjs.org/:_authToken=${NODE_AUTH_TOKEN}" > ~/.npmrc
-
-          # メインのパッケージを公開
-          cd packages/${{ steps.get-directory.outputs.directory }}
-          pnpm publish --access public --tag ${{ github.event.inputs.tag }} --no-git-checks
-
-          # 依存パッケージも公開
-          if [[ "${{ github.event.inputs.update_dependent_packages }}" == "true" ]]; then
-            if [ "${{ github.event.inputs.package }}" = "@ssml-utilities/core" ]; then
-              # validation を公開
-              cd $GITHUB_WORKSPACE/packages/validation
-              pnpm publish --access public --tag ${{ github.event.inputs.tag }} --no-git-checks
-
-              # highlighter を公開
-              cd $GITHUB_WORKSPACE/packages/highlighter
-              pnpm publish --access public --tag ${{ github.event.inputs.tag }} --no-git-checks
-
-              # tag-remover を公開
-              cd $GITHUB_WORKSPACE/packages/tag-remover
-              pnpm publish --access public --tag ${{ github.event.inputs.tag }} --no-git-checks
-              
-              # editor-react を公開
-              cd $GITHUB_WORKSPACE/packages/editor-react
-              pnpm publish --access public --tag ${{ github.event.inputs.tag }} --no-git-checks
-            
-            elif [ "${{ github.event.inputs.package }}" = "@ssml-utilities/validation" ]; then
-              # highlighter を公開
-              cd $GITHUB_WORKSPACE/packages/highlighter
-              pnpm publish --access public --tag ${{ github.event.inputs.tag }} --no-git-checks
-
-              # editor-react を公開
-              cd $GITHUB_WORKSPACE/packages/editor-react
-              pnpm publish --access public --tag ${{ github.event.inputs.tag }} --no-git-checks
-
-            elif [ "${{ github.event.inputs.package }}" = "@ssml-utilities/highlighter" ]; then
-              # editor-react を公開
-              cd $GITHUB_WORKSPACE/packages/editor-react
-              pnpm publish --access public --tag ${{ github.event.inputs.tag }} --no-git-checks
-            fi
-          fi
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
