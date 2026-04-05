@@ -1,9 +1,44 @@
-import React, { useState, useEffect, useRef, useCallback } from "react";
-import { ssmlHighlighter, HighlightOptions } from "@ssml-utilities/highlighter";
+import React, {
+  useState,
+  useEffect,
+  useRef,
+  useCallback,
+  useMemo,
+} from "react";
+import {
+  ssmlHighlighter,
+  HighlightOptions,
+  HighlightedSSML,
+} from "@ssml-utilities/highlighter";
 import { getCaretCoordinates } from "./textareaCaretPosition";
 import { useIsWindows } from "./useIsWindows";
 
-interface SSMLEditorProps {
+const DEFAULT_HIGHLIGHT_CLASSES: HighlightOptions["classes"] = {
+  tag: "ssml-tag",
+  attribute: "ssml-attribute",
+  attributeValue: "ssml-attribute-value",
+  text: "ssml-text",
+  unsupportedTag: "ssml-unsupported-tag",
+  invalidAttribute: "ssml-invalid-attribute",
+  invalidAttributeValue: "ssml-invalid-attribute-value",
+  invalidNesting: "ssml-invalid-nesting",
+  invalidText: "ssml-invalid-text",
+  error: "ssml-error",
+  warning: "ssml-warning",
+};
+
+const EMPTY_DIAGNOSTICS: HighlightedSSML["diagnostics"] = [];
+
+export interface SSMLEditorDiagnosticsSnapshot {
+  /** このスナップショット計算時点の SSML 全文 */
+  ssml: string;
+  diagnostics: HighlightedSSML["diagnostics"];
+  /** `highlightDetailed` が成功したか（失敗時は `highlightError` を参照） */
+  highlightOk: boolean;
+  highlightError?: string;
+}
+
+export interface SSMLEditorProps {
   initialValue?: string;
   onChange?: (value: string) => void;
   width?: string;
@@ -35,6 +70,9 @@ interface SSMLEditorProps {
   autoExpand?: boolean;
   minHeight?: string;
   maxHeight?: string;
+  validationProfile?: HighlightOptions["profile"];
+  /** ハイライト計算と同じタイミングの validation 結果を親へ渡す（エディタ内では一覧表示しない） */
+  onDiagnosticsChange?: (snapshot: SSMLEditorDiagnosticsSnapshot) => void;
 }
 
 interface TagAttributes {
@@ -54,11 +92,11 @@ export const SSMLEditor: React.FC<SSMLEditorProps> = ({
   autoExpand,
   minHeight,
   maxHeight,
+  validationProfile = "off",
+  onDiagnosticsChange,
 }) => {
   const isWindows = useIsWindows();
   const [ssml, setSSML] = useState(initialValue);
-  const [highlightedHtml, setHighlightedHtml] = useState("");
-  const [lineNumbers, setLineNumbers] = useState<string[]>([]);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const highlightRef = useRef<HTMLDivElement>(null);
   const lineNumbersRef = useRef<HTMLDivElement>(null);
@@ -78,38 +116,57 @@ export const SSMLEditor: React.FC<SSMLEditorProps> = ({
     setActiveSuggestionIndex(0);
   };
 
-  // ハイライトを更新する
-  useEffect(() => {
+  const highlightedState = useMemo(() => {
     const options: HighlightOptions = {
-      classes: {
-        tag: "ssml-tag",
-        attribute: "ssml-attribute",
-        attributeValue: "ssml-attribute-value",
-        text: "ssml-text",
-      },
+      classes: DEFAULT_HIGHLIGHT_CLASSES,
       indentation: 2,
+      profile: validationProfile,
     };
+    const highlightResult = ssmlHighlighter.highlightDetailed(ssml, options);
 
-    const highlightResult = ssmlHighlighter.highlight(ssml, options);
-
-    if (highlightResult.ok) {
-      // 空行の処理を統一するため、空行を明示的に処理
-      const processedHtml = highlightResult.value
-        .replace(/<div><\/div>/g, "<div>&nbsp;</div>") // 空行を&nbsp;で置換
-        .replace(/<br\s*\/?>/g, "<br>"); // 改行タグを統一
-
-      setHighlightedHtml(processedHtml);
-    } else {
-      console.error("Error highlighting SSML:", highlightResult.error);
-      setHighlightedHtml(
-        `<span class="error">Error: ${highlightResult.error}</span>`
-      );
+    if (!highlightResult.ok) {
+      return {
+        html: `<span class="ssml-error">Error: ${highlightResult.error}</span>`,
+        diagnostics: EMPTY_DIAGNOSTICS,
+        highlightError: highlightResult.error,
+      };
     }
 
-    // 実際の改行のみを使用して行番号を生成
-    const lines = ssml.split("\n");
-    setLineNumbers(lines.map((_, i) => (i + 1).toString()));
-  }, [ssml]);
+    const processedHtml = highlightResult.value.html
+      .replace(/<div><\/div>/g, "<div>&nbsp;</div>")
+      .replace(/<br\s*\/?>/g, "<br>");
+
+    return {
+      html: processedHtml,
+      diagnostics: highlightResult.value.diagnostics,
+      highlightError: null as string | null,
+    };
+  }, [ssml, validationProfile]);
+
+  const onDiagnosticsChangeRef = useRef(onDiagnosticsChange);
+  onDiagnosticsChangeRef.current = onDiagnosticsChange;
+
+  // 親へ highlight と同じタイミングの validation スナップショットを渡す（外部コンシューマ同期）
+  useEffect(() => {
+    const notify = onDiagnosticsChangeRef.current;
+    if (!notify) return;
+    notify({
+      ssml,
+      diagnostics: highlightedState.diagnostics,
+      highlightOk: highlightedState.highlightError == null,
+      highlightError:
+        highlightedState.highlightError ?? undefined,
+    });
+  }, [
+    ssml,
+    highlightedState.diagnostics,
+    highlightedState.highlightError,
+  ]);
+
+  const lineNumbers = useMemo(
+    () => ssml.split("\n").map((_, index) => (index + 1).toString()),
+    [ssml]
+  );
 
   const handleInput = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     const newValue = e.target.value;
@@ -441,6 +498,7 @@ export const SSMLEditor: React.FC<SSMLEditorProps> = ({
     wordWrap: "break-word",
   };
 
+  // Sync the textarea height with the measured DOM size for autoExpand.
   useEffect(() => {
     if (textareaRef.current && autoExpand) {
       // 一度高さをリセット
@@ -462,121 +520,126 @@ export const SSMLEditor: React.FC<SSMLEditorProps> = ({
   return (
     <div
       style={{
-        position: "relative",
-        height,
         width,
+        display: "flex",
+        flexDirection: "column",
       }}
     >
-      {showLineNumbers && (
-        <div
-          ref={lineNumbersRef}
-          style={{
-            width: "auto",
-            borderRight: "none",
-            paddingLeft: "auto",
-            marginLeft: "auto",
-            textAlign: "right",
-            color: "#6b6b6b",
-            border: "1px solid #ddd",
-            borderRadius: "10px 0px 0px 10px",
-            fontFamily: isWindows
-              ? '"Consolas", "Monaco", "Lucida Console", "Liberation Mono", "DejaVu Sans Mono", "Bitstream Vera Sans Mono", "Courier New", monospace'
-              : "monospace",
-            fontSize: "14px",
-            lineHeight: isWindows ? "21px" : "1.5", // Windows: 固定値、他: 相対値
-            ...(isWindows && {
-              fontVariantLigatures: "none", // Windowsのみリガチャを無効化
-              textRendering: "geometricPrecision", // Windowsのみより正確なレンダリング
-            }),
-            padding: "10px",
-            margin: "0",
-            position: "absolute",
-            top: "0",
-            left: "0",
-            height: "100%",
-            overflow: "auto",
-            whiteSpace: "pre-wrap",
-            wordWrap: "break-word",
-          }}
-        >
-          {lineNumbers.map((num) => (
-            <div
-              key={num}
-              style={{
-                display: "block",
-                minHeight: isWindows ? "21px" : "1.5em", // OS判定に基づく高さ
-                lineHeight: isWindows ? "21px" : "1.5", // OS判定に基づくlineHeight
-                padding: "0 5px",
-              }}
-            >
-              {num}
-            </div>
-          ))}
-        </div>
-      )}
       <div
         style={{
           position: "relative",
-          height: "100%",
-          marginLeft: showLineNumbers ? "30px" : "0",
+          height,
         }}
       >
+        {showLineNumbers && (
+          <div
+            ref={lineNumbersRef}
+            style={{
+              width: "auto",
+              borderRight: "none",
+              paddingLeft: "auto",
+              marginLeft: "auto",
+              textAlign: "right",
+              color: "#6b6b6b",
+              border: "1px solid #ddd",
+              borderRadius: "10px 0px 0px 10px",
+              fontFamily: isWindows
+                ? '"Consolas", "Monaco", "Lucida Console", "Liberation Mono", "DejaVu Sans Mono", "Bitstream Vera Sans Mono", "Courier New", monospace'
+                : "monospace",
+              fontSize: "14px",
+              lineHeight: isWindows ? "21px" : "1.5",
+              ...(isWindows && {
+                fontVariantLigatures: "none",
+                textRendering: "geometricPrecision",
+              }),
+              padding: "10px",
+              margin: "0",
+              position: "absolute",
+              top: "0",
+              left: "0",
+              height: "100%",
+              overflow: "auto",
+              whiteSpace: "pre-wrap",
+              wordWrap: "break-word",
+            }}
+          >
+            {lineNumbers.map((num) => (
+              <div
+                key={num}
+                style={{
+                  display: "block",
+                  minHeight: isWindows ? "21px" : "1.5em",
+                  lineHeight: isWindows ? "21px" : "1.5",
+                  padding: "0 5px",
+                }}
+              >
+                {num}
+              </div>
+            ))}
+          </div>
+        )}
         <div
-          ref={highlightRef}
           style={{
-            ...commonStyles,
-            backgroundColor: "#f5f5f5",
-            pointerEvents: "none",
-            border: "1px solid #ddd",
-            borderRadius: showLineNumbers ? "0px 10px 10px 0px" : "10px",
-            overflow: "auto",
-            paddingBottom: "20px",
-            minHeight: "100%",
+            position: "relative",
+            height: "100%",
+            marginLeft: showLineNumbers ? "30px" : "0",
           }}
-          onScroll={(e) => {
-            requestAnimationFrame(() => {
-              if (textareaRef.current && e.currentTarget) {
-                textareaRef.current.scrollTop = e.currentTarget.scrollTop;
-                textareaRef.current.scrollLeft = e.currentTarget.scrollLeft;
-                if (lineNumbersRef.current) {
-                  lineNumbersRef.current.scrollTop = e.currentTarget.scrollTop;
+        >
+          <div
+            ref={highlightRef}
+            style={{
+              ...commonStyles,
+              backgroundColor: "#f5f5f5",
+              pointerEvents: "none",
+              border: "1px solid #ddd",
+              borderRadius: showLineNumbers ? "0px 10px 10px 0px" : "10px",
+              overflow: "auto",
+              paddingBottom: "20px",
+              minHeight: "100%",
+            }}
+            onScroll={(e) => {
+              requestAnimationFrame(() => {
+                if (textareaRef.current && e.currentTarget) {
+                  textareaRef.current.scrollTop = e.currentTarget.scrollTop;
+                  textareaRef.current.scrollLeft = e.currentTarget.scrollLeft;
+                  if (lineNumbersRef.current) {
+                    lineNumbersRef.current.scrollTop = e.currentTarget.scrollTop;
+                  }
                 }
-              }
-            });
-          }}
-          dangerouslySetInnerHTML={{ __html: highlightedHtml }}
-        />
-        <textarea
-          ref={textareaRef}
-          value={ssml}
-          onChange={handleInput}
-          onScroll={syncScroll}
-          onKeyDown={handleKeyDown}
-          onCompositionStart={handleCompositionStart}
-          onCompositionEnd={handleCompositionEnd}
-          onClick={() => {
-            // クリックでカーソル位置変更時に候補を消す
-            closeSuggestions();
-          }}
-          onBlur={() => {
-            // フォーカスを失った時に候補を消す
-            isComposingRef.current = false;
-            closeSuggestions();
-          }}
-          style={{
-            ...commonStyles,
-            backgroundColor: "transparent",
-            color: "transparent",
-            caretColor: "black",
-            resize: "none",
-            zIndex: 1,
-            left: "0",
-            outline: "none",
-            paddingBottom: "20px",
-            minHeight: "100%",
-          }}
-          spellCheck="false"
-        />
+              });
+            }}
+            dangerouslySetInnerHTML={{ __html: highlightedState.html }}
+          />
+          <textarea
+            ref={textareaRef}
+            value={ssml}
+            onChange={handleInput}
+            onScroll={syncScroll}
+            onKeyDown={handleKeyDown}
+            onCompositionStart={handleCompositionStart}
+            onCompositionEnd={handleCompositionEnd}
+            onClick={() => {
+              closeSuggestions();
+            }}
+            onBlur={() => {
+              isComposingRef.current = false;
+              closeSuggestions();
+            }}
+            style={{
+              ...commonStyles,
+              backgroundColor: "transparent",
+              color: "transparent",
+              caretColor: "black",
+              resize: "none",
+              zIndex: 1,
+              left: "0",
+              outline: "none",
+              paddingBottom: "20px",
+              minHeight: "100%",
+            }}
+            spellCheck="false"
+          />
+        </div>
       </div>
       {suggestions.length > 0 && suggestionPosition && (
         <div
@@ -629,6 +692,22 @@ export const SSMLEditor: React.FC<SSMLEditorProps> = ({
         .ssml-attribute { color: #FFA500; }
         .ssml-attribute-value { color: #008000; }
         .ssml-text { color: #000; }
+        .ssml-unsupported-tag,
+        .ssml-invalid-nesting,
+        .ssml-error {
+          text-decoration: underline wavy #d92d20;
+          text-decoration-thickness: 1.5px;
+        }
+        .ssml-invalid-attribute,
+        .ssml-invalid-attribute-value,
+        .ssml-invalid-text {
+          background-color: rgba(217, 45, 32, 0.12);
+          border-radius: 3px;
+        }
+        .ssml-warning {
+          text-decoration: underline wavy #b54708;
+          text-decoration-thickness: 1.5px;
+        }
         
         div[dangerouslySetInnerHTML] span {
           text-align: left;

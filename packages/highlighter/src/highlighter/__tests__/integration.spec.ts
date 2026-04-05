@@ -86,4 +86,29 @@ describe("ssmlHighlighter.highlightDetailed", () => {
       );
     }
   });
+
+  it("profile を off にすると diagnostics と provider 向け CSS を付けない", () => {
+    const ssml =
+      '<speak><voice name="ja-JP-NanamiNeural"><mark name="timepoint"/></voice></speak>';
+    const result = ssmlHighlighter.highlightDetailed(ssml, {
+      ...defaultOptions,
+      profile: "off",
+    });
+
+    expect(result.ok).toBe(true);
+    if (result.ok) {
+      expect(result.value.diagnostics).toEqual([]);
+      expect(result.value.html).not.toContain("unsupported");
+      expect(result.value.html).not.toContain("invalid-nesting");
+    }
+
+    const withFalse = ssmlHighlighter.highlightDetailed(ssml, {
+      ...defaultOptions,
+      profile: false,
+    });
+    expect(withFalse.ok).toBe(true);
+    if (withFalse.ok) {
+      expect(withFalse.value.diagnostics).toEqual([]);
+    }
+  });
 });

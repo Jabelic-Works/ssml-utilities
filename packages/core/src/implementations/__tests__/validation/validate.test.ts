@@ -105,4 +105,18 @@ describe("validateSSML", () => {
       }),
     ]);
   });
+
+  it("profile が off のときは diagnostics を返さない", () => {
+    const azureErrors = validateSSML("<speak>Hello</speak>", {
+      profile: "azure",
+    });
+    expect(azureErrors.length).toBeGreaterThan(0);
+
+    expect(
+      validateSSML("<speak>Hello</speak>", { profile: "off" })
+    ).toEqual([]);
+    expect(
+      validateSSML("<speak>Hello</speak>", { profile: false })
+    ).toEqual([]);
+  });
 });

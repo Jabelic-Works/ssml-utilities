@@ -29,7 +29,11 @@ export interface SSMLValidationProfile {
 }
 
 export interface SSMLValidationOptions {
-  profile?: SSMLProvider | SSMLValidationProfile;
+  /**
+   * `false` または `"off"` のときは検証を行わず diagnostics は常に空。
+   * 省略時は従来どおり `"generic"` 相当の profile が使われる。
+   */
+  profile?: SSMLProvider | SSMLValidationProfile | false | "off";
 }
 
 export type SSMLDiagnosticCode =

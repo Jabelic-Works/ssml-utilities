@@ -51,6 +51,8 @@ const diagnostics = validateSSML("<speak>Hello</speak>", {
 console.log(diagnostics);
 ```
 
+検証だけ無効にしたい場合は `profile: "off"` または `profile: false` を指定すると diagnostics は常に空になります（構文ハイライト用途向け）。
+
 ### DAGの操作
 
 ```typescript

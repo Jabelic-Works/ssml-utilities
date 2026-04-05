@@ -30,6 +30,10 @@ export function validateSSML(
     return [];
   }
 
+  if (options.profile === false || options.profile === "off") {
+    return [];
+  }
+
   const profile = getValidationProfile(options.profile);
   const tokens = tokenize(ssml);
   const diagnostics: SSMLDiagnostic[] = [];

@@ -2,8 +2,7 @@ import {
   Result,
   SSMLDAG,
   SSMLDiagnostic,
-  SSMLProvider,
-  SSMLValidationProfile,
+  SSMLValidationOptions,
 } from "@ssml-utilities/core";
 
 export interface HighlightClasses {
@@ -23,7 +22,7 @@ export interface HighlightClasses {
 export interface HighlightOptions {
   classes: HighlightClasses;
   indentation?: number;
-  profile?: SSMLProvider | SSMLValidationProfile;
+  profile?: SSMLValidationOptions["profile"];
   diagnostics?: SSMLDiagnostic[];
 }
 
