@@ -68,6 +68,33 @@ describe("validateSSML", () => {
     ]);
   });
 
+  it("Azure profile で speak の xmlns:* 属性を許可する", () => {
+    const diagnostics = validateSSML(
+      '<speak version="1.0" xml:lang="ja-JP" xmlns:mstts="https://www.w3.org/2001/mstts"><voice name="ja-JP-NanamiNeural">こんにちは</voice></speak>',
+      {
+        profile: "azure",
+      }
+    );
+
+    expect(diagnostics).toEqual([]);
+  });
+
+  it("Azure profile で voice 配下の backgroundaudio をネスト違反にする", () => {
+    const diagnostics = validateSSML(
+      '<speak version="1.0" xml:lang="ja-JP"><voice name="ja-JP-NanamiNeural"><mstts:backgroundaudio src="bgm.mp3" /></voice></speak>',
+      {
+        profile: "azure",
+      }
+    );
+
+    expect(diagnostics).toEqual([
+      expect.objectContaining({
+        code: "invalid-nesting",
+        tagName: "mstts:backgroundaudio",
+      }),
+    ]);
+  });
+
   it("Google profile の media timing value を検証する", () => {
     const diagnostics = validateSSML(
       '<speak><par><media begin="soon"><speak>hello</speak></media></par></speak>',
@@ -81,6 +108,52 @@ describe("validateSSML", () => {
         code: "invalid-attribute-value",
         tagName: "media",
         attributeName: "begin",
+      }),
+    ]);
+  });
+
+  it("Google profile で par 直下の text を検出する", () => {
+    const diagnostics = validateSSML("<speak><par>hello</par></speak>", {
+      profile: "google",
+    });
+
+    expect(diagnostics).toEqual([
+      expect.objectContaining({
+        code: "text-not-allowed",
+        tagName: "par",
+      }),
+    ]);
+  });
+
+  it("Google profile で audio 配下の子タグをネスト違反にする", () => {
+    const diagnostics = validateSSML(
+      '<speak><audio src="https://example.com/a.mp3"><break time="1s" /></audio></speak>',
+      {
+        profile: "google",
+      }
+    );
+
+    expect(diagnostics).toEqual([
+      expect.objectContaining({
+        code: "invalid-nesting",
+        tagName: "break",
+      }),
+    ]);
+  });
+
+  it("Google profile で voice language の不正な BCP47 値を検出する", () => {
+    const diagnostics = validateSSML(
+      '<speak><voice language="ja_JP">hello</voice></speak>',
+      {
+        profile: "google",
+      }
+    );
+
+    expect(diagnostics).toEqual([
+      expect.objectContaining({
+        code: "invalid-attribute-value",
+        tagName: "voice",
+        attributeName: "language",
       }),
     ]);
   });
