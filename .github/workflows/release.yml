@@ -9,6 +9,7 @@ on:
         type: choice
         options:
           - "@ssml-utilities/core"
+          - "@ssml-utilities/validation"
           - "@ssml-utilities/highlighter"
           - "@ssml-utilities/tag-remover"
           - "@ssml-utilities/editor-react"
@@ -26,6 +27,10 @@ on:
         type: boolean
         default: false
 
+concurrency:
+  group: release-${{ github.repository }}
+  cancel-in-progress: false
+
 jobs:
   release:
     runs-on: ubuntu-latest
@@ -37,7 +42,38 @@ jobs:
         with:
           fetch-depth: 0
           token: ${{ secrets.PNPM_PUBLISH }}
-          ref: ${{ github.head_ref }}
+          ref: ${{ github.ref_name }}
+
+      - name: Validate release branch
+        run: |
+          if [ "${{ github.ref_name }}" != "${{ github.event.repository.default_branch }}" ]; then
+            echo "この workflow は default branch (${{ github.event.repository.default_branch }}) からのみ実行できます。"
+            echo "selected ref: ${{ github.ref_name }}"
+            exit 1
+          fi
+
+      - name: Validate release inputs
+        env:
+          RELEASE_VERSION_INPUT: ${{ github.event.inputs.version }}
+          RELEASE_TAG_INPUT: ${{ github.event.inputs.tag }}
+        run: |
+          case "$RELEASE_VERSION_INPUT" in
+            major|minor|patch)
+              ;;
+            *)
+              if ! [[ "$RELEASE_VERSION_INPUT" =~ ^[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z.-]+)?$ ]]; then
+                echo "version は major, minor, patch または semver 文字列を指定してください。"
+                echo "received version: $RELEASE_VERSION_INPUT"
+                exit 1
+              fi
+              ;;
+          esac
+
+          if ! [[ "$RELEASE_TAG_INPUT" =~ ^[A-Za-z0-9][A-Za-z0-9._-]*$ ]]; then
+            echo "tag には npm dist-tag として安全な文字列を指定してください。"
+            echo "received tag: $RELEASE_TAG_INPUT"
+            exit 1
+          fi
 
       - name: Setup Node.js
         uses: actions/setup-node@v3
@@ -47,7 +83,7 @@ jobs:
 
       - uses: pnpm/action-setup@v4
         with:
-          version: latest
+          version: 10.12.4
 
       - name: Install dependencies
         run: pnpm install --prefer-frozen-lockfile
@@ -70,26 +106,33 @@ jobs:
 
       - name: Calculate new versions
         id: calc-versions
+        env:
+          RELEASE_VERSION_INPUT: ${{ github.event.inputs.version }}
         run: |
           # メインパッケージのバージョンを更新
           cd packages/${{ steps.get-directory.outputs.directory }}
           CURRENT_VERSION=$(node -p "require('./package.json').version")
 
-          # semver をインストール
-          npm install -g semver
+          # semver をインストール（固定バージョン）
+          npm install -g semver@7.6.3
 
-          if [[ "${{ github.event.inputs.version }}" = "major" ]]; then
-            NEW_VERSION=$(semver -i major $CURRENT_VERSION)
-          elif [[ "${{ github.event.inputs.version }}" = "minor" ]]; then
-            NEW_VERSION=$(semver -i minor $CURRENT_VERSION)
-          elif [[ "${{ github.event.inputs.version }}" = "patch" ]]; then
-            NEW_VERSION=$(semver -i patch $CURRENT_VERSION)
-          else
-            NEW_VERSION="${{ github.event.inputs.version }}"
-          fi
+          case "$RELEASE_VERSION_INPUT" in
+            major)
+              NEW_VERSION=$(semver -i major "$CURRENT_VERSION")
+              ;;
+            minor)
+              NEW_VERSION=$(semver -i minor "$CURRENT_VERSION")
+              ;;
+            patch)
+              NEW_VERSION=$(semver -i patch "$CURRENT_VERSION")
+              ;;
+            *)
+              NEW_VERSION="$RELEASE_VERSION_INPUT"
+              ;;
+          esac
 
           # package.json のバージョンフィールドのみを更新
-          pnpm pkg set version=$NEW_VERSION
+          pnpm pkg set "version=$NEW_VERSION"
 
           echo "new_version=$NEW_VERSION" >> $GITHUB_OUTPUT
 
@@ -97,36 +140,32 @@ jobs:
           if [[ "${{ github.event.inputs.update_dependent_packages }}" == "true" ]]; then
             PACKAGE_NAME="${{ github.event.inputs.package }}"
             UPDATED_PACKAGES="$PACKAGE_NAME@$NEW_VERSION"
+
+            bump_package() {
+              TARGET_PACKAGE="$1"
+              if [ "$TARGET_PACKAGE" = "@ssml-utilities/editor-react" ]; then
+                TARGET_DIRECTORY="editor-react"
+              else
+                TARGET_DIRECTORY=${TARGET_PACKAGE#@ssml-utilities/}
+              fi
+
+              cd "$GITHUB_WORKSPACE/packages/$TARGET_DIRECTORY"
+              TARGET_VERSION=$(node -p "require('./package.json').version")
+              TARGET_NEW_VERSION=$(semver -i patch $TARGET_VERSION)
+              pnpm pkg set version=$TARGET_NEW_VERSION
+              UPDATED_PACKAGES="$UPDATED_PACKAGES $TARGET_PACKAGE@$TARGET_NEW_VERSION"
+            }
             
             if [ "$PACKAGE_NAME" = "@ssml-utilities/core" ]; then
-              # highlighter を更新
-              cd $GITHUB_WORKSPACE/packages/highlighter
-              HIGHLIGHTER_VERSION=$(node -p "require('./package.json').version")
-              HIGHLIGHTER_NEW_VERSION=$(semver -i patch $HIGHLIGHTER_VERSION)
-              pnpm pkg set version=$HIGHLIGHTER_NEW_VERSION
-              UPDATED_PACKAGES="$UPDATED_PACKAGES @ssml-utilities/highlighter@$HIGHLIGHTER_NEW_VERSION"
-
-              # tag-remover を更新
-              cd $GITHUB_WORKSPACE/packages/tag-remover
-              TAG_REMOVER_VERSION=$(node -p "require('./package.json').version")
-              TAG_REMOVER_NEW_VERSION=$(semver -i patch $TAG_REMOVER_VERSION)
-              pnpm pkg set version=$TAG_REMOVER_NEW_VERSION
-              UPDATED_PACKAGES="$UPDATED_PACKAGES @ssml-utilities/tag-remover@$TAG_REMOVER_NEW_VERSION"
-              
-              # editor-react を更新
-              cd $GITHUB_WORKSPACE/packages/editor-react
-              EDITOR_VERSION=$(node -p "require('./package.json').version")
-              EDITOR_NEW_VERSION=$(semver -i patch $EDITOR_VERSION)
-              pnpm pkg set version=$EDITOR_NEW_VERSION
-              UPDATED_PACKAGES="$UPDATED_PACKAGES @ssml-utilities/editor-react@$EDITOR_NEW_VERSION"
-              
+              bump_package "@ssml-utilities/validation"
+              bump_package "@ssml-utilities/highlighter"
+              bump_package "@ssml-utilities/tag-remover"
+              bump_package "@ssml-utilities/editor-react"
+            elif [ "$PACKAGE_NAME" = "@ssml-utilities/validation" ]; then
+              bump_package "@ssml-utilities/highlighter"
+              bump_package "@ssml-utilities/editor-react"
             elif [ "$PACKAGE_NAME" = "@ssml-utilities/highlighter" ]; then
-              # editor-react を更新
-              cd $GITHUB_WORKSPACE/packages/editor-react
-              EDITOR_VERSION=$(node -p "require('./package.json').version")
-              EDITOR_NEW_VERSION=$(semver -i patch $EDITOR_VERSION)
-              pnpm pkg set version=$EDITOR_NEW_VERSION
-              UPDATED_PACKAGES="$UPDATED_PACKAGES @ssml-utilities/editor-react@$EDITOR_NEW_VERSION"
+              bump_package "@ssml-utilities/editor-react"
             fi
             
             echo "updated_packages=$UPDATED_PACKAGES" >> $GITHUB_OUTPUT
@@ -137,61 +176,24 @@ jobs:
         run: |
           # 依存するパッケージを適切な順序でビルド
           if [ "${{ github.event.inputs.package }}" = "@ssml-utilities/core" ]; then
+            pnpm --filter "@ssml-utilities/validation" run build
             pnpm --filter "@ssml-utilities/highlighter" run build
             pnpm --filter "@ssml-utilities/tag-remover" run build
+            pnpm --filter "@ssml-utilities/editor-react" run build
+          elif [ "${{ github.event.inputs.package }}" = "@ssml-utilities/validation" ]; then
+            pnpm --filter "@ssml-utilities/highlighter" run build
             pnpm --filter "@ssml-utilities/editor-react" run build
           elif [ "${{ github.event.inputs.package }}" = "@ssml-utilities/highlighter" ]; then
             pnpm --filter "@ssml-utilities/editor-react" run build
           fi
-
-      - name: Commit changes and create tags
-        run: |
-          git config --local user.email "action@github.com"
-          git config --local user.name "GitHub Action"
-
-          # 変更を追加
-          git add packages/*/package.json
-
-          # メインパッケージのコミットとタグ
-          MAIN_PACKAGE="${{ github.event.inputs.package }}"
-          MAIN_VERSION="${{ steps.calc-versions.outputs.new_version }}"
-          git commit -m "Release $MAIN_PACKAGE@$MAIN_VERSION"
-
-          # タグが存在するかチェックし、存在しない場合のみ作成
-          if ! git tag -l "$MAIN_PACKAGE@$MAIN_VERSION" | grep -q "$MAIN_PACKAGE@$MAIN_VERSION"; then
-            git tag "$MAIN_PACKAGE@$MAIN_VERSION"
-          else
-            echo "タグ $MAIN_PACKAGE@$MAIN_VERSION はすでに存在します。スキップします。"
-          fi
-
-          # 依存パッケージが更新された場合、追加のタグを作成
-          if [[ "${{ github.event.inputs.update_dependent_packages }}" == "true" ]]; then
-            for PACKAGE_INFO in ${{ steps.calc-versions.outputs.updated_packages }}; do
-              # 最初のパッケージ（メイン）はスキップ
-              if [ "$PACKAGE_INFO" != "$MAIN_PACKAGE@$MAIN_VERSION" ]; then
-                PACKAGE_NAME=${PACKAGE_INFO%@*}
-                PACKAGE_VERSION=${PACKAGE_INFO#*@}
-                
-                # タグが存在するかチェックし、存在しない場合のみ作成
-                if ! git tag -l "$PACKAGE_NAME@$PACKAGE_VERSION" | grep -q "$PACKAGE_NAME@$PACKAGE_VERSION"; then
-                  git tag "$PACKAGE_NAME@$PACKAGE_VERSION"
-                else
-                  echo "タグ $PACKAGE_NAME@$PACKAGE_VERSION はすでに存在します。スキップします。"
-                fi
-              fi
-            done
-          fi
-
-          # 変更をプッシュ（--force オプションを追加して強制プッシュ）
-          git push --force
-          git push --tags --force
 
       - name: Generate Release Notes
         id: release-notes
         run: |
           PACKAGE_NAME="${{ github.event.inputs.package }}"
           PACKAGE_NAME_ESC=$(echo $PACKAGE_NAME | sed 's/\//\\\//g' | sed 's/\@/\\\@/g')
-          PREVIOUS_TAG=$(git tag --sort=-version:refname | grep "$PACKAGE_NAME_ESC@" | sed -n 2p)
+          PACKAGE_TAG_PATTERN="^${PACKAGE_NAME_ESC}@[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z.-]+)?$"
+          PREVIOUS_TAG=$(git tag --sort=-version:refname | grep -E "$PACKAGE_TAG_PATTERN" | head -n 1 || true)
 
           if [ -z "$PREVIOUS_TAG" ]; then
             # 最初のリリースの場合
@@ -205,14 +207,18 @@ jobs:
             echo "- リリース" > changelog.txt
           fi
 
-      - name: Create GitHub Release
-        uses: softprops/action-gh-release@v1
-        with:
-          tag_name: ${{ github.event.inputs.package }}@${{ steps.calc-versions.outputs.new_version }}
-          name: ${{ github.event.inputs.package }} v${{ steps.calc-versions.outputs.new_version }}
-          body_path: changelog.txt
-          draft: false
-          prerelease: ${{ github.event.inputs.tag != 'latest' }}
+      - name: Ensure release branch is unchanged before publish
+        run: |
+          git fetch --depth=1 origin "${{ github.ref_name }}"
+          REMOTE_HEAD=$(git rev-parse FETCH_HEAD)
+
+          if [ "$REMOTE_HEAD" != "${{ github.sha }}" ]; then
+            echo "Release workflow started from an older default-branch commit."
+            echo "workflow sha: ${{ github.sha }}"
+            echo "origin/${{ github.ref_name }}: $REMOTE_HEAD"
+            echo "最新の default branch から再実行してください。"
+            exit 1
+          fi
 
       - name: Setup Node.js with NPM auth
         uses: actions/setup-node@v4
@@ -223,34 +229,129 @@ jobs:
           scope: "@ssml-utilities"
 
       - name: Publish to npm
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+          RELEASE_TAG_INPUT: ${{ github.event.inputs.tag }}
         run: |
           # NPMの認証設定
           echo "//registry.npmjs.org/:_authToken=${NODE_AUTH_TOKEN}" > ~/.npmrc
 
+          ensure_release_branch_unchanged() {
+            local target_package="$1"
+
+            git fetch --depth=1 origin "${{ github.ref_name }}"
+            local remote_head
+            remote_head=$(git rev-parse FETCH_HEAD)
+
+            if [ "$remote_head" != "${{ github.sha }}" ]; then
+              echo "default branch advanced before publishing $target_package."
+              echo "workflow sha: ${{ github.sha }}"
+              echo "origin/${{ github.ref_name }}: $remote_head"
+              echo "npm artifact と tag/source の不整合を避けるため、以降の publish は中止します。"
+              exit 1
+            fi
+          }
+
+          publish_package() {
+            local TARGET_PACKAGE="$1"
+
+            ensure_release_branch_unchanged "$TARGET_PACKAGE"
+
+            if [ "$TARGET_PACKAGE" = "@ssml-utilities/editor-react" ]; then
+              local TARGET_DIRECTORY="editor-react"
+            else
+              local TARGET_DIRECTORY=${TARGET_PACKAGE#@ssml-utilities/}
+            fi
+
+            cd "$GITHUB_WORKSPACE/packages/$TARGET_DIRECTORY"
+            pnpm publish --access public --tag "$RELEASE_TAG_INPUT" --no-git-checks
+          }
+
           # メインのパッケージを公開
-          cd packages/${{ steps.get-directory.outputs.directory }}
-          pnpm publish --access public --tag ${{ github.event.inputs.tag }} --no-git-checks
+          publish_package "${{ github.event.inputs.package }}"
 
           # 依存パッケージも公開
           if [[ "${{ github.event.inputs.update_dependent_packages }}" == "true" ]]; then
             if [ "${{ github.event.inputs.package }}" = "@ssml-utilities/core" ]; then
-              # highlighter を公開
-              cd $GITHUB_WORKSPACE/packages/highlighter
-              pnpm publish --access public --tag ${{ github.event.inputs.tag }} --no-git-checks
-
-              # tag-remover を公開
-              cd $GITHUB_WORKSPACE/packages/tag-remover
-              pnpm publish --access public --tag ${{ github.event.inputs.tag }} --no-git-checks
-              
-              # editor-react を公開
-              cd $GITHUB_WORKSPACE/packages/editor-react
-              pnpm publish --access public --tag ${{ github.event.inputs.tag }} --no-git-checks
-            
+              publish_package "@ssml-utilities/validation"
+              publish_package "@ssml-utilities/highlighter"
+              publish_package "@ssml-utilities/tag-remover"
+              publish_package "@ssml-utilities/editor-react"
+            elif [ "${{ github.event.inputs.package }}" = "@ssml-utilities/validation" ]; then
+              publish_package "@ssml-utilities/highlighter"
+              publish_package "@ssml-utilities/editor-react"
             elif [ "${{ github.event.inputs.package }}" = "@ssml-utilities/highlighter" ]; then
-              # editor-react を公開
-              cd $GITHUB_WORKSPACE/packages/editor-react
-              pnpm publish --access public --tag ${{ github.event.inputs.tag }} --no-git-checks
+              publish_package "@ssml-utilities/editor-react"
             fi
           fi
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+      - name: Commit changes and create tags
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+
+          # 変更を追加
+          git add packages/*/package.json
+
+          # メインパッケージのコミットとタグ
+          MAIN_PACKAGE="${{ github.event.inputs.package }}"
+          MAIN_VERSION="${{ steps.calc-versions.outputs.new_version }}"
+          MAIN_TAG="$MAIN_PACKAGE@$MAIN_VERSION"
+          git commit -m "Release $MAIN_TAG"
+
+          # publish 中に default branch が進んだ場合は provenance を壊さないよう失敗させる
+          git fetch --depth=1 origin "${{ github.ref_name }}"
+          REMOTE_HEAD=$(git rev-parse FETCH_HEAD)
+
+          if [ "$REMOTE_HEAD" != "${{ github.sha }}" ]; then
+            echo "default branch advanced during publish."
+            echo "published package version: $MAIN_TAG"
+            echo "workflow sha: ${{ github.sha }}"
+            echo "origin/${{ github.ref_name }}: $REMOTE_HEAD"
+            echo "npm artifact と tag/source の不整合を避けるため、Git metadata の確定は中止します。"
+            exit 1
+          fi
+
+          # タグが存在するかチェックし、存在しない場合のみ作成
+          TAGS_TO_PUSH="$MAIN_TAG"
+          if ! git tag -l "$MAIN_TAG" | grep -q "$MAIN_TAG"; then
+            git tag "$MAIN_TAG"
+          else
+            echo "タグ $MAIN_TAG はすでに存在します。スキップします。"
+          fi
+
+          # 依存パッケージが更新された場合、追加のタグを作成
+          if [[ "${{ github.event.inputs.update_dependent_packages }}" == "true" ]]; then
+            for PACKAGE_INFO in ${{ steps.calc-versions.outputs.updated_packages }}; do
+              # 最初のパッケージ（メイン）はスキップ
+              if [ "$PACKAGE_INFO" != "$MAIN_TAG" ]; then
+                PACKAGE_NAME=${PACKAGE_INFO%@*}
+                PACKAGE_VERSION=${PACKAGE_INFO##*@}
+                TAG_NAME="$PACKAGE_NAME@$PACKAGE_VERSION"
+
+                # タグが存在するかチェックし、存在しない場合のみ作成
+                if ! git tag -l "$TAG_NAME" | grep -q "$TAG_NAME"; then
+                  git tag "$TAG_NAME"
+                else
+                  echo "タグ $TAG_NAME はすでに存在します。スキップします。"
+                fi
+
+                TAGS_TO_PUSH="$TAGS_TO_PUSH $TAG_NAME"
+              fi
+            done
+          fi
+
+          # publish 成功後にのみ release metadata を確定する
+          PUSH_REFS=("HEAD:${{ github.ref_name }}")
+          for TAG_NAME in $TAGS_TO_PUSH; do
+            PUSH_REFS+=("refs/tags/$TAG_NAME:refs/tags/$TAG_NAME")
+          done
+          git push --atomic origin "${PUSH_REFS[@]}"
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: ${{ github.event.inputs.package }}@${{ steps.calc-versions.outputs.new_version }}
+          name: ${{ github.event.inputs.package }} v${{ steps.calc-versions.outputs.new_version }}
+          body_path: changelog.txt
+          draft: false
+          prerelease: ${{ github.event.inputs.tag != 'latest' }}
