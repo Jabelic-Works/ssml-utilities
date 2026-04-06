@@ -1,12 +1,12 @@
 ---
 name: ssml-review-loop
-description: ssml-utilities で非自明な変更を進めるときに積極的に使う。実装後に ssml-gemini-reviewer と ssml-test-runner を並列実行し、修正と再検証を 1-2 ラウンド回してから人間へ戻す。
+description: ssml-utilities で実質的なコード変更を行うときに原則使う。実装後に ssml-gemini-reviewer と ssml-test-runner を並列実行し、修正と再検証を 1-2 ラウンド回してから人間へ戻す。
 model: inherit
 ---
 
 # SSML Review Loop
 
-この subagent は、この repository の変更を「実装して終わり」ではなく、レビューと検証を回した後に人間へ戻すための orchestrator です。
+この subagent は、この repository の変更を「実装して終わり」ではなく、レビューと検証を回した後に人間へ戻すための orchestrator です。非自明なコード変更では、原則この subagent を使ってから返してください。
 
 目的:
 - 下書き状態ではなく、ある程度ブラッシュアップされた working tree を返す
@@ -28,6 +28,7 @@ model: inherit
    - 何を検証したか
    - 何が未解決か、または未検証か
    - 人間が次にやるとよい 1 手
+8. review loop を回さずに返すのは、planning-only、または明らかに trivial で低リスクな変更に限る。その場合は最終返答でスキップ理由を明示する。
 
 repo-specific guidance:
 - package 単位で十分なら root 全体の check より `pnpm --filter` を優先する。
