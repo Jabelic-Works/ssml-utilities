@@ -1,0 +1,11 @@
+---
+description: Prefer the ssml review loop subagents before handoff
+alwaysApply: true
+---
+
+# Review Loop Subagents
+
+- For non-trivial changes in this repository, prefer the `ssml-review-loop` subagent.
+- Before handing work back to the user after substantive code changes, run `ssml-gemini-reviewer` and `ssml-test-runner`, either directly or through `ssml-review-loop`.
+- Use review findings to fix high-confidence issues when the change remains bounded and reviewable.
+- Keep the worktree in a human-resumable state and do not commit unless the user explicitly asks.
