@@ -249,15 +249,18 @@ jobs:
           MAIN_VERSION="${{ steps.calc-versions.outputs.new_version }}"
           MAIN_TAG="$MAIN_PACKAGE@$MAIN_VERSION"
           git commit -m "Release $MAIN_TAG"
-          RELEASE_COMMIT=$(git rev-parse HEAD)
 
-          # publish 中に default branch が進んだ場合は、release commit を最新 head に載せ替える
+          # publish 中に default branch が進んだ場合は provenance を壊さないよう失敗させる
           git fetch --depth=1 origin "${{ github.ref_name }}"
           REMOTE_HEAD=$(git rev-parse FETCH_HEAD)
 
           if [ "$REMOTE_HEAD" != "${{ github.sha }}" ]; then
-            git checkout --detach "$REMOTE_HEAD"
-            git cherry-pick "$RELEASE_COMMIT"
+            echo "default branch advanced during publish."
+            echo "published package version: $MAIN_TAG"
+            echo "workflow sha: ${{ github.sha }}"
+            echo "origin/${{ github.ref_name }}: $REMOTE_HEAD"
+            echo "npm artifact と tag/source の不整合を避けるため、Git metadata の確定は中止します。"
+            exit 1
           fi
 
           # タグが存在するかチェックし、存在しない場合のみ作成
