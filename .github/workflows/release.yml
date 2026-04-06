@@ -52,6 +52,29 @@ jobs:
             exit 1
           fi
 
+      - name: Validate release inputs
+        env:
+          RELEASE_VERSION_INPUT: ${{ github.event.inputs.version }}
+          RELEASE_TAG_INPUT: ${{ github.event.inputs.tag }}
+        run: |
+          case "$RELEASE_VERSION_INPUT" in
+            major|minor|patch)
+              ;;
+            *)
+              if ! [[ "$RELEASE_VERSION_INPUT" =~ ^[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z.-]+)?$ ]]; then
+                echo "version は major, minor, patch または semver 文字列を指定してください。"
+                echo "received version: $RELEASE_VERSION_INPUT"
+                exit 1
+              fi
+              ;;
+          esac
+
+          if ! [[ "$RELEASE_TAG_INPUT" =~ ^[A-Za-z0-9][A-Za-z0-9._-]*$ ]]; then
+            echo "tag には npm dist-tag として安全な文字列を指定してください。"
+            echo "received tag: $RELEASE_TAG_INPUT"
+            exit 1
+          fi
+
       - name: Setup Node.js
         uses: actions/setup-node@v3
         with:
@@ -83,6 +106,8 @@ jobs:
 
       - name: Calculate new versions
         id: calc-versions
+        env:
+          RELEASE_VERSION_INPUT: ${{ github.event.inputs.version }}
         run: |
           # メインパッケージのバージョンを更新
           cd packages/${{ steps.get-directory.outputs.directory }}
@@ -91,18 +116,23 @@ jobs:
           # semver をインストール（固定バージョン）
           npm install -g semver@7.6.3
 
-          if [[ "${{ github.event.inputs.version }}" = "major" ]]; then
-            NEW_VERSION=$(semver -i major $CURRENT_VERSION)
-          elif [[ "${{ github.event.inputs.version }}" = "minor" ]]; then
-            NEW_VERSION=$(semver -i minor $CURRENT_VERSION)
-          elif [[ "${{ github.event.inputs.version }}" = "patch" ]]; then
-            NEW_VERSION=$(semver -i patch $CURRENT_VERSION)
-          else
-            NEW_VERSION="${{ github.event.inputs.version }}"
-          fi
+          case "$RELEASE_VERSION_INPUT" in
+            major)
+              NEW_VERSION=$(semver -i major "$CURRENT_VERSION")
+              ;;
+            minor)
+              NEW_VERSION=$(semver -i minor "$CURRENT_VERSION")
+              ;;
+            patch)
+              NEW_VERSION=$(semver -i patch "$CURRENT_VERSION")
+              ;;
+            *)
+              NEW_VERSION="$RELEASE_VERSION_INPUT"
+              ;;
+          esac
 
           # package.json のバージョンフィールドのみを更新
-          pnpm pkg set version=$NEW_VERSION
+          pnpm pkg set "version=$NEW_VERSION"
 
           echo "new_version=$NEW_VERSION" >> $GITHUB_OUTPUT
 
@@ -199,21 +229,42 @@ jobs:
           scope: "@ssml-utilities"
 
       - name: Publish to npm
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+          RELEASE_TAG_INPUT: ${{ github.event.inputs.tag }}
         run: |
           # NPMの認証設定
           echo "//registry.npmjs.org/:_authToken=${NODE_AUTH_TOKEN}" > ~/.npmrc
 
+          ensure_release_branch_unchanged() {
+            local target_package="$1"
+
+            git fetch --depth=1 origin "${{ github.ref_name }}"
+            local remote_head
+            remote_head=$(git rev-parse FETCH_HEAD)
+
+            if [ "$remote_head" != "${{ github.sha }}" ]; then
+              echo "default branch advanced before publishing $target_package."
+              echo "workflow sha: ${{ github.sha }}"
+              echo "origin/${{ github.ref_name }}: $remote_head"
+              echo "npm artifact と tag/source の不整合を避けるため、以降の publish は中止します。"
+              exit 1
+            fi
+          }
+
           publish_package() {
-            TARGET_PACKAGE="$1"
+            local TARGET_PACKAGE="$1"
+
+            ensure_release_branch_unchanged "$TARGET_PACKAGE"
 
             if [ "$TARGET_PACKAGE" = "@ssml-utilities/editor-react" ]; then
-              TARGET_DIRECTORY="editor-react"
+              local TARGET_DIRECTORY="editor-react"
             else
-              TARGET_DIRECTORY=${TARGET_PACKAGE#@ssml-utilities/}
+              local TARGET_DIRECTORY=${TARGET_PACKAGE#@ssml-utilities/}
             fi
 
             cd "$GITHUB_WORKSPACE/packages/$TARGET_DIRECTORY"
-            pnpm publish --access public --tag ${{ github.event.inputs.tag }} --no-git-checks
+            pnpm publish --access public --tag "$RELEASE_TAG_INPUT" --no-git-checks
           }
 
           # メインのパッケージを公開
@@ -233,9 +284,6 @@ jobs:
               publish_package "@ssml-utilities/editor-react"
             fi
           fi
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-
       - name: Commit changes and create tags
         run: |
           git config --local user.email "action@github.com"
