@@ -163,7 +163,7 @@ jobs:
           PACKAGE_NAME="${{ github.event.inputs.package }}"
           PACKAGE_NAME_ESC=$(echo $PACKAGE_NAME | sed 's/\//\\\//g' | sed 's/\@/\\\@/g')
           PACKAGE_TAG_PATTERN="^${PACKAGE_NAME_ESC}@[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z.-]+)?$"
-          PREVIOUS_TAG=$(git tag --sort=-version:refname | grep -E "$PACKAGE_TAG_PATTERN" | head -n 1)
+          PREVIOUS_TAG=$(git tag --sort=-version:refname | grep -E "$PACKAGE_TAG_PATTERN" | head -n 1 || true)
 
           if [ -z "$PREVIOUS_TAG" ]; then
             # 最初のリリースの場合
@@ -175,6 +175,19 @@ jobs:
           # 空の場合のデフォルトメッセージ
           if [ ! -s changelog.txt ]; then
             echo "- リリース" > changelog.txt
+          fi
+
+      - name: Ensure release branch is unchanged before publish
+        run: |
+          git fetch --depth=1 origin "${{ github.ref_name }}"
+          REMOTE_HEAD=$(git rev-parse FETCH_HEAD)
+
+          if [ "$REMOTE_HEAD" != "${{ github.sha }}" ]; then
+            echo "Release workflow started from an older default-branch commit."
+            echo "workflow sha: ${{ github.sha }}"
+            echo "origin/${{ github.ref_name }}: $REMOTE_HEAD"
+            echo "最新の default branch から再実行してください。"
+            exit 1
           fi
 
       - name: Setup Node.js with NPM auth
@@ -235,10 +248,20 @@ jobs:
           MAIN_PACKAGE="${{ github.event.inputs.package }}"
           MAIN_VERSION="${{ steps.calc-versions.outputs.new_version }}"
           MAIN_TAG="$MAIN_PACKAGE@$MAIN_VERSION"
-          TAGS_TO_PUSH="$MAIN_TAG"
           git commit -m "Release $MAIN_TAG"
+          RELEASE_COMMIT=$(git rev-parse HEAD)
+
+          # publish 中に default branch が進んだ場合は、release commit を最新 head に載せ替える
+          git fetch --depth=1 origin "${{ github.ref_name }}"
+          REMOTE_HEAD=$(git rev-parse FETCH_HEAD)
+
+          if [ "$REMOTE_HEAD" != "${{ github.sha }}" ]; then
+            git checkout --detach "$REMOTE_HEAD"
+            git cherry-pick "$RELEASE_COMMIT"
+          fi
 
           # タグが存在するかチェックし、存在しない場合のみ作成
+          TAGS_TO_PUSH="$MAIN_TAG"
           if ! git tag -l "$MAIN_TAG" | grep -q "$MAIN_TAG"; then
             git tag "$MAIN_TAG"
           else
@@ -267,10 +290,11 @@ jobs:
           fi
 
           # publish 成功後にのみ release metadata を確定する
-          git push origin "HEAD:${{ github.ref_name }}"
+          PUSH_REFS=("HEAD:${{ github.ref_name }}")
           for TAG_NAME in $TAGS_TO_PUSH; do
-            git push origin "refs/tags/$TAG_NAME:refs/tags/$TAG_NAME"
+            PUSH_REFS+=("refs/tags/$TAG_NAME:refs/tags/$TAG_NAME")
           done
+          git push --atomic origin "${PUSH_REFS[@]}"
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v1
